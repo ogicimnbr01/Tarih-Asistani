@@ -1,0 +1,13 @@
+# Terraform state dosyaları - Hassas bilgiler içerebilir! ASLA YÜKLENMEMELİ.
+*.tfstate
+*.tfstate.*
+
+# Terraform'un indirdiği eklenti dosyaları (gereksiz)
+.terraform/
+
+# Terraform'un oluşturduğu zip dosyaları (gereksiz, her seferinde yeniden oluşur)
+*.zip
+
+# İşletim sistemi özel dosyaları
+.DS_Store
+Thumbs.db

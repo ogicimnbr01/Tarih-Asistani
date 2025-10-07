@@ -1,0 +1,99 @@
+import boto3
+import json
+
+TABLE_NAME = "TarihProjesiKaynakKutuphanesi"
+
+bedrock = boto3.client(service_name='bedrock-runtime')
+dynamodb = boto3.resource('dynamodb')
+table = dynamodb.Table(TABLE_NAME)
+
+model_id = 'anthropic.claude-3-haiku-20240307-v1:0'
+
+CORS_HEADERS = {
+    'access-control-allow-origin': '*',
+    'access-control-allow-headers': 'Content-Type',
+    'access-control-allow-methods': 'OPTIONS, POST, GET'
+}
+
+def lambda_handler(event, context):
+    if event.get('httpMethod') == 'OPTIONS':
+        return {'statusCode': 200, 'headers': CORS_HEADERS}
+
+    try:
+
+        body_str = event.get("body", "{}")
+        if not body_str: body_str = "{}"
+        body = json.loads(body_str)
+        unit_id = body.get("unit_id")
+        outcome_id = body.get("outcome_id")
+
+        if not unit_id or not outcome_id:
+            raise ValueError("Lütfen 'unit_id' ve 'outcome_id' alanlarını gönderiniz.")
+
+
+        print(f"Veritabanında sorgulanan: unit_id={unit_id}, outcome_id ile başlayan source_id'ler")
+        
+
+        response = table.query(
+            KeyConditionExpression='unit_id = :uid AND begins_with(source_id, :oid_prefix)',
+            ExpressionAttributeValues={
+                ':uid': unit_id,
+                ':oid_prefix': outcome_id 
+            }
+        )
+        
+        items = response.get('Items', [])
+        if not items:
+
+            return {
+                'statusCode': 404, 
+                'headers': CORS_HEADERS,
+                'body': json.dumps({'message': 'Seçtiğiniz ünite ve kazanıma uygun bir kaynak henüz kütüphaneye eklenmemiş.'}, ensure_ascii=False)
+            }
+        
+
+        item = items[0]
+        
+        tarihi_metin = item.get('extracted_text')
+        if not tarihi_metin:
+             raise ValueError("Kaynak bulundu fakat metin içeriği boş.")
+
+
+        prompt = f"""Sen bir 12. Sınıf T.C. İnkılap Tarihi ve Atatürkçülük dersi öğretmenisin. 
+        Aşağıdaki metni kullanarak 2 adet çoktan seçmeli soru ve 1 adet "Bu metne göre..." ile başlayan açık uçlu yorum sorusu hazırla.
+        ---
+        Tarihi Metin: "{tarihi_metin}"
+        ---
+        """
+        
+        request_body = {
+            "anthropic_version": "bedrock-2023-05-31",
+            "max_tokens": 2048,
+            "messages": [{"role": "user", "content": [{"type": "text", "text": prompt}]}]
+        }
+
+        bedrock_response = bedrock.invoke_model(modelId=model_id, body=json.dumps(request_body))
+        response_body = json.loads(bedrock_response['body'].read())
+        generated_text = response_body['content'][0]['text']
+        
+        success_headers = CORS_HEADERS.copy()
+        success_headers['content-type'] = 'application/json; charset=utf-8'
+
+        return {
+            'statusCode': 200,
+            'headers': success_headers,
+            'body': json.dumps({
+                'calisma_kagidi': generated_text,
+                'kullanilan_kaynak': tarihi_metin
+                }, ensure_ascii=False)
+        }
+
+    except Exception as e:
+        print(f"HATA: {str(e)}")
+        error_headers = CORS_HEADERS.copy()
+        error_headers['content-type'] = 'application/json; charset=utf-8'
+        return {
+            'statusCode': 500,
+            'headers': error_headers,
+            'body': json.dumps({'error': str(e)}, ensure_ascii=False)
+        }
