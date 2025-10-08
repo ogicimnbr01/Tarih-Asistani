@@ -47,10 +47,10 @@ resource "aws_iam_role_policy" "lambda_policy" {
         Effect   = "Allow",
         Resource = "*"
       },
-            {
-        Action   = "dynamodb:Query",
+{
+        Action   = ["dynamodb:Query", "dynamodb:GetItem"],
         Effect   = "Allow",
-        Resource = aws_dynamodb_table.kaynak_kutuphanesi.arn 
+        Resource = aws_dynamodb_table.kaynak_kutuphanesi.arn
       }
     ]
   })
@@ -165,13 +165,14 @@ resource "aws_iam_role_policy" "belge_isleyici_lambda_policy" {
         Effect   = "Allow",
         Resource = "${aws_s3_bucket.belge_deposu.arn}/*"
       },
-
-      {
-        Action   = "textract:DetectDocumentText",
+{
+        Action   = [
+            "textract:StartDocumentTextDetection",
+            "textract:GetDocumentTextDetection"
+        ],
         Effect   = "Allow",
-        Resource = "*" 
+        Resource = "*"
       },
-
       {
         Action   = "dynamodb:PutItem",
         Effect   = "Allow",
@@ -192,7 +193,7 @@ resource "aws_lambda_function" "belge_isleyici_lambda" {
   runtime          = "python3.12"
   filename         = data.archive_file.belge_isleyici_zip.output_path
   source_code_hash = data.archive_file.belge_isleyici_zip.output_base64sha256
-  timeout          = 60
+  timeout          = 300
 }
 resource "aws_s3_bucket_notification" "bucket_notification" {
   bucket = aws_s3_bucket.belge_deposu.id
