@@ -31,7 +31,7 @@ def lambda_handler(event, context):
             return list_sources(body['unit_id'], body['outcome_id'])
             
         else:
-            raise ValueError("İstek için 'unit_id' ve 'outcome_id' (listeleme için) veya 'unit_id' ve 'source_id' (oluşturma için) gereklidir.")
+            raise ValueError("İstek için gerekli parametreler eksik.")
 
     except Exception as e:
         print(f"HATA: {str(e)}")
@@ -49,28 +49,17 @@ def list_sources(unit_id, outcome_id):
     
     response = table.query(
         KeyConditionExpression='unit_id = :uid AND begins_with(source_id, :oid_prefix)',
-        ExpressionAttributeValues={
-            ':uid': unit_id,
-            ':oid_prefix': outcome_id 
-        }
+        ExpressionAttributeValues={':uid': unit_id, ':oid_prefix': outcome_id }
     )
-    
     items = response.get('Items', [])
-    
     sources = [{'source_id': item['source_id'], 'source_title': item['source_title']} for item in items]
-    
-    return {
-        'statusCode': 200,
-        'headers': CORS_HEADERS,
-        'body': json.dumps(sources, ensure_ascii=False)
-    }
+    return {'statusCode': 200, 'headers': CORS_HEADERS, 'body': json.dumps(sources, ensure_ascii=False)}
 
 def generate_worksheet(unit_id, source_id):
-    """Verilen bir kaynak ID'si için veritabanından metni alır, Bedrock'a gönderir ve çalışma kağıdı üretir."""
+    """Verilen bir kaynak ID'si için çalışma kağıdı üretir."""
     print(f"Çalışma kağıdı üretiliyor: unit_id={unit_id}, source_id={source_id}")
     
     response = table.get_item(Key={'unit_id': unit_id, 'source_id': source_id})
-    
     item = response.get('Item')
     if not item:
         return {
@@ -83,7 +72,7 @@ def generate_worksheet(unit_id, source_id):
     if not tarihi_metin:
          raise ValueError("Kaynak bulundu fakat metin içeriği boş.")
 
-prompt = f"""
+    prompt = f"""
 ### GÖREV ###
 Sen, MEB müfredatına hakim, modern pedagojik yaklaşımları benimsemiş, uzman bir 12. Sınıf T.C. İnkılap Tarihi ve Atatürkçülük dersi öğretmenisin. Amacın, aşağıda sunulan birinci elden tarihi kaynağı kullanarak, derste öğrenciler arasında zengin ve çok yönlü bir tartışma ortamı yaratmaktır.
 
@@ -98,6 +87,7 @@ Sen, MEB müfredatına hakim, modern pedagojik yaklaşımları benimsemiş, uzma
 {tarihi_metin}
 ---
 """
+    
     request_body = {
         "anthropic_version": "bedrock-2023-05-31",
         "max_tokens": 2048,
