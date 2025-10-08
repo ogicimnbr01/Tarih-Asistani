@@ -83,13 +83,21 @@ def generate_worksheet(unit_id, source_id):
     if not tarihi_metin:
          raise ValueError("Kaynak bulundu fakat metin içeriği boş.")
 
-    prompt = f"""Sen bir 12. Sınıf T.C. İnkılap Tarihi ve Atatürkçülük dersi öğretmenisin. 
-    Aşağıdaki metni kullanarak 2 adet çoktan seçmeli soru ve 1 adet "Bu metne göre..." ile başlayan açık uçlu yorum sorusu hazırla.
-    ---
-    Tarihi Metin: "{tarihi_metin}"
-    ---
-    """
-    
+prompt = f"""
+### GÖREV ###
+Sen, MEB müfredatına hakim, modern pedagojik yaklaşımları benimsemiş, uzman bir 12. Sınıf T.C. İnkılap Tarihi ve Atatürkçülük dersi öğretmenisin. Amacın, aşağıda sunulan birinci elden tarihi kaynağı kullanarak, derste öğrenciler arasında zengin ve çok yönlü bir tartışma ortamı yaratmaktır.
+
+### TALİMATLAR ###
+1.  Bu metne dayanarak, Bloom Taksonomisi'nin üst düzey basamaklarına (Analiz, Sentez, Değerlendirme) uygun **3 adet açık uçlu yorum ve analiz sorusu** hazırla.
+2.  Sorular, "ne oldu?" diye sormak yerine, "neden olmuş olabilir?", "bu durumun farklı sonuçları ne olabilirdi?", "metnin yazarının asıl amacı ve motivasyonu ne olabilir?", "bu belgedeki ifadeler, dönemin genel zihniyetiyle nasıl bir ilişki içindedir?" gibi daha derin sorgulamalara yöneltmelidir.
+3.  Hazırladığın sorular, öğrencileri farklı bakış açıları geliştirmeye ve kendi yorumlarını kanıtlarla desteklemeye teşvik etmelidir.
+4.  **Kesinlikle** tek bir doğru cevabı olan veya metinden doğrudan kopyala-yapıştır ile cevaplanabilecek sorulardan kaçın. Çoktan seçmeli soru oluşturma.
+
+### KAYNAK METİN ###
+---
+{tarihi_metin}
+---
+"""
     request_body = {
         "anthropic_version": "bedrock-2023-05-31",
         "max_tokens": 2048,
