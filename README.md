@@ -2,7 +2,6 @@
 
 Bu proje, 12. Sınıf T.C. İnkılap Tarihi ve Atatürkçülük dersi öğretmenleri için geliştirilmiş, yapay zeka destekli bir çalışma kağıdı üreticisidir.
 
-*(Not: Bu linki, kendi aldığın daha güzel bir ekran görüntüsünü bir resim yükleme sitesine (örn: imgur.com) yükleyip o linkle değiştirebilirsin.)*
 
 **Canlı Prototipi Denemek İçin:** [https://ogicimnbr01.github.io/tarih-projesi-link/](https://ogicimnbr01.github.io/tarih-projesi-link/)
 
