@@ -151,35 +151,34 @@ resource "aws_iam_role" "belge_isleyici_lambda_role" {
 resource "aws_iam_role_policy" "belge_isleyici_lambda_policy" {
   name = "tarih-projesi-belge-isleyici-policy"
   role = aws_iam_role.belge_isleyici_lambda_role.id
-  policy = jsonencode({
-    Version   = "2012-10-17",
-    Statement = [
-      {
-        Action   = ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"],
-        Effect   = "Allow",
-        Resource = "arn:aws:logs:*:*:*"
-      },
-
-      {
-        Action   = "s3:GetObject",
-        Effect   = "Allow",
-        Resource = "${aws_s3_bucket.belge_deposu.arn}/*"
-      },
-{
-        Action   = [
-            "textract:StartDocumentTextDetection",
-            "textract:GetDocumentTextDetection"
-        ],
-        Effect   = "Allow",
-        Resource = "*"
-      },
-      {
-        Action   = "dynamodb:PutItem",
-        Effect   = "Allow",
-        Resource = aws_dynamodb_table.kaynak_kutuphanesi.arn
-      }
-    ]
-  })
+policy = jsonencode({
+  Version   = "2012-10-17",
+  Statement = [
+    {
+      Action   = ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"],
+      Effect   = "Allow",
+      Resource = "arn:aws:logs:*:*:*"
+    },
+    {
+      Action   = "s3:GetObject",
+      Effect   = "Allow",
+      Resource = "${aws_s3_bucket.belge_deposu.arn}/*"
+    },
+    {
+      Action   = [
+          "textract:StartDocumentTextDetection",
+          "textract:GetDocumentTextDetection"
+      ],
+      Effect   = "Allow",
+      Resource = "*"
+    },
+    {
+      Action   = "dynamodb:PutItem",
+      Effect   = "Allow",
+      Resource = aws_dynamodb_table.kaynak_kutuphanesi.arn
+    }
+  ]
+})
 }
 data "archive_file" "belge_isleyici_zip" {
   type        = "zip"
@@ -198,10 +197,10 @@ resource "aws_lambda_function" "belge_isleyici_lambda" {
 resource "aws_s3_bucket_notification" "bucket_notification" {
   bucket = aws_s3_bucket.belge_deposu.id
   depends_on = [aws_lambda_permission.allow_s3_to_call_lambda]
+
   lambda_function {
     lambda_function_arn = aws_lambda_function.belge_isleyici_lambda.arn
     events              = ["s3:ObjectCreated:*"]
-    filter_suffix       = ".pdf"
   }
 }
 resource "aws_lambda_permission" "allow_s3_to_call_lambda" {

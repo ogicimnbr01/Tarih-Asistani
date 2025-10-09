@@ -46,20 +46,45 @@ def lambda_handler(event, context):
 def list_sources(unit_id, outcome_id):
     """Verilen ünite ve kazanıma ait tüm kaynakları veritabanından sorgular ve listeler."""
     print(f"Kaynaklar listeleniyor: unit_id={unit_id}, outcome_id ile başlayanlar")
-    
-    response = table.query(
-        KeyConditionExpression='unit_id = :uid AND begins_with(source_id, :oid_prefix)',
-        ExpressionAttributeValues={':uid': unit_id, ':oid_prefix': outcome_id }
-    )
-    items = response.get('Items', [])
-    sources = [{'source_id': item['source_id'], 'source_title': item['source_title']} for item in items]
-    return {'statusCode': 200, 'headers': CORS_HEADERS, 'body': json.dumps(sources, ensure_ascii=False)}
+
+    try:
+        response = table.query(
+
+            KeyConditionExpression='unit_id = :uid AND begins_with(source_id, :oid_prefix)',
+            ExpressionAttributeValues={
+                ':uid': unit_id,
+                ':oid_prefix': outcome_id
+            }
+        )
+
+        items = response.get('Items', [])
+
+        sources = [{
+            'source_id': item['source_id'],
+            'source_title': item['source_title'],
+            'source_type': item.get('source_type', 'Belge'),
+            'source_url': item.get('source_url')
+        } for item in items]
+
+        return {
+            'statusCode': 200,
+            'headers': CORS_HEADERS,
+            'body': json.dumps(sources, ensure_ascii=False)
+        }
+    except Exception as e:
+        print(f"list_sources içinde HATA: {str(e)}")
+        return {
+            'statusCode': 500,
+            'headers': CORS_HEADERS,
+            'body': json.dumps({'error': 'Veritabanı sorgusunda hata oluştu.'}, ensure_ascii=False)
+        }
 
 def generate_worksheet(unit_id, source_id):
     """Verilen bir kaynak ID'si için çalışma kağıdı üretir."""
     print(f"Çalışma kağıdı üretiliyor: unit_id={unit_id}, source_id={source_id}")
     
     response = table.get_item(Key={'unit_id': unit_id, 'source_id': source_id})
+    
     item = response.get('Item')
     if not item:
         return {
@@ -87,7 +112,7 @@ Sen, MEB müfredatına hakim, modern pedagojik yaklaşımları benimsemiş, uzma
 {tarihi_metin}
 ---
 """
-    
+
     request_body = {
         "anthropic_version": "bedrock-2023-05-31",
         "max_tokens": 2048,
@@ -106,6 +131,8 @@ Sen, MEB müfredatına hakim, modern pedagojik yaklaşımları benimsemiş, uzma
         'headers': success_headers,
         'body': json.dumps({
             'calisma_kagidi': generated_text,
-            'kullanilan_kaynak': tarihi_metin
+            'kullanilan_kaynak': tarihi_metin,
+            'source_type': item.get('source_type'), 
+            'source_url': item.get('source_url') 
             }, ensure_ascii=False)
     }

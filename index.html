@@ -5,111 +5,45 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>İnkılap Tarihi Akıllı Çalışma Kağıdı Asistanı</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-            background-color: #f4f4f4;
-            color: #333;
-        }
-        .container {
-            max-width: 800px;
-            margin: 20px auto;
-            padding: 20px;
-            background-color: #fff;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-        h1 {
-            color: #0056b3;
-            text-align: center;
-        }
-        .form-group {
-            margin-bottom: 15px;
-        }
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-        }
-        select, button {
-            width: 100%;
-            padding: 10px;
-            border-radius: 4px;
-            border: 1px solid #ddd;
-            box-sizing: border-box;
-            margin-top: 5px;
-        }
-        button {
-            background-color: #007bff;
-            color: white;
-            border: none;
-            cursor: pointer;
-            font-size: 16px;
-            transition: background-color 0.3s ease;
-        }
-        button:hover {
-            background-color: #0056b3;
-        }
-        #sonuc-alani {
-            margin-top: 20px;
-            padding: 15px;
-            background-color: #e9ecef;
-            border-radius: 4px;
-            border: 1px solid #ced4da;
-            white-space: pre-wrap;
-        }
-        .loading {
-            text-align: center;
-            font-style: italic;
-            color: #6c757d;
-        }
+        body { font-family: Arial, sans-serif; margin: 20px; background-color: #f4f4f4; color: #333; }
+        .container { max-width: 800px; margin: 20px auto; padding: 20px; background-color: #fff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); }
+        h1 { color: #0056b3; text-align: center; }
+        select, button { width: 100%; padding: 10px; border-radius: 4px; border: 1px solid #ddd; box-sizing: border-box; margin-top: 5px; }
+        button { background-color: #007bff; color: white; border: none; cursor: pointer; font-size: 16px; }
+        .kaynak-item { display: flex; align-items: center; margin-bottom: 10px; cursor: pointer; padding: 8px; border-radius: 4px; border: 1px solid transparent; }
+        .kaynak-item:hover { background-color: #f0f0f0; }
+        .kaynak-item.selected { border-color: #007bff; background-color: #e7f3ff; }
+        .kaynak-item .icon { font-size: 24px; margin-right: 10px; }
+        .kaynak-gorsel { max-width: 100%; border-radius: 4px; margin-bottom: 20px; }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>İnkılap Tarihi Akıllı Çalışma Kağıdı Asistanı</h1>
-
+        <div class="form-group"><label for="unite-secimi">Ünite Seçimi:</label><select id="unite-secimi"><option value="">Lütfen bir ünite seçiniz</option></select></div>
+        <div class="form-group"><label for="kazanim-secimi">Kazanım Seçimi:</label><select id="kazanim-secimi" disabled><option value="">Lütfen önce ünite seçiniz</option></select></div>
+        
         <div class="form-group">
-            <label for="unite-secimi">Ünite Seçimi:</label>
-            <select id="unite-secimi">
-                <option value="">Lütfen bir ünite seçiniz</option>
-                </select>
-        </div>
-
-<div class="form-group">
-            <label for="kazanim-secimi">Kazanım Seçimi:</label>
-            <select id="kazanim-secimi" disabled>
-                <option value="">Lütfen önce ünite seçiniz</option>
-            </select>
-        </div>
-
-        <div class="form-group">
-            <label for="kaynak-secimi">Kaynak Seçimi:</label>
-            <select id="kaynak-secimi" disabled>
-                <option value="">Lütfen önce kazanım seçiniz</option>
-            </select>
+            <label for="kaynak-listesi">Kaynak Seçimi:</label>
+            <div id="kaynak-listesi" style="border: 1px solid #ddd; border-radius: 4px; padding: 10px; min-height: 50px;">
+                <p style="color: #6c757d;">Lütfen önce kazanım seçiniz</p>
+            </div>
         </div>
 
         <button id="olustur-butonu" disabled>Çalışma Kağıdı Oluştur</button>
 
-        <div id="kaynak-basligi" style="margin-top: 20px; display: none;">
-            <h3>Kullanılan Birinci Elden Kaynak:</h3>
-        </div>
-        <div id="kaynak-alani" style="padding: 15px; background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 4px; white-space: pre-wrap; margin-bottom: 20px;">
-            </div>
-
-        <div id="sonuc-basligi" style="margin-top: 20px; display: none;">
-            <h3>Oluşturulan Çalışma Kağıdı:</h3>
-        </div>
-        <div id="sonuc-alani">
-            </div>
+        <div id="kaynak-basligi" style="margin-top: 20px; display: none;"><h3>Kullanılan Birinci Elden Kaynak:</h3></div>
+        <div id="kaynak-alani"></div>
+        <div id="sonuc-basligi" style="margin-top: 20px; display: none;"><h3>Oluşturulan Çalışma Kağıdı:</h3></div>
+        <div id="sonuc-alani"></div>
+    </div>
 
 <script>
-    const API_ENDPOINT_URL = 'https://duwr3ymxi6.execute-api.eu-central-1.amazonaws.com/';
+    const API_ENDPOINT_URL = 'https://duwr3ymxi6.execute-api.eu-central-1.amazonaws.com/'; // KENDİ API URL'İNİ KONTROL ET
 
     const uniteSecimi = document.getElementById('unite-secimi');
     const kazanimSecimi = document.getElementById('kazanim-secimi');
-    const kaynakSecimi = document.getElementById('kaynak-secimi');
+    const kaynakListesi = document.getElementById('kaynak-listesi');
     const olusturButonu = document.getElementById('olustur-butonu');
     const kaynakBasligi = document.getElementById('kaynak-basligi');
     const kaynakAlani = document.getElementById('kaynak-alani');
@@ -179,18 +113,12 @@
         ]
     };
 
-    function uniteleriYukle() {
-        mockUniteler.forEach(unite => {
-            const option = document.createElement('option');
-            option.value = unite.id;
-            option.textContent = unite.ad;
-            uniteSecimi.appendChild(option);
-        });
-    }
-
+    function uniteleriYukle() { mockUniteler.forEach(unite => { const option = document.createElement('option'); option.value = unite.id; option.textContent = unite.ad; uniteSecimi.appendChild(option); }); }
+    
     function kazanımlariGuncelle(uniteId) {
         kazanimSecimi.innerHTML = '<option value="">Lütfen bir kazanım seçiniz</option>';
         olusturButonu.disabled = true;
+        kaynakListesi.innerHTML = '<p style="color: #6c757d;">Lütfen önce kazanım seçiniz</p>';
         if (uniteId) {
             kazanimSecimi.disabled = false;
             const secilenUniteninKazanimlari = mockKazanimlar[uniteId] || [];
@@ -202,102 +130,77 @@
             });
         } else {
             kazanimSecimi.disabled = true;
-            kazanimSecimi.innerHTML = '<option value="">Lütfen önce ünite seçiniz</option>';
         }
     }
-
-    function formatlaCalismaKagidi(metin) {
-        let htmlCiktisi = '';
-        const satirlar = metin.split('\n');
-        satirlar.forEach(satir => {
-            satir = satir.trim();
-            if (satir === '') return;
-
-            if (satir.startsWith('Soru') || satir.startsWith('Bu metne göre')) {
-                htmlCiktisi += `<p><strong>${satir}</strong></p>`;
-            }
-            else if (satir.match(/^[a-d]\)/i)) {
-                htmlCiktisi += `<p style="margin-left: 20px;">${satir}</p>`;
-            }
-
-            else {
-                htmlCiktisi += `<p>${satir}</p>`;
-            }
-        });
-        return htmlCiktisi;
-    }
-        
+    
     async function kaynaklariYukle(unitId, outcomeId) {
-        kaynakSecimi.innerHTML = '<option value="">Kaynaklar yükleniyor...</option>';
+        kaynakListesi.innerHTML = '<p class="loading">Kaynaklar yükleniyor...</p>';
         olusturButonu.disabled = true;
-
         try {
             const response = await fetch(API_ENDPOINT_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ unit_id: unitId, outcome_id: outcomeId }),
             });
+            if (!response.ok) throw new Error('Kaynaklar sunucudan alınamadı.');
             const kaynaklar = await response.json();
-
-            kaynakSecimi.innerHTML = '<option value="">Lütfen bir kaynak seçiniz</option>';
+            kaynakListesi.innerHTML = '';
             if (kaynaklar.length > 0) {
-                kaynakSecimi.disabled = false;
                 kaynaklar.forEach(kaynak => {
-                    const option = document.createElement('option');
-                    option.value = kaynak.source_id;
-                    option.textContent = kaynak.source_title;
-                    kaynakSecimi.appendChild(option);
+                    const type = (kaynak.source_type || 'belge').toLowerCase();
+                    let icon = '📜';
+                    if (type === 'gazete') icon = '📰';
+                    else if (type === 'hatirat') icon = '📖';
+                    else if (type === 'mektup') icon = '✉️';
+                    const kaynakItemHTML = `<div class="kaynak-item" data-source-id="${kaynak.source_id}" onclick="kaynakSecildi(this)"><span class="icon" title="${type.charAt(0).toUpperCase() + type.slice(1)}">${icon}</span><label style="font-weight: normal; cursor: pointer;">${kaynak.source_title}</label></div>`;
+                    kaynakListesi.innerHTML += kaynakItemHTML;
                 });
             } else {
-                kaynakSecimi.innerHTML = '<option value="">Bu kazanıma ait kaynak bulunamadı</option>';
-                kaynakSecimi.disabled = true;
+                kaynakListesi.innerHTML = '<p>Bu kazanıma ait kaynak bulunamadı</p>';
             }
         } catch (error) {
             console.error("Kaynakları yüklerken hata oluştu:", error);
-            kaynakSecimi.innerHTML = '<option value="">Kaynaklar yüklenemedi</option>';
-            kaynakSecimi.disabled = true;
+            kaynakListesi.innerHTML = '<p style="color: red;">Kaynaklar yüklenemedi.</p>';
         }
+    }
+    
+    function kaynakSecildi(element) {
+        document.querySelectorAll('.kaynak-item').forEach(item => item.classList.remove('selected'));
+        element.classList.add('selected');
+        olusturButonu.disabled = false;
     }
 
     async function calismaKagidiOlustur() {
-        console.log("calismaKagidiOlustur fonksiyonu BAŞLADI!");
-
-
+        const seciliKaynak = document.querySelector('.kaynak-item.selected');
+        if (!seciliKaynak) { alert("Lütfen bir kaynak seçiniz."); return; }
+        const secilenKaynakId = seciliKaynak.dataset.sourceId;
         const secilenUniteId = uniteSecimi.value;
-        const secilenKaynakId = kaynakSecimi.value;
-        
-        kaynakAlani.textContent = '';
-        sonucAlani.innerHTML = '<p class="loading">Çalışma kağıdı hazırlanıyor, lütfen bekleyiniz...</p>';
+        kaynakAlani.innerHTML = '';
+        sonucAlani.innerHTML = '<p class="loading">Çalışma kağıdı hazırlanıyor...</p>';
         kaynakBasligi.style.display = 'none';
         sonucBasligi.style.display = 'none';
         olusturButonu.disabled = true;
-
         try {
-
-            const istekVerisi = {
-                unit_id: secilenUniteId,
-                source_id: secilenKaynakId
-            };
-
+            const istekVerisi = { unit_id: secilenUniteId, source_id: secilenKaynakId };
             const response = await fetch(API_ENDPOINT_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(istekVerisi),
             });
-
             const veri = await response.json();
-            console.log("Backend'den gelen ham cevap:", veri);
-
-            if (!response.ok) {
-                throw new Error(veri.message || `Sunucudan hata kodu alındı: ${response.status}`);
-            }
-
-            const formatlanmisHtml = formatlaCalismaKagidi(veri.calisma_kagidi);
-            sonucAlani.innerHTML = formatlanmisHtml;
-            kaynakAlani.textContent = veri.kullanilan_kaynak;
+            if (!response.ok) { throw new Error(veri.message || `Sunucu hatası`); }
             kaynakBasligi.style.display = 'block';
             sonucBasligi.style.display = 'block';
-
+            if (veri.source_type && veri.source_type.toLowerCase() === 'gazete') {
+                kaynakAlani.innerHTML = `
+                    <img src="${veri.source_url}" alt="${veri.source_title}" class="kaynak-gorsel">
+                    <p style="white-space: pre-wrap; margin-top: 15px; background-color: #f0f0f0; padding: 10px; border-radius: 4px;">${veri.kullanilan_kaynak}</p>
+                `;
+            } else {
+                kaynakAlani.textContent = veri.kullanilan_kaynak;
+            }
+            const formatlanmisHtml = formatlaCalismaKagidi(veri.calisma_kagidi);
+            sonucAlani.innerHTML = formatlanmisHtml;
         } catch (error) {
             console.error('Hata:', error);
             sonucAlani.innerHTML = `<p style="color: red;">${error.message}</p>`;
@@ -307,36 +210,23 @@
             olusturButonu.disabled = false;
         }
     }
-    document.addEventListener('DOMContentLoaded', uniteleriYukle);
-
-    uniteSecimi.addEventListener('change', (event) => {
-        const secilenUniteId = event.target.value;
-        kazanımlariGuncelle(secilenUniteId);
-        kaynakSecimi.innerHTML = '<option value="">Lütfen önce kazanım seçiniz</option>';
-        kaynakSecimi.disabled = true;
-        olusturButonu.disabled = true;
-    });
     
-    kazanimSecimi.addEventListener('change', () => {
+    function formatlaCalismaKagidi(metin) { let htmlCiktisi = ''; const satirlar = metin.split('\n'); satirlar.forEach(satir => { satir = satir.trim(); if (satir === '') return; if (satir.startsWith('Soru') || satir.startsWith('Bu metne göre') || satir.startsWith('Cevaplar:')) { htmlCiktisi += `<p><strong>${satir}</strong></p>`; } else if (satir.match(/^[a-d]\)/i)) { htmlCiktisi += `<p style="margin-left: 20px;">${satir}</p>`; } else { htmlCiktisi += `<p>${satir}</p>`; } }); return htmlCiktisi; }
+
+    document.addEventListener('DOMContentLoaded', uniteleriYukle);
+    uniteSecimi.addEventListener('change', (event) => {
+        kazanımlariGuncelle(event.target.value);
+    });
+    kazanimSecimi.addEventListener('change', (event) => {
         const secilenUniteId = uniteSecimi.value;
-        const secilenKazanimId = kazanimSecimi.value;
+        const secilenKazanimId = event.target.value;
         if (secilenKazanimId) {
             kaynaklariYukle(secilenUniteId, secilenKazanimId);
         } else {
-            kaynakSecimi.innerHTML = '<option value="">Lütfen önce kazanım seçiniz</option>';
-            kaynakSecimi.disabled = true;
+            kaynakListesi.innerHTML = '<p style="color: #6c757d;">Lütfen önce kazanım seçiniz</p>';
             olusturButonu.disabled = true;
         }
     });
-
-    kaynakSecimi.addEventListener('change', () => {
-        if (kaynakSecimi.value) {
-            olusturButonu.disabled = false;
-        } else {
-            olusturButonu.disabled = true;
-        }
-    });
-    
     olusturButonu.addEventListener('click', calismaKagidiOlustur);
 </script>
 </body>
