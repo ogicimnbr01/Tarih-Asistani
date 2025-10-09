@@ -170,16 +170,18 @@
         olusturButonu.disabled = false;
     }
 
-    async function calismaKagidiOlustur() {
+async function calismaKagidiOlustur() {
         const seciliKaynak = document.querySelector('.kaynak-item.selected');
         if (!seciliKaynak) { alert("Lütfen bir kaynak seçiniz."); return; }
         const secilenKaynakId = seciliKaynak.dataset.sourceId;
         const secilenUniteId = uniteSecimi.value;
+        
         kaynakAlani.innerHTML = '';
         sonucAlani.innerHTML = '<p class="loading">Çalışma kağıdı hazırlanıyor...</p>';
         kaynakBasligi.style.display = 'none';
         sonucBasligi.style.display = 'none';
         olusturButonu.disabled = true;
+
         try {
             const istekVerisi = { unit_id: secilenUniteId, source_id: secilenKaynakId };
             const response = await fetch(API_ENDPOINT_URL, {
@@ -189,18 +191,21 @@
             });
             const veri = await response.json();
             if (!response.ok) { throw new Error(veri.message || `Sunucu hatası`); }
+
             kaynakBasligi.style.display = 'block';
             sonucBasligi.style.display = 'block';
-            if (veri.source_type && veri.source_type.toLowerCase() === 'gazete') {
-                kaynakAlani.innerHTML = `
-                    <img src="${veri.source_url}" alt="${veri.source_title}" class="kaynak-gorsel">
-                    <p style="white-space: pre-wrap; margin-top: 15px; background-color: #f0f0f0; padding: 10px; border-radius: 4px;">${veri.kullanilan_kaynak}</p>
-                `;
+
+            const type = (veri.source_type || '').toLowerCase();
+            if (type === 'gazete' || type === 'genelge') {
+                kaynakAlani.innerHTML = `<img src="${veri.source_url}" alt="${veri.source_title}" class="kaynak-gorsel">
+                                         <p style="white-space: pre-wrap; margin-top: 15px; background-color: #f0f0f0; padding: 10px; border-radius: 4px;">${veri.kullanilan_kaynak}</p>`;
             } else {
                 kaynakAlani.textContent = veri.kullanilan_kaynak;
             }
+            
             const formatlanmisHtml = formatlaCalismaKagidi(veri.calisma_kagidi);
             sonucAlani.innerHTML = formatlanmisHtml;
+
         } catch (error) {
             console.error('Hata:', error);
             sonucAlani.innerHTML = `<p style="color: red;">${error.message}</p>`;
