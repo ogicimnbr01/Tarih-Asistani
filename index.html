@@ -198,7 +198,7 @@ async function calismaKagidiOlustur() {
             const veri = await response.json();
             if (!response.ok) { throw new Error(veri.message || `Sunucu hatası`); }
                 sonApiCevabi = veri; 
-                
+
             kaynakBasligi.style.display = 'block';
             sonucBasligi.style.display = 'block';
             indirPdfButonu.style.display = 'block';
@@ -243,43 +243,44 @@ async function calismaKagidiOlustur() {
     });
     olusturButonu.addEventListener('click', calismaKagidiOlustur);
 
-// --- YUKARIDA SİLDİĞİN KODLARIN YERİNE BU BLOK GELECEK ---
 
 indirPdfButonu.addEventListener('click', olusturVeIndirPDF);
 
-/**
- * Bir resim URL'sinden Base64 formatında veri çeker.
- * Bu, resmi PDF'e gömebilmemiz için gereklidir.
- */
 async function getImageBase64(url) {
+    console.log('[TEŞHİS] getImageBase64 fonksiyonu başlatıldı. Resim URL:', url);
     try {
         const response = await fetch(url);
-        // CORS sorunlarını önlemek için 'no-cors' modunu deneyebiliriz ama genellikle işe yaramaz.
-        // S3 bucket'ınızın public-read olması bu adımı başarılı kılar.
+        console.log('[TEŞHİS] Fetch isteği yapıldı. Sunucu cevabı:', response.status, response.statusText);
+        
         if (!response.ok) {
-            throw new Error(`Resim yüklenemedi. Sunucu durumu: ${response.status}`);
+            throw new Error(`Resim sunucudan alınamadı. Hata Kodu: ${response.status}`);
         }
+        
         const blob = await response.blob();
+        console.log('[TEŞHİS] Resim verisi (blob) başarıyla alındı.');
+
         return new Promise((resolve, reject) => {
             const reader = new FileReader();
-            reader.onloadend = () => resolve(reader.result);
-            reader.onerror = reject;
+            reader.onloadend = () => {
+                console.log('[TEŞHİS] Resim Base64 formatına çevrildi.');
+                resolve(reader.result);
+            };
+            reader.onerror = (error) => {
+                console.error('[HATA] Resim Base64 formatına çevrilirken hata oluştu!', error);
+                reject(error);
+            };
             reader.readAsDataURL(blob);
         });
     } catch (error) {
-        console.error("getImageBase64 hatası:", error);
-        // Hata durumunda null döndürerek PDF oluşturmanın devam etmesini sağlarız.
-        return null; 
+        console.error('[HATA] getImageBase64 fonksiyonunda fetch sırasında ciddi bir hata oluştu:', error);
+        throw error;
     }
 }
 
-
-/**
- * Ana PDF oluşturma ve indirme fonksiyonu.
- */
 async function olusturVeIndirPDF() {
+    console.log('[TEŞHİS] PDF oluşturma süreci başlatıldı.');
     if (!sonApiCevabi) {
-        alert("PDF oluşturmak için önce bir çalışma kağıdı oluşturmalısınız.");
+        alert("HATA: PDF oluşturmak için gereken 'sonApiCevabi' verisi bulunamadı.");
         return;
     }
 
@@ -290,65 +291,55 @@ async function olusturVeIndirPDF() {
     const doc = new jsPDF();
 
     try {
-        // Font dosyasını yükle (Türkçe karakterler için)
         const fontURL = 'Roboto-Regular.ttf';
-        const response = await fetch(fontURL);
-        if (!response.ok) throw new Error(`Font dosyası yüklenemedi: ${response.statusText}`);
-        
-        const fontBlob = await response.blob();
+        const fontResponse = await fetch(fontURL);
+        if (!fontResponse.ok) throw new Error('Font dosyası yüklenemedi.');
+        const fontBlob = await fontResponse.blob();
         const fontBase64 = await new Promise((resolve, reject) => {
             const reader = new FileReader();
             reader.onloadend = () => resolve(reader.result.split(',')[1]);
             reader.onerror = reject;
             reader.readAsDataURL(fontBlob);
         });
-
-        // Fontu PDF'e ekle ve aktif hale getir
         doc.addFileToVFS('Roboto-Regular.ttf', fontBase64);
         doc.addFont('Roboto-Regular.ttf', 'Roboto', 'normal');
         doc.setFont('Roboto');
+        console.log('[TEŞHİS] Font başarıyla PDF\'e eklendi.');
 
-        // Sayfadaki resmi bul ve Base64'e çevir
         let imageDataUrl = null;
         const imageElement = document.querySelector('#kaynak-alani img');
+        
         if (imageElement && imageElement.src) {
-            console.log("Resim bulundu, işleniyor:", imageElement.src);
+            console.log('[TEŞHİS] Sayfada bir resim bulundu. Kaynak:', imageElement.src);
             imageDataUrl = await getImageBase64(imageElement.src);
+        } else {
+            console.log('[TEŞHİS] Sayfada gösterilecek bir resim bulunamadı. Sadece metinler eklenecek.');
         }
 
-        // PDF içeriğini (resim ve metinler) oluştur
         generatePdfContent(doc, sonApiCevabi, imageDataUrl);
 
+        console.log('[TEŞHİS] PDF içeriği oluşturuldu, kaydetme işlemi yapılıyor...');
         doc.save('calisma_kagidi.pdf');
 
     } catch (error) {
-        console.error("PDF oluşturma hatası:", error);
-        alert("PDF oluşturulurken bir hata oluştu. Lütfen konsolu kontrol edin.");
+        console.error("PDF OLUŞTURMA ANA HATASI:", error);
+        alert(`PDF oluşturulurken bir hata oluştu!\n\nLütfen F12 ile konsolu kontrol edin.\n\nHata Mesajı: ${error.message}`);
     } finally {
         indirPdfButonu.disabled = false;
         indirPdfButonu.textContent = "PDF Olarak İndir";
     }
 }
 
-
 function generatePdfContent(doc, veri, imageDataUrl) {
+    console.log('[TEŞHİS] generatePdfContent fonksiyonu başlatıldı.');
     const solKenar = 15;
     const sayfaGenisligi = doc.internal.pageSize.getWidth() - (solKenar * 2);
     let yPozisyonu = 20;
 
-    const baslikEkle = (metin) => {
-        if (yPozisyonu > 270) { doc.addPage(); yPozisyonu = 20; }
-        doc.setFontSize(14);
-        doc.setFont('Roboto', 'normal');
-        doc.text(metin, solKenar, yPozisyonu);
-        yPozisyonu += 12;
-    };
-
+    const baslikEkle = (metin) => { doc.setFontSize(14); doc.text(metin, solKenar, yPozisyonu); yPozisyonu += 12; };
     const paragrafEkle = (metin) => {
         if (!metin || metin.trim() === "") return;
-        if (yPozisyonu > 270) { doc.addPage(); yPozisyonu = 20; }
         doc.setFontSize(11);
-        doc.setFont('Roboto', 'normal');
         const satirlar = doc.splitTextToSize(metin, sayfaGenisligi);
         doc.text(satirlar, solKenar, yPozisyonu);
         yPozisyonu += (satirlar.length * 6.5) + 5;
@@ -357,28 +348,32 @@ function generatePdfContent(doc, veri, imageDataUrl) {
     baslikEkle('Kullanılan Birinci Elden Kaynak');
 
     if (imageDataUrl) {
+        console.log('[TEŞHİS] Resim verisi mevcut, PDF\'e eklenmeye çalışılıyor...');
         try {
+            let imageFormat = 'JPEG';
+            if (imageDataUrl.startsWith('data:image/png')) {
+                imageFormat = 'PNG';
+            }
+            
             const imgProps = doc.getImageProperties(imageDataUrl);
             const aspectRatio = imgProps.height / imgProps.width;
-            const imgWidth = sayfaGenisligi; 
+            const imgWidth = sayfaGenisligi;
             const imgHeight = imgWidth * aspectRatio;
 
-            if (yPozisyonu + imgHeight > 280) {
-                doc.addPage();
-                yPozisyonu = 20;
-            }
-            doc.addImage(imageDataUrl, 'JPEG', solKenar, yPozisyonu, imgWidth, imgHeight);
+            doc.addImage(imageDataUrl, imageFormat, solKenar, yPozisyonu, imgWidth, imgHeight);
+            console.log('[TEŞHİS] Resim PDF\'e başarıyla eklendi.');
             yPozisyonu += imgHeight + 10;
-        } catch(e) {
-            console.error("PDF'e resim eklenirken hata oluştu:", e);
-            paragrafEkle("[Hata: Bu resim PDF'e eklenemedi. Lütfen dosya formatını kontrol edin.]");
+        } catch (e) {
+            console.error('[HATA] jsPDF.addImage fonksiyonu hata verdi!', e);
+            alert('HATA: Resim verisi bulundu ancak PDF\'e eklenirken bir sorun oluştu. Lütfen konsolu kontrol edin.');
+            paragrafEkle("[Hata: Bu resim PDF'e eklenemedi.]");
         }
+    } else {
+        console.log('[TEŞHİS] Eklenecek resim verisi bulunmadığı için atlandı.');
     }
 
     paragrafEkle(veri.kullanilan_kaynak);
-    
     yPozisyonu += 10;
-
     baslikEkle('Oluşturulan Çalışma Kağıdı');
     paragrafEkle(veri.calisma_kagidi);
 }
