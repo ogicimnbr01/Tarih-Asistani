@@ -277,131 +277,156 @@ async function getImageBase64(url) {
     }
 }
 
+
+async function olusturVeIndirPDF() {
+    if (!sonApiCevabi) {
+        alert("PDF oluşturmak için önce bir çalışma kağıdı oluşturmalısınız.");
+        return;
+    }
+    indirPdfButonu.disabled = true;
+    indirPdfButonu.textContent = "PDF Oluşturuluyor...";
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF('p', 'pt', 'a4');
+
+    try {
+        const fetchAssetAsBase64 = async (url) => {
+            const response = await fetch(url);
+            if (!response.ok) throw new Error(`${url} yüklenemedi.`);
+            const blob = await response.blob();
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onloadend = () => resolve(reader.result);
+                reader.onerror = reject;
+                reader.readAsDataURL(blob);
+            });
+        };
+
+        const [
+            loraRegular, loraBold, loraItalic,
+            playfairRegular, playfairBold,
+            logoBase64
+        ] = await Promise.all([
+            fetchAssetAsBase64('Lora-Regular.ttf'),
+            fetchAssetAsBase64('Lora-Bold.ttf'),
+            fetchAssetAsBase64('Lora-Italic.ttf'),
+            fetchAssetAsBase64('PlayfairDisplay-Regular.ttf'),
+            fetchAssetAsBase64('PlayfairDisplay-Bold.ttf'),
+            fetchAssetAsBase64('logo.png')
+        ]);
+        
+        doc.addFileToVFS('Lora-Regular.ttf', loraRegular.split(',')[1]);
+        doc.addFont('Lora-Regular.ttf', 'Lora', 'normal');
+        doc.addFileToVFS('Lora-Bold.ttf', loraBold.split(',')[1]);
+        doc.addFont('Lora-Bold.ttf', 'Lora', 'bold');
+        doc.addFileToVFS('Lora-Italic.ttf', loraItalic.split(',')[1]);
+        doc.addFont('Lora-Italic.ttf', 'Lora', 'italic');
+        doc.addFileToVFS('PlayfairDisplay-Regular.ttf', playfairRegular.split(',')[1]);
+        doc.addFont('PlayfairDisplay-Regular.ttf', 'Playfair', 'normal');
+        doc.addFileToVFS('PlayfairDisplay-Bold.ttf', playfairBold.split(',')[1]);
+        doc.addFont('PlayfairDisplay-Bold.ttf', 'Playfair', 'bold');
+
+        let imageDataUrl = null;
+        const imageElement = document.querySelector('#kaynak-alani img');
+        if (imageElement && imageElement.src) {
+            imageDataUrl = await fetchAssetAsBase64(imageElement.src);
+        }
+
+        const kazanımSelect = document.getElementById('kazanim-secimi');
+        const seciliKazanimMetni = kazanımSelect.options[kazanımSelect.selectedIndex].text.substring(4);
+        const kaynakKunyesi = document.querySelector('.kaynak-item.selected label, .kaynak-item.selected span').textContent;
+
+        generatePdfContent(doc, sonApiCevabi, imageDataUrl, seciliKazanimMetni, kaynakKunyesi, logoBase64);
+
+        doc.save('calisma_kagidi.pdf');
+
+    } catch (error) {
+        console.error("PDF oluşturma hatası:", error);
+        alert(`PDF oluşturulurken bir hata oluştu: ${error.message}`);
+    } finally {
+        indirPdfButonu.disabled = false;
+        indirPdfButonu.textContent = "PDF Olarak İndir";
+    }
+}
+
 function generatePdfContent(doc, veri, imageDataUrl, kazanımMetni, kaynakKunyesi, logoBase64) {
     const solKenar = 55;
     const sayfaGenisligi = doc.internal.pageSize.getWidth() - (solKenar * 2);
-    const sayfaYuksekligi = doc.internal.pageSize.getHeight();
-    const altBosluk = 80; 
-    let yPozisyonu = 70; 
-    const satirAraligi = 1.4;
-    const koyuGri = [34, 34, 34];
-    const lacivert = [42, 77, 122];
+    let yPozisyonu = 70;
+    
 
-    const sayfaKontrolu = (gerekliBosluk) => {
-        if (yPozisyonu + gerekliBosluk > sayfaYuksekligi - altBosluk) {
-            altBilgiEkle(doc); 
-            doc.addPage();
-            yPozisyonu = 70; 
-            return true; 
-        }
-        return false; 
+    const yazdirVeSayfaAtla = (text, options) => {
+        const { x, font, style, size, color, maxWidth, lineHeight } = options;
+        doc.setFont(font, style);
+        doc.setFontSize(size);
+        doc.setTextColor(color[0], color[1], color[2]);
+
+        const satirlar = doc.splitTextToSize(text, maxWidth);
+        
+        satirlar.forEach(satir => {
+            if (yPozisyonu > doc.internal.pageSize.getHeight() - 80) {
+                altBilgiEkle(doc);
+                doc.addPage();
+                yPozisyonu = 70;
+            }
+            doc.text(satir, x, yPozisyonu);
+            yPozisyonu += size * lineHeight;
+        });
+        return yPozisyonu;
     };
 
-    doc.addImage(logoBase64, 'PNG', solKenar, yPozisyonu - 30, 35, 35);
-    doc.setFont('Playfair', 'bold'); doc.setFontSize(24); doc.setTextColor(koyuGri[0], koyuGri[1], koyuGri[2]);
-    doc.text('T.C. İnkılap Tarihi ve Atatürkçülük', doc.internal.pageSize.getWidth() / 2, yPozisyonu, { align: 'center' });
-    yPozisyonu += 28;
 
-    doc.setFont('Lora', 'italic'); doc.setFontSize(10); doc.setTextColor(120);
-    const kazanımSatirlari = doc.splitTextToSize(`Kazanım: ${kazanımMetni}`, sayfaGenisligi - 40);
-    doc.text(kazanımSatirlari, doc.internal.pageSize.getWidth() / 2, yPozisyonu, { align: 'center' });
-    yPozisyonu += (kazanımSatirlari.length * 10 * satirAraligi) + 15;
-    
+    doc.addImage(logoBase64, 'PNG', solKenar, yPozisyonu - 30, 35, 35);
+    yPozisyonu = yazdirVeSayfaAtla('T.C. İnkılap Tarihi ve Atatürkçülük Dersi', { x: doc.internal.pageSize.getWidth() / 2, font: 'Playfair', style: 'bold', size: 24, color: [34, 34, 34], maxWidth: sayfaGenisligi, lineHeight: 1.2, align: 'center' });
+    yPozisyonu = yazdirVeSayfaAtla(`Kazanım: ${kazanımMetni}`, { x: doc.internal.pageSize.getWidth() / 2, font: 'Lora', style: 'italic', size: 10, color: [120, 120, 120], maxWidth: sayfaGenisligi - 40, lineHeight: 1.4, align: 'center' });
+    yPozisyonu += 15;
     doc.setDrawColor(220, 220, 220);
     doc.line(solKenar, yPozisyonu, doc.internal.pageSize.getWidth() - solKenar, yPozisyonu);
-    yPozisyonu += 30; 
+    yPozisyonu += 30;
 
-    if (sayfaKontrolu(50)) { 
-    }
-    doc.setFillColor(249, 249, 249);
-    doc.setDrawColor(230, 230, 230);
-    doc.rect(solKenar - 15, yPozisyonu - 15, sayfaGenisligi + 30, 0, 'F'); 
-    doc.setFont('Playfair', 'bold'); doc.setFontSize(16); doc.setTextColor(koyuGri[0], koyuGri[1], koyuGri[2]);
-    doc.text('Tarihsel Kaynak', solKenar, yPozisyonu);
-    yPozisyonu += 25; 
-
-
+    yPozisyonu = yazdirVeSayfaAtla('Tarihsel Kaynak', { x: solKenar, font: 'Playfair', style: 'bold', size: 16, color: [34, 34, 34], maxWidth: sayfaGenisligi, lineHeight: 1.2 });
+    
     if (imageDataUrl) {
         const imgProps = doc.getImageProperties(imageDataUrl);
-        let imgHeight = sayfaGenisligi * imgProps.height / imgProps.width;
-
-        let metinYuksekligiTahmini = 0;
-        if (veri.kullanilan_kaynak) {
-            const tempMetinSatirlari = doc.splitTextToSize(veri.kullanilan_kaynak, sayfaGenisligi);
-            metinYuksekligiTahmini = tempMetinSatirlari.length * 11 * satirAraligi + 10;
+        const imgHeight = sayfaGenisligi * imgProps.height / imgProps.width;
+        if (yPozisyonu + imgHeight > doc.internal.pageSize.getHeight() - 80) {
+            altBilgiEkle(doc);
+            doc.addPage();
+            yPozisyonu = 70;
         }
-        const kaynakKunyesiYuksekligiTahmini = 30;
-
-        const toplamGerekliBoslukResimBolumu = imgHeight + 15 + metinYuksekligiTahmini + kaynakKunyesiYuksekligiTahmini; 
-
-        if (sayfaKontrolu(toplamGerekliBoslukResimBolumu)) {
-
-        }
-
         doc.addImage(imageDataUrl, 'JPEG', solKenar, yPozisyonu, sayfaGenisligi, imgHeight);
-        yPozisyonu += imgHeight + 15; 
+        yPozisyonu += imgHeight + 15;
     }
     
     if (veri.kullanilan_kaynak) {
-        const metinSatirlari = doc.splitTextToSize(veri.kullanilan_kaynak, sayfaGenisligi);
-        const metinBlokYuksekligi = metinSatirlari.length * 11 * satirAraligi + 10;
-
-        if (sayfaKontrolu(metinBlokYuksekligi)) {
-        }
-        doc.setFont('Lora', 'normal'); doc.setFontSize(11); doc.setTextColor(koyuGri[0], koyuGri[1], koyuGri[2]);
-        doc.text(metinSatirlari, solKenar, yPozisyonu, { lineHeightFactor: satirAraligi });
-        yPozisyonu += metinBlokYuksekligi;
+        yPozisyonu = yazdirVeSayfaAtla(veri.kullanilan_kaynak, { x: solKenar, font: 'Lora', style: 'normal', size: 11, color: [34, 34, 34], maxWidth: sayfaGenisligi, lineHeight: 1.35 });
     }
+    yPozisyonu = yazdirVeSayfaAtla(`Kaynak: ${kaynakKunyesi}`, { x: sayfaGenisligi + solKenar, font: 'Lora', style: 'italic', size: 9, color: [150, 150, 150], maxWidth: sayfaGenisligi, lineHeight: 1.2, align: 'right' });
+    yPozisyonu += 15;
 
-    const kaynakKunyesiBlokYuksekligi = 30; 
-    if (sayfaKontrolu(kaynakKunyesiBlokYuksekligi)) {
-    }
-    doc.setFont('Lora', 'italic'); doc.setFontSize(9); doc.setTextColor(150);
-    doc.text(`Kaynak: ${kaynakKunyesi}`, sayfaGenisligi + solKenar, yPozisyonu, { align: 'right' });
-    yPozisyonu += kaynakKunyesiBlokYuksekligi;
-
-    const analizBaslikYuksekligi = 50; 
-    if (sayfaKontrolu(analizBaslikYuksekligi)) { 
-    }
-    doc.setFont('Playfair', 'bold'); doc.setFontSize(16); doc.setTextColor(lacivert[0], lacivert[1], lacivert[2]);
-    doc.text('Analiz ve Yorumlama Soruları', solKenar, yPozisyonu);
-    yPozisyonu += 25; 
-
+    // 3. SORU BÖLÜMÜ
+    yPozisyonu = yazdirVeSayfaAtla('Analiz ve Yorumlama Soruları', { x: solKenar, font: 'Playfair', style: 'bold', size: 16, color: [42, 77, 122], maxWidth: sayfaGenisligi, lineHeight: 1.2 });
 
     const sorular = (veri.calisma_kagidi || "").split('\n').filter(s => s.trim().length > 0 && !s.toLowerCase().includes("sorusu:"));
     sorular.forEach((satir, index) => {
         const soruMetni = satir.replace(/^\d+\.\s*/, '');
-
-        const soruMetniGenisligi = sayfaGenisligi - 25; 
-        const soruSatirlari = doc.splitTextToSize(soruMetni, soruMetniGenisligi);
+        const soruNumarasi = `${index + 1}.`;
         
-
-        const soruMetinYuksekligi = soruSatirlari.length * 11 * satirAraligi;
-        const tekSoruGerekliBosluk = soruMetinYuksekligi + 30; 
-
-        if (sayfaKontrolu(tekSoruGerekliBosluk)) {
-        }
+        doc.setFont('Playfair', 'bold'); doc.setFontSize(14); doc.setTextColor(42, 77, 122);
+        doc.text(soruNumarasi, solKenar, yPozisyonu);
         
-        doc.setFont('Playfair', 'bold'); doc.setFontSize(14); doc.setTextColor(lacivert[0], lacivert[1], lacivert[2]);
-        doc.text(`${index + 1}.`, solKenar, yPozisyonu + 11 * satirAraligi / 2); 
-
-        doc.setFont('Lora', 'normal'); doc.setFontSize(11); doc.setTextColor(koyuGri[0], koyuGri[1], koyuGri[2]);
-        doc.text(soruSatirlari, solKenar + 25, yPozisyonu, { lineHeightFactor: satirAraligi });
-        
-        yPozisyonu += soruMetinYuksekligi + 30; 
+        yPozisyonu = yazdirVeSayfaAtla(soruMetni, { x: solKenar + 25, font: 'Lora', style: 'normal', size: 11, color: [34, 34, 34], maxWidth: sayfaGenisligi - 25, lineHeight: 1.35 });
+        yPozisyonu += 10; 
     });
 
-
-    altBilgiEkle(doc); 
+    altBilgiEkle(doc);
 }
 
 function altBilgiEkle(doc) {
     const totalPages = doc.internal.getNumberOfPages();
     for (let i = 1; i <= totalPages; i++) {
         doc.setPage(i);
-        doc.setFont('Lora', 'italic');
-        doc.setFontSize(8);
-        doc.setTextColor(150);
+        doc.setFont('Lora', 'italic'); doc.setFontSize(8); doc.setTextColor(150);
         const footerText = `Akıllı Çalışma Kağıdı Asistanı © 2025 | Sayfa ${i} / ${totalPages}`;
         doc.text(footerText, doc.internal.pageSize.getWidth() / 2, doc.internal.pageSize.getHeight() - 30, { align: 'center' });
     }
