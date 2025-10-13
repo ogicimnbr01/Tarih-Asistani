@@ -329,53 +329,92 @@ async function olusturVeIndirPDF() {
         indirPdfButonu.textContent = "PDF Olarak İndir";
     }
 }
-
 function generatePdfContent(doc, veri, imageDataUrl) {
-    console.log('[TEŞHİS] generatePdfContent fonksiyonu başlatıldı.');
-    const solKenar = 15;
+    const solKenar = 20;
     const sayfaGenisligi = doc.internal.pageSize.getWidth() - (solKenar * 2);
     let yPozisyonu = 20;
+    let sayfaNumarasi = 1;
 
-    const baslikEkle = (metin) => { doc.setFontSize(14); doc.text(metin, solKenar, yPozisyonu); yPozisyonu += 12; };
-    const paragrafEkle = (metin) => {
-        if (!metin || metin.trim() === "") return;
-        doc.setFontSize(11);
-        const satirlar = doc.splitTextToSize(metin, sayfaGenisligi);
-        doc.text(satirlar, solKenar, yPozisyonu);
-        yPozisyonu += (satirlar.length * 6.5) + 5;
+
+    const sayfaKontrolu = (gerekliBosluk) => {
+        if (yPozisyonu + gerekliBosluk > 280) { 
+            doc.addPage();
+            yPozisyonu = 20;
+            sayfaNumarasi++;
+            altBilgiEkle();
+        }
+    };
+    
+    const altBilgiEkle = () => {
+        doc.setFontSize(9);
+        doc.setTextColor(150);
+        doc.text(`Sayfa ${sayfaNumarasi}`, doc.internal.pageSize.getWidth() / 2, 290, { align: 'center' });
+        doc.setTextColor(0); 
     };
 
-    baslikEkle('Kullanılan Birinci Elden Kaynak');
-
+    doc.setFontSize(18);
+    doc.setFont('Roboto', 'bold');
+    doc.text('T.C. İnkılap Tarihi ve Atatürkçülük Çalışma Kağıdı', doc.internal.pageSize.getWidth() / 2, yPozisyonu, { align: 'center' });
+    yPozisyonu += 15;
+    
+    sayfaKontrolu(20);
+    doc.setFontSize(14);
+    doc.setFont('Roboto', 'bold');
+    doc.text('Kullanılan Birinci Elden Kaynak', solKenar, yPozisyonu);
+    yPozisyonu += 5;
+    doc.setDrawColor(200, 200, 200);
+    doc.line(solKenar, yPozisyonu, solKenar + sayfaGenisligi, yPozisyonu); 
+    yPozisyonu += 10;
+    
+    // Resim Varsa Ekle
     if (imageDataUrl) {
-        console.log('[TEŞHİS] Resim verisi mevcut, PDF\'e eklenmeye çalışılıyor...');
+        sayfaKontrolu(80);
         try {
-            let imageFormat = 'JPEG';
-            if (imageDataUrl.startsWith('data:image/png')) {
-                imageFormat = 'PNG';
-            }
-            
             const imgProps = doc.getImageProperties(imageDataUrl);
             const aspectRatio = imgProps.height / imgProps.width;
-            const imgWidth = sayfaGenisligi;
+            const imgWidth = sayfaGenisligi; 
             const imgHeight = imgWidth * aspectRatio;
-
-            doc.addImage(imageDataUrl, imageFormat, solKenar, yPozisyonu, imgWidth, imgHeight);
-            console.log('[TEŞHİS] Resim PDF\'e başarıyla eklendi.');
-            yPozisyonu += imgHeight + 10;
+            
+            doc.addImage(imageDataUrl, 'JPEG', solKenar, yPozisyonu, imgWidth, imgHeight);
+            yPozisyonu += imgHeight + 8;
         } catch (e) {
-            console.error('[HATA] jsPDF.addImage fonksiyonu hata verdi!', e);
-            alert('HATA: Resim verisi bulundu ancak PDF\'e eklenirken bir sorun oluştu. Lütfen konsolu kontrol edin.');
-            paragrafEkle("[Hata: Bu resim PDF'e eklenemedi.]");
+            console.error("PDF'e resim eklenemedi:", e);
         }
-    } else {
-        console.log('[TEŞHİS] Eklenecek resim verisi bulunmadığı için atlandı.');
+    }
+    
+    if (veri.kullanilan_kaynak) {
+        doc.setFontSize(11);
+        doc.setFont('Roboto', 'normal');
+        doc.setTextColor(50, 50, 50);
+        const kaynakMetniSatirlari = doc.splitTextToSize(veri.kullanilan_kaynak, sayfaGenisligi);
+        
+        sayfaKontrolu(kaynakMetniSatirlari.length * 7);
+        doc.text(kaynakMetniSatirlari, solKenar, yPozisyonu, { lineHeightFactor: 1.5 });
+        yPozisyonu += (kaynakMetniSatirlari.length * 7 * 1.5) + 5;
+        doc.setTextColor(0);
     }
 
-    paragrafEkle(veri.kullanilan_kaynak);
     yPozisyonu += 10;
-    baslikEkle('Oluşturulan Çalışma Kağıdı');
-    paragrafEkle(veri.calisma_kagidi);
+
+    sayfaKontrolu(20);
+    doc.setFontSize(14);
+    doc.setFont('Roboto', 'bold');
+    doc.text('Oluşturulan Çalışma Kağıdı', solKenar, yPozisyonu);
+    yPozisyonu += 5;
+    doc.setDrawColor(200, 200, 200);
+    doc.line(solKenar, yPozisyonu, solKenar + sayfaGenisligi, yPozisyonu);
+    yPozisyonu += 10;
+
+    if (veri.calisma_kagidi) {
+        doc.setFontSize(11);
+        doc.setFont('Roboto', 'normal');
+        const calismaKagidiSatirlari = doc.splitTextToSize(veri.calisma_kagidi, sayfaGenisligi);
+        
+        sayfaKontrolu(calismaKagidiSatirlari.length * 7);
+        doc.text(calismaKagidiSatirlari, solKenar, yPozisyonu, { lineHeightFactor: 1.5 });
+    }
+    
+    altBilgiEkle();
 }
     indirPdfButonu.addEventListener('click', olusturVeIndirPDF);
 </script>

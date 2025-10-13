@@ -241,7 +241,7 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
     allowed_methods  = ["GET", "HEAD", "OPTIONS"]
     cached_methods   = ["GET", "HEAD"]
     target_origin_id = "S3-TarihProjesi"
-
+    response_headers_policy_id = aws_cloudfront_response_headers_policy.cors_policy.id
     forwarded_values {
       query_string = false
       headers      = ["Origin", "Access-Control-Request-Header", "Access-Control-Request-Method"]
@@ -283,5 +283,22 @@ data "aws_iam_policy_document" "s3_policy_for_cloudfront" {
       variable = "AWS:SourceArn"
       values   = [aws_cloudfront_distribution.s3_distribution.arn]
     }
+  }
+}
+resource "aws_cloudfront_response_headers_policy" "cors_policy" {
+  name    = "tarih-projesi-cors-headers-policy"
+  comment = "Tarih Projesi icin CORS Izin Politikasi"
+cors_config {
+    access_control_allow_credentials = false
+    access_control_allow_headers {
+      items = ["*"]
+    }
+    access_control_allow_methods {
+      items = ["GET", "HEAD", "OPTIONS"]
+    }
+    access_control_allow_origins {
+      items = ["https://main.d30pkxbqbjkexa.amplifyapp.com", "http://localhost:8000", "http://127.0.0.1:5500"]
+    }
+    origin_override = true
   }
 }
