@@ -278,9 +278,8 @@ async function getImageBase64(url) {
 }
 
 async function olusturVeIndirPDF() {
-    console.log('[TEŞHİS] PDF oluşturma süreci başlatıldı.');
     if (!sonApiCevabi) {
-        alert("HATA: PDF oluşturmak için gereken 'sonApiCevabi' verisi bulunamadı.");
+        alert("PDF oluşturmak için önce bir çalışma kağıdı oluşturmalısınız.");
         return;
     }
 
@@ -291,39 +290,44 @@ async function olusturVeIndirPDF() {
     const doc = new jsPDF();
 
     try {
-        const fontURL = 'Roboto-Regular.ttf';
-        const fontResponse = await fetch(fontURL);
-        if (!fontResponse.ok) throw new Error('Font dosyası yüklenemedi.');
-        const fontBlob = await fontResponse.blob();
-        const fontBase64 = await new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onloadend = () => resolve(reader.result.split(',')[1]);
-            reader.onerror = reject;
-            reader.readAsDataURL(fontBlob);
-        });
-        doc.addFileToVFS('Roboto-Regular.ttf', fontBase64);
+        const fetchFontAsBase64 = async (fontUrl) => {
+            const response = await fetch(fontUrl);
+            if (!response.ok) throw new Error(`${fontUrl} yüklenemedi.`);
+            const blob = await response.blob();
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onloadend = () => resolve(reader.result.split(',')[1]);
+                reader.onerror = reject;
+                reader.readAsDataURL(blob);
+            });
+        };
+
+        const [regularFontBase64, boldFontBase64] = await Promise.all([
+            fetchFontAsBase64('Roboto-Regular.ttf'),
+            fetchFontAsBase64('Roboto-Bold.ttf')
+        ]);
+        
+        doc.addFileToVFS('Roboto-Regular.ttf', regularFontBase64);
         doc.addFont('Roboto-Regular.ttf', 'Roboto', 'normal');
-        doc.setFont('Roboto');
-        console.log('[TEŞHİS] Font başarıyla PDF\'e eklendi.');
+        
+        doc.addFileToVFS('Roboto-Bold.ttf', boldFontBase64);
+        doc.addFont('Roboto-Bold.ttf', 'Roboto', 'bold');
+
+        doc.setFont('Roboto', 'normal');
 
         let imageDataUrl = null;
         const imageElement = document.querySelector('#kaynak-alani img');
-        
         if (imageElement && imageElement.src) {
-            console.log('[TEŞHİS] Sayfada bir resim bulundu. Kaynak:', imageElement.src);
             imageDataUrl = await getImageBase64(imageElement.src);
-        } else {
-            console.log('[TEŞHİS] Sayfada gösterilecek bir resim bulunamadı. Sadece metinler eklenecek.');
         }
 
         generatePdfContent(doc, sonApiCevabi, imageDataUrl);
 
-        console.log('[TEŞHİS] PDF içeriği oluşturuldu, kaydetme işlemi yapılıyor...');
         doc.save('calisma_kagidi.pdf');
 
     } catch (error) {
-        console.error("PDF OLUŞTURMA ANA HATASI:", error);
-        alert(`PDF oluşturulurken bir hata oluştu!\n\nLütfen F12 ile konsolu kontrol edin.\n\nHata Mesajı: ${error.message}`);
+        console.error("PDF oluşturma hatası:", error);
+        alert(`PDF oluşturulurken bir hata oluştu: ${error.message}`);
     } finally {
         indirPdfButonu.disabled = false;
         indirPdfButonu.textContent = "PDF Olarak İndir";
@@ -366,7 +370,6 @@ function generatePdfContent(doc, veri, imageDataUrl) {
     doc.line(solKenar, yPozisyonu, solKenar + sayfaGenisligi, yPozisyonu); 
     yPozisyonu += 10;
     
-    // Resim Varsa Ekle
     if (imageDataUrl) {
         sayfaKontrolu(80);
         try {
