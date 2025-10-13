@@ -277,9 +277,6 @@ async function getImageBase64(url) {
     }
 }
 
-
-// --- ESKİ ÜÇ PDF FONKSİYONUNU SİL VE BU YENİ ÜÇ FONKSİYONU YAPIŞTIR ---
-
 async function olusturVeIndirPDF() {
     if (!sonApiCevabi) {
         alert("PDF oluşturmak için önce bir çalışma kağıdı oluşturmalısınız.");
@@ -345,108 +342,108 @@ async function olusturVeIndirPDF() {
 }
 
 
-// --- SİLDİĞİN TÜM PDF FONKSİYONLARININ YERİNE BUNLARI YAPIŞTIR ---
-
 function generatePdfContent(doc, veri, imageDataUrl, kazanımMetni, kaynakKunyesi, logoBase64) {
+    let yPozisyonu = 70;
     const solKenar = 55;
     const sayfaGenisligi = doc.internal.pageSize.getWidth() - (solKenar * 2);
-    const sayfaYuksekligi = doc.internal.pageSize.getHeight();
-    const altBosluk = 80;
-    let yPozisyonu = 70;
-    const koyuGri = [34, 34, 34];
-    const lacivert = [42, 77, 122];
 
-    // --- YARDIMCI FONKSİYONLAR (HEPSİ ANA FONKSİYONUN İÇİNDE) ---
-    const altBilgiEkle = () => {
-        const totalPages = doc.internal.getNumberOfPages();
-        for (let i = 1; i <= totalPages; i++) {
-            doc.setPage(i);
-            doc.setFont('Lora', 'italic'); doc.setFontSize(8); doc.setTextColor(150);
-            const footerText = `Akıllı Çalışma Kağıdı Asistanı © 2025 | Sayfa ${i} / ${totalPages}`;
-            doc.text(footerText, doc.internal.pageSize.getWidth() / 2, doc.internal.pageSize.getHeight() - 30, { align: 'center' });
-        }
-    };
-    
     const sayfaKontrolu = (gerekliBosluk) => {
-        if (yPozisyonu + gerekliBosluk > sayfaYuksekligi - altBosluk) {
-            altBilgiEkle();
+        if (yPozisyonu + gerekliBosluk > doc.internal.pageSize.getHeight() - 80) {
+            altBilgiEkle(doc);
             doc.addPage();
             yPozisyonu = 70;
         }
     };
-    // --- YARDIMCI FONKSİYONLAR BİTTİ ---
-
-
-    // --- BLOK 1: HEADER ---
-    doc.addImage(logoBase64, 'PNG', solKenar, yPozisyonu - 30, 35, 35);
-    doc.setFont('Playfair', 'bold'); doc.setFontSize(24); doc.setTextColor(koyuGri[0], koyuGri[1], koyuGri[2]);
-    doc.text('T.C. İnkılap Tarihi ve Atatürkçülük Dersi', doc.internal.pageSize.getWidth() / 2, yPozisyonu, { align: 'center' });
-    yPozisyonu += 28;
-
-    doc.setFont('Lora', 'italic'); doc.setFontSize(10); doc.setTextColor(120);
-    const kazanımSatirlari = doc.splitTextToSize(`Kazanım: ${kazanımMetni}`, sayfaGenisligi - 40);
-    doc.text(kazanımSatirlari, doc.internal.pageSize.getWidth() / 2, yPozisyonu, { align: 'center' });
-    yPozisyonu += (kazanımSatirlari.length * 12) + 15;
     
-    doc.setDrawColor(220, 220, 220);
-    doc.line(solKenar, yPozisyonu, doc.internal.pageSize.getWidth() - solKenar, yPozisyonu);
-    yPozisyonu += 30;
+    const drawHeader = () => {
+        doc.addImage(logoBase64, 'PNG', solKenar, yPozisyonu - 30, 35, 35);
+        doc.setFont('Playfair', 'bold'); doc.setFontSize(24); doc.setTextColor(34, 34, 34);
+        doc.text('T.C. İnkılap Tarihi ve Atatürkçülük Dersi', doc.internal.pageSize.getWidth() / 2, yPozisyonu, { align: 'center' });
+        yPozisyonu += 28;
 
-    // --- BLOK 2: TARİHSEL KAYNAK ---
-    sayfaKontrolu(50);
-    doc.setFont('Playfair', 'bold'); doc.setFontSize(16); doc.setTextColor(koyuGri[0], koyuGri[1], koyuGri[2]);
-    doc.text('Tarihsel Kaynak', solKenar, yPozisyonu);
-    yPozisyonu += 25;
+        doc.setFont('Lora', 'italic'); doc.setFontSize(10); doc.setTextColor(120);
+        const kazanımSatirlari = doc.splitTextToSize(`Kazanım: ${kazanımMetni}`, sayfaGenisligi - 40);
+        doc.text(kazanımSatirlari, doc.internal.pageSize.getWidth() / 2, yPozisyonu, { align: 'center' });
+        yPozisyonu += (kazanımSatirlari.length * 12) + 15;
+        
+        doc.setDrawColor(220, 220, 220);
+        doc.line(solKenar, yPozisyonu, doc.internal.pageSize.getWidth() - solKenar, yPozisyonu);
+        yPozisyonu += 30;
+    };
 
-    if (imageDataUrl) {
-        const imgProps = doc.getImageProperties(imageDataUrl);
-        const imgHeight = sayfaGenisligi * imgProps.height / imgProps.width;
-        sayfaKontrolu(imgHeight);
-        doc.addImage(imageDataUrl, 'JPEG', solKenar, yPozisyonu, sayfaGenisligi, imgHeight);
-        yPozisyonu += imgHeight + 15;
-    }
+    const drawSourceBlock = () => {
+        sayfaKontrolu(50);
+        doc.setFont('Playfair', 'bold'); doc.setFontSize(16); doc.setTextColor(34, 34, 34);
+        doc.text('Tarihsel Kaynak', solKenar, yPozisyonu);
+        yPozisyonu += 25;
+
+        if (imageDataUrl) {
+            const imgProps = doc.getImageProperties(imageDataUrl);
+            const imgHeight = sayfaGenisligi * imgProps.height / imgProps.width;
+            sayfaKontrolu(imgHeight);
+            doc.addImage(imageDataUrl, 'JPEG', solKenar, yPozisyonu, sayfaGenisligi, imgHeight);
+            yPozisyonu += imgHeight + 15;
+        }
+        
+        if (veri.kullanilan_kaynak) {
+            doc.setFont('Lora', 'normal'); doc.setFontSize(11); doc.setTextColor(34, 34, 34);
+            const metinSatirlari = doc.splitTextToSize(veri.kullanilan_kaynak, sayfaGenisligi);
+            metinSatirlari.forEach(satir => {
+                sayfaKontrolu(11 * 1.35);
+                doc.text(satir, solKenar, yPozisyonu);
+                yPozisyonu += 11 * 1.35;
+            });
+            yPozisyonu += 10;
+        }
+
+        doc.setFont('Lora', 'italic'); doc.setFontSize(9); doc.setTextColor(150);
+        doc.text(`Kaynak: ${kaynakKunyesi}`, sayfaGenisligi + solKenar, yPozisyonu, { align: 'right' });
+        yPozisyonu += 30;
+    };
     
-    if (veri.kullanilan_kaynak) {
-        doc.setFont('Lora', 'normal'); doc.setFontSize(11); doc.setTextColor(koyuGri[0], koyuGri[1], koyuGri[2]);
-        const metinSatirlari = doc.splitTextToSize(veri.kullanilan_kaynak, sayfaGenisligi);
-        metinSatirlari.forEach(satir => {
-            sayfaKontrolu(11 * 1.35);
-            doc.text(satir, solKenar, yPozisyonu);
-            yPozisyonu += 11 * 1.35;
+    const drawQuestionsBlock = () => {
+        sayfaKontrolu(50);
+        doc.setFont('Playfair', 'bold'); doc.setFontSize(16); doc.setTextColor(42, 77, 122);
+        doc.text('Analiz ve Yorumlama Soruları', solKenar, yPozisyonu);
+        yPozisyonu += 25;
+
+        const sorular = (veri.calisma_kagidi || "").split('\n')
+            .map(s => s.trim())
+            .filter(s => s.length > 5 && !s.toLowerCase().includes("sorusu:"));
+
+        sorular.forEach((satir, index) => {
+            const soruMetni = satir.replace(/^[a-z]\)\s*|^[0-9]+\.\s*/i, '');
+            const soruNumarasi = `${index + 1}.`;
+            
+            sayfaKontrolu(30);
+            doc.setFont('Playfair', 'bold'); doc.setFontSize(14); doc.setTextColor(42, 77, 122);
+            doc.text(soruNumarasi, solKenar, yPozisyonu);
+            
+            doc.setFont('Lora', 'normal'); doc.setFontSize(11); doc.setTextColor(34, 34, 34);
+            const soruSatirlari = doc.splitTextToSize(soruMetni, sayfaGenisligi - 25);
+            soruSatirlari.forEach(soruSatiri => {
+                sayfaKontrolu(11 * 1.35);
+                doc.text(soruSatiri, solKenar + 25, yPozisyonu);
+                yPozisyonu += 11 * 1.35;
+            });
+            yPozisyonu += 20;
         });
-        yPozisyonu += 10;
+    };
+
+    drawHeader();
+    drawSourceBlock();
+    drawQuestionsBlock();
+    altBilgiEkle(doc);
+}
+
+function altBilgiEkle(doc) {
+    const totalPages = doc.internal.getNumberOfPages();
+    for (let i = 1; i <= totalPages; i++) {
+        doc.setPage(i);
+        doc.setFont('Lora', 'italic'); doc.setFontSize(8); doc.setTextColor(150);
+        const footerText = `Akıllı Çalışma Kağıdı Asistanı © 2025 | Sayfa ${i} / ${totalPages}`;
+        doc.text(footerText, doc.internal.pageSize.getWidth() / 2, doc.internal.pageSize.getHeight() - 30, { align: 'center' });
     }
-
-    doc.setFont('Lora', 'italic'); doc.setFontSize(9); doc.setTextColor(150);
-    doc.text(`Kaynak: ${kaynakKunyesi}`, sayfaGenisligi + solKenar, yPozisyonu, { align: 'right' });
-    yPozisyonu += 30;
-
-    // --- BLOK 3: SORULAR ---
-    sayfaKontrolu(50);
-    doc.setFont('Playfair', 'bold'); doc.setFontSize(16); doc.setTextColor(lacivert[0], lacivert[1], lacivert[2]);
-    doc.text('Analiz ve Yorumlama Soruları', solKenar, yPozisyonu);
-    yPozisyonu += 25;
-
-    const sorular = (veri.calisma_kagidi || "").split('\n').filter(s => s.trim().length > 0 && !s.toLowerCase().includes("sorusu:"));
-    sorular.forEach((satir, index) => {
-        const soruMetni = satir.replace(/^\d+\.\s*/, '');
-        const soruNumarasi = `${index + 1}.`;
-        
-        sayfaKontrolu(30);
-        doc.setFont('Playfair', 'bold'); doc.setFontSize(14); doc.setTextColor(lacivert[0], lacivert[1], lacivert[2]);
-        doc.text(soruNumarasi, solKenar, yPozisyonu);
-        
-        doc.setFont('Lora', 'normal'); doc.setFontSize(11); doc.setTextColor(koyuGri[0], koyuGri[1], koyuGri[2]);
-        const soruSatirlari = doc.splitTextToSize(soruMetni, sayfaGenisligi - 25);
-        soruSatirlari.forEach(soruSatiri => {
-            sayfaKontrolu(11 * 1.35);
-            doc.text(soruSatiri, solKenar + 25, yPozisyonu);
-            yPozisyonu += 11 * 1.35;
-        });
-        yPozisyonu += 20;
-    });
-
-    altBilgiEkle();
 }
 
     indirPdfButonu.addEventListener('click', olusturVeIndirPDF);
