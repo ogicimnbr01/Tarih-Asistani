@@ -277,6 +277,7 @@ async function getImageBase64(url) {
     }
 }
 
+
 async function olusturVeIndirPDF() {
     if (!sonApiCevabi) {
         alert("PDF oluşturmak için önce bir çalışma kağıdı oluşturmalısınız.");
@@ -341,26 +342,22 @@ async function olusturVeIndirPDF() {
     }
 }
 
+
 function generatePdfContent(doc, veri, imageDataUrl, kazanımMetni, kaynakKunyesi, logoBase64) {
     const solKenar = 55;
     const sayfaGenisligi = doc.internal.pageSize.getWidth() - (solKenar * 2);
-    const sayfaYuksekligi = doc.internal.pageSize.getHeight();
-    const altBosluk = 80;
     let yPozisyonu = 70;
-    const koyuGri = [34, 34, 34];
-    const lacivert = [42, 77, 122];
 
     const sayfaKontrolu = (gerekliBosluk) => {
-        if (yPozisyonu + gerekliBosluk > sayfaYuksekligi - altBosluk) {
+        if (yPozisyonu + gerekliBosluk > doc.internal.pageSize.getHeight() - 80) {
             altBilgiEkle(doc);
             doc.addPage();
             yPozisyonu = 70;
         }
     };
 
-
-    doc.addImage(logoBase64, 'PNG', solKenar - 15, yPozisyonu - 35, 35, 35);
-    doc.setFont('Playfair', 'bold'); doc.setFontSize(24); doc.setTextColor(koyuGri[0], koyuGri[1], koyuGri[2]);
+    doc.addImage(logoBase64, 'PNG', solKenar, yPozisyonu - 30, 35, 35);
+    doc.setFont('Playfair', 'bold'); doc.setFontSize(24); doc.setTextColor(34, 34, 34);
     doc.text('T.C. İnkılap Tarihi ve Atatürkçülük Dersi', doc.internal.pageSize.getWidth() / 2, yPozisyonu, { align: 'center' });
     yPozisyonu += 28;
 
@@ -374,7 +371,7 @@ function generatePdfContent(doc, veri, imageDataUrl, kazanımMetni, kaynakKunyes
     yPozisyonu += 30;
 
     sayfaKontrolu(50);
-    doc.setFont('Playfair', 'bold'); doc.setFontSize(16); doc.setTextColor(koyuGri[0], koyuGri[1], koyuGri[2]);
+    doc.setFont('Playfair', 'bold'); doc.setFontSize(16); doc.setTextColor(34, 34, 34);
     doc.text('Tarihsel Kaynak', solKenar, yPozisyonu);
     yPozisyonu += 25;
 
@@ -387,9 +384,8 @@ function generatePdfContent(doc, veri, imageDataUrl, kazanımMetni, kaynakKunyes
     }
     
     if (veri.kullanilan_kaynak) {
-        const alintiMetni = `"${veri.kullanilan_kaynak}"`;
-        doc.setFont('Lora', 'normal'); doc.setFontSize(11); doc.setTextColor(koyuGri[0], koyuGri[1], koyuGri[2]);
-        const metinSatirlari = doc.splitTextToSize(alintiMetni, sayfaGenisligi);
+        doc.setFont('Lora', 'normal'); doc.setFontSize(11); doc.setTextColor(34, 34, 34);
+        const metinSatirlari = doc.splitTextToSize(`"${veri.kullanilan_kaynak}"`, sayfaGenisligi);
         metinSatirlari.forEach(satir => {
             sayfaKontrolu(11 * 1.35);
             doc.text(satir, solKenar, yPozisyonu);
@@ -403,20 +399,20 @@ function generatePdfContent(doc, veri, imageDataUrl, kazanımMetni, kaynakKunyes
     yPozisyonu += 30;
 
     sayfaKontrolu(50);
-    doc.setFont('Playfair', 'bold'); doc.setFontSize(16); doc.setTextColor(lacivert[0], lacivert[1], lacivert[2]);
+    doc.setFont('Playfair', 'bold'); doc.setFontSize(16); doc.setTextColor(42, 77, 122);
     doc.text('Analiz ve Yorumlama Soruları', solKenar, yPozisyonu);
     yPozisyonu += 25;
 
-    const sorular = (veri.calisma_kagidi || "").split('\n').filter(s => s.trim().length > 5 && !s.toLowerCase().includes("sorusu:"));
+    const sorular = (veri.calisma_kagidi || "").split('\n').filter(s => s.trim().match(/^\d+\./));
     sorular.forEach((satir, index) => {
-        const soruMetni = satir.replace(/^[a-z]\)\s*|^[0-9]+\.\s*/i, '');
+        const soruMetni = satir.substring(satir.indexOf('.') + 1).trim();
         const soruNumarasi = `${index + 1}.`;
         
         sayfaKontrolu(30);
-        doc.setFont('Playfair', 'bold'); doc.setFontSize(14); doc.setTextColor(lacivert[0], lacivert[1], lacivert[2]);
+        doc.setFont('Playfair', 'bold'); doc.setFontSize(14); doc.setTextColor(42, 77, 122);
         doc.text(soruNumarasi, solKenar, yPozisyonu);
         
-        doc.setFont('Lora', 'normal'); doc.setFontSize(11); doc.setTextColor(koyuGri[0], koyuGri[1], koyuGri[2]);
+        doc.setFont('Lora', 'normal'); doc.setFontSize(11); doc.setTextColor(34, 34, 34);
         const soruSatirlari = doc.splitTextToSize(soruMetni, sayfaGenisligi - 25);
         soruSatirlari.forEach(soruSatiri => {
             sayfaKontrolu(11 * 1.35);
@@ -428,6 +424,7 @@ function generatePdfContent(doc, veri, imageDataUrl, kazanımMetni, kaynakKunyes
 
     altBilgiEkle(doc);
 }
+
 
 function altBilgiEkle(doc) {
     const totalPages = doc.internal.getNumberOfPages();

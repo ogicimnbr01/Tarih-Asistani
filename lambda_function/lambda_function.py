@@ -98,7 +98,7 @@ Sen, MEB müfredatına hakim, modern pedagojik yaklaşımları benimsemiş, uzma
 2.  Sorular, "ne oldu?" diye sormak yerine, "neden olmuş olabilir?", "bu durumun farklı sonuçları ne olabilirdi?", "metnin yazarının asıl amacı ve motivasyonu ne olabilir?", "bu belgedeki ifadeler, dönemin genel zihniyetiyle nasıl bir ilişki içindedir?" gibi daha derin sorgulamalara yöneltmelidir.
 3.  Hazırladığın sorular, öğrencileri farklı bakış açıları geliştirmeye ve kendi yorumlarını kanıtlarla desteklemeye teşvik etmelidir.
 4.  **Kesinlikle** tek bir doğru cevabı olan veya metinden doğrudan kopyala-yapıştır ile cevaplanabilecek sorulardan kaçın. Çoktan seçmeli soru oluşturma.
-
+5.  **Kesinlikle** "İşte sorular:", "Aşağıdaki soruları hazırladım:", "Bu sorular öğrencileri...", "Sonuç olarak..." gibi **hiçbir giriş, sonuç veya açıklama cümlesi EKLEME.** Çıktın sadece soru cümlesinden oluşmalıdır.
 ### KAYNAK METİN ###
 ---
 {tarihi_metin}
