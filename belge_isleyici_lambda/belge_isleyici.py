@@ -3,15 +3,12 @@ import boto3
 import urllib.parse
 import time
 
-# Gerekli tüm servisler
 s3_client = boto3.client('s3')
 textract_client = boto3.client('textract')
 dynamodb = boto3.resource('dynamodb')
 table = dynamodb.Table("TarihProjesiKaynakKutuphanesi")
 
-# (Bu fonksiyonu bir önceki mesajımızdan alıyoruz, Textract sonuçlarını toplamak için)
 def get_textract_job_results(job_id):
-    # ... (Bu fonksiyonun içeriği önceki mesajdakiyle aynı)
     pages = []
     response = textract_client.get_document_text_detection(JobId=job_id)
     pages.append(response)
@@ -46,7 +43,8 @@ def lambda_handler(event, context):
         unit_id, outcome_id, source_type = parts[0], parts[1], parts[2]
         source_title = " ".join(parts[3:])
         source_id = f"{outcome_id}_{source_title.replace(' ', '-')}"
-        public_url = f"https://{bucket_name}.s3.eu-central-1.amazonaws.com/{object_key}"
+        CLOUDFRONT_DOMAIN = "d2an9xa3x2j0tn.cloudfront.net"
+        public_url = f"https://{CLOUDFRONT_DOMAIN}/{object_key}"
 
         print(f"Ayrıştırılan bilgiler -> Ünite: {unit_id}, Kazanım: {outcome_id}, Tür: {source_type}, Başlık: {source_title}")
         

@@ -126,16 +126,7 @@ resource "aws_s3_bucket_public_access_block" "belge_deposu_access_block" {
 }
 resource "aws_s3_bucket_policy" "belge_deposu_policy" {
   bucket = aws_s3_bucket.belge_deposu.id
-  depends_on = [aws_s3_bucket_public_access_block.belge_deposu_access_block]
-  policy = jsonencode({
-    Version = "2012-10-17",
-    Statement = [{
-      Effect    = "Allow",
-      Principal = "*",
-      Action    = "s3:GetObject",
-      Resource  = ["${aws_s3_bucket.belge_deposu.arn}/*"]
-    }]
-  })
+  policy = data.aws_iam_policy_document.s3_policy_for_cloudfront.json
 }
 resource "aws_iam_role" "belge_isleyici_lambda_role" {
   name = "tarih-projesi-belge-isleyici-role"
@@ -224,5 +215,73 @@ resource "aws_s3_bucket_cors_configuration" "belge_deposu_cors" {
     ]
     expose_headers  = []
     max_age_seconds = 3000
+  }
+}
+
+resource "aws_cloudfront_origin_access_control" "oac" {
+  name                              = "tarih-projesi-oac"
+  description                       = "Tarih Projesi S3 Bucket OAC"
+  origin_access_control_origin_type = "s3"
+  signing_behavior                  = "always"
+  signing_protocol                  = "sigv4"
+}
+
+resource "aws_cloudfront_distribution" "s3_distribution" {
+  origin {
+    domain_name              = aws_s3_bucket.belge_deposu.bucket_regional_domain_name
+    origin_access_control_id = aws_cloudfront_origin_access_control.oac.id
+    origin_id                = "S3-TarihProjesi"
+  }
+
+  enabled             = true
+  is_ipv6_enabled     = true
+  default_root_object = "index.html"
+
+  default_cache_behavior {
+    allowed_methods  = ["GET", "HEAD", "OPTIONS"]
+    cached_methods   = ["GET", "HEAD"]
+    target_origin_id = "S3-TarihProjesi"
+
+    forwarded_values {
+      query_string = false
+      headers      = ["Origin", "Access-Control-Request-Header", "Access-Control-Request-Method"]
+      cookies {
+        forward = "none"
+      }
+    }
+
+    viewer_protocol_policy = "redirect-to-https"
+    min_ttl                = 0
+    default_ttl            = 3600
+    max_ttl                = 86400
+  }
+
+  price_class = "PriceClass_100"
+  restrictions {
+    geo_restriction {
+      restriction_type = "none"
+    }
+  }
+
+  viewer_certificate {
+    cloudfront_default_certificate = true
+  }
+}
+
+data "aws_iam_policy_document" "s3_policy_for_cloudfront" {
+  statement {
+    actions   = ["s3:GetObject"]
+    resources = ["${aws_s3_bucket.belge_deposu.arn}/*"]
+
+    principals {
+      type        = "Service"
+      identifiers = ["cloudfront.amazonaws.com"]
+    }
+
+    condition {
+      test     = "StringEquals"
+      variable = "AWS:SourceArn"
+      values   = [aws_cloudfront_distribution.s3_distribution.arn]
+    }
   }
 }
