@@ -158,7 +158,7 @@
                     if (type === 'gazete') icon = '📰';
                     else if (type === 'hatirat') icon = '📖';
                     else if (type === 'mektup') icon = '✉️';
-                    const kaynakItemHTML = `<div class="kaynak-item" data-source-id="${kaynak.source_id}" onclick="kaynakSecildi(this)"><span class="icon" title="${type.charAt(0).toUpperCase() + type.slice(1)}">${icon}</span><label style="font-weight: normal; cursor: pointer;">${kaynak.source_title}</label></div>`;
+                    const kaynakItemHTML = `<div class="kaynak-item" data-source-id="${kaynak.source_id}" onclick="kaynakSecildi(this)"><span class="icon" title="${type.charAt(0).toUpperCase() + type.slice(1)}">${icon}</span><span style="font-weight: normal; cursor: pointer;">${kaynak.source_title}</span></div>`;
                     kaynakListesi.innerHTML += kaynakItemHTML;
                 });
             } else {
