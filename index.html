@@ -354,13 +354,16 @@ function generatePdfContent(doc, veri, imageDataUrl, kazanımMetni, kaynakKunyes
     const koyuGri = [34, 34, 34];
     const lacivert = [42, 77, 122];
 
-    const sayfaKontroluVeGecis = (gerekliBosluk) => {
+    // --- YARDIMCI FONKSİYONUN TANIMI (Hatanın çözümü burada) ---
+    const sayfaKontrolu = (gerekliBosluk) => {
         if (yPozisyonu + gerekliBosluk > sayfaYuksekligi - altBosluk) {
             altBilgiEkle(doc);
             doc.addPage();
             yPozisyonu = 70;
         }
     };
+    // --- YARDIMCI FONKSİYON BİTTİ ---
+
 
     // --- BLOK 1: HEADER ---
     doc.addImage(logoBase64, 'PNG', solKenar, yPozisyonu - 30, 35, 35);
@@ -417,7 +420,7 @@ function generatePdfContent(doc, veri, imageDataUrl, kazanımMetni, kaynakKunyes
         const soruMetni = satir.replace(/^\d+\.\s*/, '');
         const soruNumarasi = `${index + 1}.`;
         
-        sayfaKontrolu(30); // Soru numarası için yer
+        sayfaKontrolu(30);
         doc.setFont('Playfair', 'bold'); doc.setFontSize(14); doc.setTextColor(lacivert[0], lacivert[1], lacivert[2]);
         doc.text(soruNumarasi, solKenar, yPozisyonu);
         
@@ -428,21 +431,10 @@ function generatePdfContent(doc, veri, imageDataUrl, kazanımMetni, kaynakKunyes
             doc.text(soruSatiri, solKenar + 25, yPozisyonu);
             yPozisyonu += 11 * 1.35;
         });
-        yPozisyonu += 20; // Sorular arası boşluk
+        yPozisyonu += 20;
     });
 
     altBilgiEkle(doc);
-}
-
-
-function altBilgiEkle(doc) {
-    const totalPages = doc.internal.getNumberOfPages();
-    for (let i = 1; i <= totalPages; i++) {
-        doc.setPage(i);
-        doc.setFont('Lora', 'italic'); doc.setFontSize(8); doc.setTextColor(150);
-        const footerText = `Akıllı Çalışma Kağıdı Asistanı © 2025 | Sayfa ${i} / ${totalPages}`;
-        doc.text(footerText, doc.internal.pageSize.getWidth() / 2, doc.internal.pageSize.getHeight() - 30, { align: 'center' });
-    }
 }
     indirPdfButonu.addEventListener('click', olusturVeIndirPDF);
 </script>
