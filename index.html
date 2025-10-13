@@ -121,7 +121,7 @@
 
     function uniteleriYukle() { mockUniteler.forEach(unite => { const option = document.createElement('option'); option.value = unite.id; option.textContent = unite.ad; uniteSecimi.appendChild(option); }); }
     
-    function kazanımlariGuncelle(uniteId) {
+    function kazanimlariGuncelle(uniteId) {
         kazanimSecimi.innerHTML = '<option value="">Lütfen bir kazanım seçiniz</option>';
         olusturButonu.disabled = true;
         kaynakListesi.innerHTML = '<p style="color: #6c757d;">Lütfen önce kazanım seçiniz</p>';
@@ -229,7 +229,7 @@ async function calismaKagidiOlustur() {
 
     document.addEventListener('DOMContentLoaded', uniteleriYukle);
     uniteSecimi.addEventListener('change', (event) => {
-        kazanımlariGuncelle(event.target.value);
+        kazanimlariGuncelle(event.target.value);
     });
     kazanimSecimi.addEventListener('change', (event) => {
         const secilenUniteId = uniteSecimi.value;
