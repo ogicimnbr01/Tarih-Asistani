@@ -346,7 +346,6 @@ async function olusturVeIndirPDF() {
     }
 }
 
-
 function generatePdfContent(doc, veri, imageDataUrl, kazanımMetni) {
     const solKenar = 25;
     const sagKenar = doc.internal.pageSize.getWidth() - solKenar;
@@ -355,13 +354,25 @@ function generatePdfContent(doc, veri, imageDataUrl, kazanımMetni) {
 
     const sayfaKontrolu = (gerekliBosluk) => {
         if (yPozisyonu + gerekliBosluk > 270) {
+            altBilgiEkle();
             doc.addPage();
             yPozisyonu = 20;
         }
     };
-    
+
+    const altBilgiEkle = () => {
+        const totalPages = doc.internal.getNumberOfPages();
+        const currentPage = doc.internal.getCurrentPageInfo().pageNumber;
+        doc.setFont('Lora', 'italic');
+        doc.setFontSize(9);
+        doc.setTextColor(150);
+        doc.text(`Akıllı Çalışma Kağıdı Asistanı © 2025`, doc.internal.pageSize.getWidth() / 2, 285, { align: 'center' });
+        doc.text(`Sayfa ${currentPage} / ${totalPages}`, sagKenar, 285, { align: 'right' });
+    };
+
     doc.setFont('Garamond', 'bold');
     doc.setFontSize(18);
+    doc.setTextColor(0);
     doc.text('T.C. İnkılap Tarihi ve Atatürkçülük', doc.internal.pageSize.getWidth() / 2, yPozisyonu, { align: 'center' });
     yPozisyonu += 8;
 
@@ -373,17 +384,15 @@ function generatePdfContent(doc, veri, imageDataUrl, kazanımMetni) {
     yPozisyonu += (kazanımSatirlari.length * 5) + 8;
     
     doc.setDrawColor(220, 220, 220);
-    doc.line(solKenar - 5, yPozisyonu, sagKenar + 5, yPozisyonu); 
+    doc.line(solKenar - 5, yPozisyonu, sagKenar + 5, yPozisyonu);
     yPozisyonu += 12;
 
     sayfaKontrolu(20);
     doc.setFont('Garamond', 'bold');
     doc.setFontSize(14);
-    doc.setTextColor(0); 
+    doc.setTextColor(0);
     doc.text('İncelenecek Kaynak', solKenar, yPozisyonu);
     yPozisyonu += 8;
-
-    const kaynakBaslangicY = yPozisyonu - 2;
     
     if (imageDataUrl) {
         const imgProps = doc.getImageProperties(imageDataUrl);
@@ -398,9 +407,9 @@ function generatePdfContent(doc, veri, imageDataUrl, kazanımMetni) {
     if (veri.kullanilan_kaynak) {
         doc.setFont('Lora', 'normal');
         doc.setFontSize(10.5);
-        doc.setTextColor(51, 51, 51); 
+        doc.setTextColor(51, 51, 51);
         const metinSatirlari = doc.splitTextToSize(veri.kullanilan_kaynak, sayfaGenisligi);
-        sayfaKontrolu(metinSatirlari.length * 6);
+        sayfaKontrolu(metinSatirlari.length * 6 * 1.4);
         doc.text(metinSatirlari, solKenar, yPozisyonu, { lineHeightFactor: 1.4 });
         yPozisyonu += (metinSatirlari.length * 6 * 1.4) + 15;
     }
@@ -436,15 +445,6 @@ function generatePdfContent(doc, veri, imageDataUrl, kazanımMetni) {
                 yPozisyonu += (soruSatirlari.length * 5 * 1.4) + 15;
             }
         });
-    }
-
-    const totalPages = doc.internal.getNumberOfPages();
-    for (let i = 1; i <= totalPages; i++) {
-        doc.setPage(i);
-        doc.setFont('Lora', 'italic');
-        doc.setFontSize(9);
-        doc.setTextColor(150);
-        doc.text('Akıllı Çalışma Kağıdı Asistanı © 2025', doc.internal.pageSize.getWidth() / 2, 285, { align: 'center' });
     }
     altBilgiEkle();
 }
