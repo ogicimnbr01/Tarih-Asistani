@@ -345,6 +345,8 @@ async function olusturVeIndirPDF() {
 }
 
 
+// --- SİLDİĞİN TÜM PDF FONKSİYONLARININ YERİNE BUNLARI YAPIŞTIR ---
+
 function generatePdfContent(doc, veri, imageDataUrl, kazanımMetni, kaynakKunyesi, logoBase64) {
     const solKenar = 55;
     const sayfaGenisligi = doc.internal.pageSize.getWidth() - (solKenar * 2);
@@ -354,15 +356,25 @@ function generatePdfContent(doc, veri, imageDataUrl, kazanımMetni, kaynakKunyes
     const koyuGri = [34, 34, 34];
     const lacivert = [42, 77, 122];
 
-    // --- YARDIMCI FONKSİYONUN TANIMI (Hatanın çözümü burada) ---
+    // --- YARDIMCI FONKSİYONLAR (HEPSİ ANA FONKSİYONUN İÇİNDE) ---
+    const altBilgiEkle = () => {
+        const totalPages = doc.internal.getNumberOfPages();
+        for (let i = 1; i <= totalPages; i++) {
+            doc.setPage(i);
+            doc.setFont('Lora', 'italic'); doc.setFontSize(8); doc.setTextColor(150);
+            const footerText = `Akıllı Çalışma Kağıdı Asistanı © 2025 | Sayfa ${i} / ${totalPages}`;
+            doc.text(footerText, doc.internal.pageSize.getWidth() / 2, doc.internal.pageSize.getHeight() - 30, { align: 'center' });
+        }
+    };
+    
     const sayfaKontrolu = (gerekliBosluk) => {
         if (yPozisyonu + gerekliBosluk > sayfaYuksekligi - altBosluk) {
-            altBilgiEkle(doc);
+            altBilgiEkle();
             doc.addPage();
             yPozisyonu = 70;
         }
     };
-    // --- YARDIMCI FONKSİYON BİTTİ ---
+    // --- YARDIMCI FONKSİYONLAR BİTTİ ---
 
 
     // --- BLOK 1: HEADER ---
@@ -434,8 +446,9 @@ function generatePdfContent(doc, veri, imageDataUrl, kazanımMetni, kaynakKunyes
         yPozisyonu += 20;
     });
 
-    altBilgiEkle(doc);
+    altBilgiEkle();
 }
+
     indirPdfButonu.addEventListener('click', olusturVeIndirPDF);
 </script>
 </body>
