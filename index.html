@@ -336,7 +336,7 @@ async function olusturVeIndirPDF() {
 
         generatePdfContent(doc, sonApiCevabi, imageDataUrl, seciliKazanimMetni, logoBase64);
 
-        doc.save('calisma_kagidi_premium.pdf');
+        doc.save('calisma_kagidi.pdf');
 
     } catch (error) {
         console.error("PDF oluşturma hatası:", error);
@@ -352,24 +352,16 @@ function generatePdfContent(doc, veri, imageDataUrl, kazanımMetni, logoBase64) 
     const solKenar = 50; 
     const sayfaGenisligi = doc.internal.pageSize.getWidth() - (solKenar * 2);
     let yPozisyonu = 60; 
+    const satirAraligi = 1.4;
+
     const sayfaKontrolu = (gerekliBosluk) => {
         if (yPozisyonu + gerekliBosluk > doc.internal.pageSize.getHeight() - 80) {
-            altBilgiEkle();
+            altBilgiEkle(doc);
             doc.addPage();
             yPozisyonu = 60;
         }
     };
     
-    const altBilgiEkle = () => {
-        const totalPages = doc.internal.getNumberOfPages();
-        const currentPage = doc.internal.getCurrentPageInfo().pageNumber;
-        doc.setFont('Lora', 'italic');
-        doc.setFontSize(8);
-        doc.setTextColor(150);
-        doc.text(`Akıllı Çalışma Kağıdı Asistanı © 2025`, doc.internal.pageSize.getWidth() / 2, doc.internal.pageSize.getHeight() - 30, { align: 'center' });
-        doc.text(`Sayfa ${currentPage} / ${totalPages}`, doc.internal.pageSize.getWidth() - solKenar, doc.internal.pageSize.getHeight() - 30, { align: 'right' });
-    };
-
     doc.addImage(logoBase64, 'PNG', solKenar, yPozisyonu - 25, 30, 30);
     doc.setFont('Garamond', 'bold');
     doc.setFontSize(22);
@@ -382,26 +374,38 @@ function generatePdfContent(doc, veri, imageDataUrl, kazanımMetni, logoBase64) 
     doc.setTextColor(120);
     const kazanımSatirlari = doc.splitTextToSize(kazanımMetni, sayfaGenisligi - 40);
     doc.text(kazanımSatirlari, doc.internal.pageSize.getWidth() / 2, yPozisyonu, { align: 'center' });
-    yPozisyonu += (kazanımSatirlari.length * 12) + 20;
+    yPozisyonu += (kazanımSatirlari.length * 10 * satirAraligi) + 10;
     
     doc.setDrawColor(230, 230, 230);
     doc.line(solKenar, yPozisyonu, doc.internal.pageSize.getWidth() - solKenar, yPozisyonu);
     yPozisyonu += 25;
 
+    sayfaKontrolu(30);
     const kaynakBaslangicY = yPozisyonu;
+    
+    doc.setFillColor(248, 249, 250); 
+    let kaynakBlokYuksekligi = 30; 
+    if (imageDataUrl) {
+        const imgProps = doc.getImageProperties(imageDataUrl);
+        kaynakBlokYuksekligi += (sayfaGenisligi - 20) * imgProps.height / imgProps.width + 15;
+    }
+    if (veri.kullanilan_kaynak) {
+        const metinSatirlari = doc.splitTextToSize(veri.kullanilan_kaynak, sayfaGenisligi - 20);
+        kaynakBlokYuksekligi += metinSatirlari.length * 11 * satirAraligi;
+    }
+    doc.rect(solKenar, kaynakBaslangicY - 10, sayfaGenisligi, kaynakBlokYuksekligi, 'F');
+    
     doc.setFont('Garamond', 'bold');
     doc.setFontSize(14);
     doc.setTextColor(51, 51, 51);
-    doc.text('📰 Tarihsel Kaynak', solKenar + 10, yPozisyonu + 15);
-    yPozisyonu += 30;
-    
+    doc.text('📰 Tarihsel Kaynak', solKenar + 10, yPozisyonu);
+    yPozisyonu += 25;
+
     if (imageDataUrl) {
         const imgProps = doc.getImageProperties(imageDataUrl);
-        const aspectRatio = imgProps.height / imgProps.width;
-        const imgWidth = sayfaGenisligi - 20; 
-        const imgHeight = imgWidth * aspectRatio;
-        sayfaKontrolu(imgHeight + 20);
-        doc.addImage(imageDataUrl, 'JPEG', solKenar + 10, yPozisyonu, imgWidth, imgHeight);
+        const imgHeight = (sayfaGenisligi - 20) * imgProps.height / imgProps.width;
+        sayfaKontrolu(imgHeight + 15);
+        doc.addImage(imageDataUrl, 'JPEG', solKenar + 10, yPozisyonu, sayfaGenisligi - 20, imgHeight);
         yPozisyonu += imgHeight + 15;
     }
     
@@ -410,21 +414,14 @@ function generatePdfContent(doc, veri, imageDataUrl, kazanımMetni, logoBase64) 
         doc.setFontSize(11);
         doc.setTextColor(51, 51, 51);
         const metinSatirlari = doc.splitTextToSize(veri.kullanilan_kaynak, sayfaGenisligi - 20);
-        sayfaKontrolu(metinSatirlari.length * 12 * 1.4);
-        doc.text(metinSatirlari, solKenar + 10, yPozisyonu, { lineHeightFactor: 1.4 });
-        yPozisyonu += (metinSatirlari.length * 11 * 1.4) + 15;
+        sayfaKontrolu(metinSatirlari.length * 11 * satirAraligi);
+        doc.text(metinSatirlari, solKenar + 10, yPozisyonu, { lineHeightFactor: satirAraligi });
+        yPozisyonu += metinSatirlari.length * 11 * satirAraligi + 15;
     }
-    
-    doc.setFillColor(245, 245, 245);
-    doc.rect(solKenar, kaynakBaslangicY, sayfaGenisligi, yPozisyonu - kaynakBaslangicY, 'F');
-    doc.setFont('Garamond', 'bold'); doc.setFontSize(14); doc.setTextColor(51, 51, 51); doc.text('📰 Tarihsel Kaynak', solKenar + 10, kaynakBaslangicY + 15);
-    if (imageDataUrl) { const imgProps = doc.getImageProperties(imageDataUrl); const aspectRatio = imgProps.height / imgProps.width; const imgWidth = sayfaGenisligi - 20; const imgHeight = imgWidth * aspectRatio; doc.addImage(imageDataUrl, 'JPEG', solKenar + 10, kaynakBaslangicY + 30, imgWidth, imgHeight); }
-    if (veri.kullanilan_kaynak) { const metinBaslangicY = kaynakBaslangicY + 30 + (imageDataUrl ? (sayfaGenisligi - 20) * doc.getImageProperties(imageDataUrl).height / doc.getImageProperties(imageDataUrl).width + 15 : 0); doc.setFont('Lora', 'normal'); doc.setFontSize(11); doc.setTextColor(51, 51, 51); const metinSatirlari = doc.splitTextToSize(veri.kullanilan_kaynak, sayfaGenisligi - 20); doc.text(metinSatirlari, solKenar + 10, metinBaslangicY, { lineHeightFactor: 1.4 }); }
-    
-    yPozisyonu += 20;
+    yPozisyonu += 15; 
 
-    sayfaKontrolu(30);
-    doc.setFillColor(51, 51, 51); 
+    sayfaKontrolu(45);
+    doc.setFillColor(51, 51, 51);
     doc.rect(solKenar, yPozisyonu, sayfaGenisligi, 30, 'F');
     doc.setFont('Garamond', 'bold');
     doc.setFontSize(14);
@@ -433,8 +430,7 @@ function generatePdfContent(doc, veri, imageDataUrl, kazanımMetni, logoBase64) 
     yPozisyonu += 45;
 
     if (veri.calisma_kagidi) {
-        const sorular = veri.calisma_kagidi.split(/\n/);
-        sorular.forEach(satir => {
+        veri.calisma_kagidi.split('\n').forEach(satir => {
             satir = satir.trim();
             if (satir.match(/^\d+\./)) {
                 sayfaKontrolu(40);
@@ -450,12 +446,25 @@ function generatePdfContent(doc, veri, imageDataUrl, kazanımMetni, logoBase64) 
                 doc.setFontSize(11);
                 doc.setTextColor(51, 51, 51);
                 const soruSatirlari = doc.splitTextToSize(soruMetni, sayfaGenisligi - 20);
-                doc.text(soruSatirlari, solKenar + 20, yPozisyonu);
-                yPozisyonu += (soruSatirlari.length * 11 * 1.4) + 20;
+                doc.text(soruSatirlari, solKenar + 20, yPozisyonu, { lineHeightFactor: satirAraligi });
+                yPozisyonu += soruSatirlari.length * 11 * satirAraligi + 20;
             }
         });
     }
-    altBilgiEkle();
+
+    altBilgiEkle(doc);
+}
+
+function altBilgiEkle(doc) {
+    const totalPages = doc.internal.getNumberOfPages();
+    for (let i = 1; i <= totalPages; i++) {
+        doc.setPage(i); 
+        doc.setFont('Lora', 'italic');
+        doc.setFontSize(8);
+        doc.setTextColor(150);
+        doc.text(`Akıllı Çalışma Kağıdı Asistanı © 2025`, doc.internal.pageSize.getWidth() / 2, doc.internal.pageSize.getHeight() - 30, { align: 'center' });
+        doc.text(`Sayfa ${i} / ${totalPages}`, doc.internal.pageSize.getWidth() - 50, doc.internal.pageSize.getHeight() - 30, { align: 'right' });
+    }
 }
     indirPdfButonu.addEventListener('click', olusturVeIndirPDF);
 </script>
