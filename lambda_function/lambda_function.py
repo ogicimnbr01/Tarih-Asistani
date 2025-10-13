@@ -7,6 +7,7 @@ dynamodb = boto3.resource('dynamodb')
 table = dynamodb.Table(TABLE_NAME)
 model_id = 'anthropic.claude-3-haiku-20240307-v1:0'
 
+
 CORS_HEADERS = {
     'access-control-allow-origin': '*',
     'access-control-allow-headers': 'Content-Type',
@@ -46,38 +47,29 @@ def lambda_handler(event, context):
 def list_sources(unit_id, outcome_id):
     """Verilen ünite ve kazanıma ait tüm kaynakları veritabanından sorgular ve listeler."""
     print(f"Kaynaklar listeleniyor: unit_id={unit_id}, outcome_id ile başlayanlar")
-
-    try:
-        response = table.query(
-
-            KeyConditionExpression='unit_id = :uid AND begins_with(source_id, :oid_prefix)',
-            ExpressionAttributeValues={
-                ':uid': unit_id,
-                ':oid_prefix': outcome_id
-            }
-        )
-
-        items = response.get('Items', [])
-
-        sources = [{
-            'source_id': item['source_id'],
-            'source_title': item['source_title'],
-            'source_type': item.get('source_type', 'Belge'),
-            'source_url': item.get('source_url')
-        } for item in items]
-
-        return {
-            'statusCode': 200,
-            'headers': CORS_HEADERS,
-            'body': json.dumps(sources, ensure_ascii=False)
+    
+    response = table.query(
+        KeyConditionExpression='unit_id = :uid AND begins_with(source_id, :oid_prefix)',
+        ExpressionAttributeValues={
+            ':uid': unit_id,
+            ':oid_prefix': outcome_id 
         }
-    except Exception as e:
-        print(f"list_sources içinde HATA: {str(e)}")
-        return {
-            'statusCode': 500,
-            'headers': CORS_HEADERS,
-            'body': json.dumps({'error': 'Veritabanı sorgusunda hata oluştu.'}, ensure_ascii=False)
-        }
+    )
+    
+    items = response.get('Items', [])
+    
+    sources = [{
+        'source_id': item['source_id'], 
+        'source_title': item['source_title'],
+        'source_type': item.get('source_type', 'Belge'),
+        'source_url': item.get('source_url')
+    } for item in items]
+    
+    return {
+        'statusCode': 200,
+        'headers': CORS_HEADERS,
+        'body': json.dumps(sources, ensure_ascii=False)
+    }
 
 def generate_worksheet(unit_id, source_id):
     """Verilen bir kaynak ID'si için çalışma kağıdı üretir."""
@@ -112,7 +104,7 @@ Sen, MEB müfredatına hakim, modern pedagojik yaklaşımları benimsemiş, uzma
 {tarihi_metin}
 ---
 """
-
+    
     request_body = {
         "anthropic_version": "bedrock-2023-05-31",
         "max_tokens": 2048,
@@ -132,7 +124,7 @@ Sen, MEB müfredatına hakim, modern pedagojik yaklaşımları benimsemiş, uzma
         'body': json.dumps({
             'calisma_kagidi': generated_text,
             'kullanilan_kaynak': tarihi_metin,
-            'source_type': item.get('source_type'), 
-            'source_url': item.get('source_url') 
+            'source_type': item.get('source_type'),
+            'source_url': item.get('source_url')
             }, ensure_ascii=False)
     }

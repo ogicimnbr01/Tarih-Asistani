@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>İnkılap Tarihi Akıllı Çalışma Kağıdı Asistanı</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
     <style>
         body { font-family: Arial, sans-serif; margin: 20px; background-color: #f4f4f4; color: #333; }
         .container { max-width: 800px; margin: 20px auto; padding: 20px; background-color: #fff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); }
@@ -31,6 +33,7 @@
         </div>
 
         <button id="olustur-butonu" disabled>Çalışma Kağıdı Oluştur</button>
+        <button id="indir-pdf-butonu" style="display: none; margin-top: 10px; background-color: #28a745;">PDF Olarak İndir</button>
 
         <div id="kaynak-basligi" style="margin-top: 20px; display: none;"><h3>Kullanılan Birinci Elden Kaynak:</h3></div>
         <div id="kaynak-alani"></div>
@@ -49,6 +52,7 @@
     const kaynakAlani = document.getElementById('kaynak-alani');
     const sonucBasligi = document.getElementById('sonuc-basligi');
     const sonucAlani = document.getElementById('sonuc-alani');
+    const indirPdfButonu = document.getElementById('indir-pdf-butonu');
 
     const mockUniteler = [
         { id: "1", ad: "1. 20. Yüzyıl Başlarında Osmanlı Devleti ve Dünya" },
@@ -194,6 +198,7 @@ async function calismaKagidiOlustur() {
 
             kaynakBasligi.style.display = 'block';
             sonucBasligi.style.display = 'block';
+            indirPdfButonu.style.display = 'block';
 
             const type = (veri.source_type || '').toLowerCase();
             if (type === 'gazete' || type === 'genelge') {
@@ -211,6 +216,7 @@ async function calismaKagidiOlustur() {
             sonucAlani.innerHTML = `<p style="color: red;">${error.message}</p>`;
             kaynakBasligi.style.display = 'none';
             sonucBasligi.style.display = 'none';
+            indirPdfButonu.style.display = 'none';
         } finally {
             olusturButonu.disabled = false;
         }
@@ -233,6 +239,77 @@ async function calismaKagidiOlustur() {
         }
     });
     olusturButonu.addEventListener('click', calismaKagidiOlustur);
+
+    async function pdfOlustur() {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+
+        try {
+            const response = await fetch('Roboto-Regular.ttf');
+            if (!response.ok) throw new Error('Font dosyası bulunamadı.');
+            
+            const fontBlob = await response.blob();
+            const reader = new FileReader();
+
+            reader.onloadend = function() {
+                try {
+                    const fontBase64 = reader.result.split(',')[1];
+                    
+                    doc.addFileToVFS('Roboto-Regular.ttf', fontBase64);
+                    doc.addFont('Roboto-Regular.ttf', 'Roboto', 'normal');
+                    doc.setFont('Roboto');
+
+                    generatePdfContent(doc);
+                } catch (e) {
+                    console.error("PDF oluşturulurken font hatası:", e);
+                    alert("PDF oluşturulamadı. Lütfen tekrar deneyin.");
+                }
+            };
+
+            reader.readAsDataURL(fontBlob);
+
+        } catch (error) {
+            console.error("Font yüklenirken bir hata oluştu:", error);
+            alert("PDF oluşturulamadı: Font dosyası yüklenemedi.");
+        }
+    }
+
+    function generatePdfContent(doc) {
+        const kaynakBasligiMetni = document.getElementById('kaynak-basligi').textContent;
+        const kaynakMetni = document.getElementById('kaynak-alani').textContent;
+        const sonucBasligiMetni = document.getElementById('sonuc-basligi').textContent;
+        const calismaKagidiMetni = document.getElementById('sonuc-alani').textContent;
+
+        let y_pos = 20;
+        const sol_kenar = 15;
+        const satir_araligi = 7;
+        const sayfa_genisligi = 180;
+
+        doc.setFontSize(14);
+        doc.text(kaynakBasligiMetni, sol_kenar, y_pos);
+        y_pos += satir_araligi * 2;
+        
+        doc.setFontSize(10);
+        const kaynakSatirlari = doc.splitTextToSize(kaynakMetni, sayfa_genisligi);
+        doc.text(kaynakSatirlari, sol_kenar, y_pos);
+        y_pos += (kaynakSatirlari.length * satir_araligi) + satir_araligi;
+        
+        if (y_pos > 250) {
+            doc.addPage();
+            y_pos = 20;
+        }
+
+        doc.setFontSize(14);
+        doc.text(sonucBasligiMetni, sol_kenar, y_pos);
+        y_pos += satir_araligi * 2;
+        
+        doc.setFontSize(10);
+        const calismaKagidiSatirlari = doc.splitTextToSize(calismaKagidiMetni, sayfa_genisligi);
+        doc.text(calismaKagidiSatirlari, sol_kenar, y_pos);
+
+        doc.save('calisma_kagidi.pdf');
+    }
+    indirPdfButonu.addEventListener('click', pdfOlustur);
 </script>
 </body>
 </html>
