@@ -355,9 +355,9 @@ function generatePdfContent(doc, veri, imageDataUrl, kazanımMetni, logoBase64) 
 
     const sayfaKontrolu = (gerekliBosluk) => {
         if (yPozisyonu + gerekliBosluk > doc.internal.pageSize.getHeight() - 80) {
-            altBilgiEkle(doc);
+            altBilgiEkle(doc); 
             doc.addPage();
-            yPozisyonu = 60;
+            yPozisyonu = 60; 
         }
     };
     
@@ -379,9 +379,9 @@ function generatePdfContent(doc, veri, imageDataUrl, kazanımMetni, logoBase64) 
     doc.line(solKenar, yPozisyonu, doc.internal.pageSize.getWidth() - solKenar, yPozisyonu);
     yPozisyonu += 25;
 
-    const kaynakBlokBaslangicY = yPozisyonu;
+    const kaynakBlokBaslangicY = yPozisyonu; 
     
-    let geciciY = kaynakBaslangicY;
+    let geciciY = kaynakBlokBaslangicY;
     geciciY += 30; 
     if (imageDataUrl) {
         const imgProps = doc.getImageProperties(imageDataUrl);
@@ -391,10 +391,10 @@ function generatePdfContent(doc, veri, imageDataUrl, kazanımMetni, logoBase64) 
         const metinSatirlari = doc.splitTextToSize(veri.kullanilan_kaynak, sayfaGenisligi - 20);
         geciciY += metinSatirlari.length * 12 * satirAraligi + 15;
     }
-    sayfaKontrolu(geciciY - kaynakBaslangicY); 
+    sayfaKontrolu(geciciY - kaynakBlokBaslangicY);
 
     doc.setFillColor(248, 249, 250);
-    doc.rect(solKenar, yPozisyonu - 10, sayfaGenisligi, (geciciY - kaynakBaslangicY) + 15, 'F');
+    doc.rect(solKenar, yPozisyonu - 10, sayfaGenisligi, (geciciY - kaynakBlokBaslangicY) + 5, 'F');
     
     doc.setFont('Garamond', 'bold');
     doc.setFontSize(14);
@@ -417,7 +417,7 @@ function generatePdfContent(doc, veri, imageDataUrl, kazanımMetni, logoBase64) 
         doc.text(metinSatirlari, solKenar + 10, yPozisyonu, { lineHeightFactor: satirAraligi });
         yPozisyonu += metinSatirlari.length * 12 * satirAraligi;
     }
-    yPozisyonu += 30; 
+    yPozisyonu += 30;
 
     sayfaKontrolu(45);
     doc.setFillColor(51, 51, 51);
