@@ -327,7 +327,6 @@ async function olusturVeIndirPDF() {
         const kazanımSelect = document.getElementById('kazanim-secimi');
         const seciliKazanimMetni = kazanımSelect.options[kazanımSelect.selectedIndex].text.substring(4);
         
-
         const kaynakKunyesi = document.querySelector('.kaynak-item.selected span:last-child').textContent;
 
         generatePdfContent(doc, sonApiCevabi, imageDataUrl, seciliKazanimMetni, kaynakKunyesi, logoBase64);
@@ -394,11 +393,9 @@ function generatePdfContent(doc, veri, imageDataUrl, kazanımMetni, kaynakKunyes
         yPozisyonu += 10;
     }
 
-
     doc.setFont('Lora', 'italic'); doc.setFontSize(9); doc.setTextColor(150);
     doc.text(`Alıntılanan Belge: ${kaynakKunyesi}`, sayfaGenisligi + solKenar, yPozisyonu, { align: 'right' });
     yPozisyonu += 30;
-
 
     sayfaKontrolu(50);
     doc.setFont('Playfair', 'bold'); doc.setFontSize(16); doc.setTextColor(42, 77, 122);
@@ -425,6 +422,16 @@ function generatePdfContent(doc, veri, imageDataUrl, kazanımMetni, kaynakKunyes
     });
 
     altBilgiEkle(doc);
+}
+
+function altBilgiEkle(doc) {
+    const totalPages = doc.internal.getNumberOfPages();
+    for (let i = 1; i <= totalPages; i++) {
+        doc.setPage(i);
+        doc.setFont('Lora', 'italic'); doc.setFontSize(8); doc.setTextColor(150);
+        const footerText = `Akıllı Çalışma Kağıdı Asistanı © 2025 | Sayfa ${i} / ${totalPages}`;
+        doc.text(footerText, doc.internal.pageSize.getWidth() / 2, doc.internal.pageSize.getHeight() - 30, { align: 'center' });
+    }
 }
 
     indirPdfButonu.addEventListener('click', olusturVeIndirPDF);
