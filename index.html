@@ -366,14 +366,14 @@ function generatePdfContent(doc, veri, imageDataUrl, kazanımMetni, kaynakKunyes
     
 if (veri.kullanilan_kaynak) {
         doc.setFont('Lora', 'italic');
-        doc.setFontSize(9);
+        doc.setFontSize(10);
         doc.setTextColor(150);
 
         const metinSatirlari = doc.splitTextToSize(`"${veri.kullanilan_kaynak}"`, sayfaGenisligi);
         metinSatirlari.forEach(satir => {
-            sayfaKontrolu(9 * 1.35); 
+            sayfaKontrolu(10 * 1.35); 
             doc.text(satir, solKenar, yPozisyonu);
-            yPozisyonu += 9 * 1.35;
+            yPozisyonu += 10 * 1.35; 
         });
         yPozisyonu += 10;
     }
