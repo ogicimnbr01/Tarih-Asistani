@@ -277,7 +277,6 @@ async function getImageBase64(url) {
     }
 }
 
-
 async function olusturVeIndirPDF() {
     if (!sonApiCevabi) {
         alert("PDF oluşturmak için önce bir çalışma kağıdı oluşturmalısınız.");
@@ -342,7 +341,6 @@ async function olusturVeIndirPDF() {
     }
 }
 
-
 function generatePdfContent(doc, veri, imageDataUrl, kazanımMetni, kaynakKunyesi, logoBase64) {
     const solKenar = 55;
     const sayfaGenisligi = doc.internal.pageSize.getWidth() - (solKenar * 2);
@@ -356,7 +354,7 @@ function generatePdfContent(doc, veri, imageDataUrl, kazanımMetni, kaynakKunyes
         }
     };
 
-    doc.addImage(logoBase64, 'PNG', solKenar, yPozisyonu - 30, 35, 35);
+    doc.addImage(logoBase64, 'PNG', solKenar - 15, yPozisyonu - 35, 35, 35);
     doc.setFont('Playfair', 'bold'); doc.setFontSize(24); doc.setTextColor(34, 34, 34);
     doc.text('T.C. İnkılap Tarihi ve Atatürkçülük Dersi', doc.internal.pageSize.getWidth() / 2, yPozisyonu, { align: 'center' });
     yPozisyonu += 28;
@@ -395,7 +393,7 @@ function generatePdfContent(doc, veri, imageDataUrl, kazanımMetni, kaynakKunyes
     }
 
     doc.setFont('Lora', 'italic'); doc.setFontSize(9); doc.setTextColor(150);
-    doc.text(`Belge: ${kaynakKunyesi}`, sayfaGenisligi + solKenar, yPozisyonu, { align: 'right' });
+    doc.text(`Alıntılanan Belge: ${kaynakKunyesi}`, sayfaGenisligi + solKenar, yPozisyonu, { align: 'right' });
     yPozisyonu += 30;
 
     sayfaKontrolu(50);
@@ -424,7 +422,6 @@ function generatePdfContent(doc, veri, imageDataUrl, kazanımMetni, kaynakKunyes
 
     altBilgiEkle(doc);
 }
-
 
 function altBilgiEkle(doc) {
     const totalPages = doc.internal.getNumberOfPages();
