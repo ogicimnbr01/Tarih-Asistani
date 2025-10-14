@@ -351,8 +351,9 @@ function generatePdfContent(doc, veri, imageDataUrl, kazanımMetni, kaynakKunyes
     doc.line(solKenar, yPozisyonu, doc.internal.pageSize.getWidth() - solKenar, yPozisyonu);
     yPozisyonu += 30;
 
-    sayfaKontrolu(50);
-    doc.setFont('Playfair', 'bold'); doc.setFontSize(16); doc.setTextColor(34, 34, 34);
+sayfaKontrolu(50);
+    doc.setFont('Playfair', 'bold'); doc.setFontSize(16);
+    doc.setTextColor(42, 77, 122);
     doc.text('Tarihsel Kaynak', solKenar, yPozisyonu);
     yPozisyonu += 25;
 
