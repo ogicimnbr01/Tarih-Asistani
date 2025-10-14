@@ -367,18 +367,17 @@ sayfaKontrolu(50);
     
 if (veri.kullanilan_kaynak) {
         doc.setFont('Lora', 'italic');
-        doc.setFontSize(10);
+        doc.setFontSize(11);
         doc.setTextColor(150);
-
         const metinSatirlari = doc.splitTextToSize(`"${veri.kullanilan_kaynak}"`, sayfaGenisligi);
         metinSatirlari.forEach(satir => {
-            sayfaKontrolu(10 * 1.35); 
+            sayfaKontrolu(11 * 1.35);
             doc.text(satir, solKenar, yPozisyonu);
-            yPozisyonu += 10 * 1.35; 
+            yPozisyonu += 11 * 1.35;
         });
         yPozisyonu += 10;
     }
-    doc.setFont('Lora', 'italic'); doc.setFontSize(9); doc.setTextColor(150);
+    doc.setFont('Lora', 'italic'); doc.setFontSize(9); doc.setTextColor(42, 77, 122);
     doc.text(`Alıntılanan Belge: ${kaynakKunyesi}`, sayfaGenisligi + solKenar, yPozisyonu, { align: 'right' });
     yPozisyonu += 30;
 
