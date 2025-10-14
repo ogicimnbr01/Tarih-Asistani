@@ -247,33 +247,78 @@ async function calismaKagidiOlustur() {
 indirPdfButonu.addEventListener('click', olusturVeIndirPDF);
 
 async function getImageBase64(url) {
-    console.log('[TEŞHİS] getImageBase64 fonksiyonu başlatıldı. Resim URL:', url);
-    try {
-        const response = await fetch(url);
-        console.log('[TEŞHİS] Fetch isteği yapıldı. Sunucu cevabı:', response.status, response.statusText);
-        
-        if (!response.ok) {
-            throw new Error(`Resim sunucudan alınamadı. Hata Kodu: ${response.status}`);
-        }
-        
-        const blob = await response.blob();
-        console.log('[TEŞHİS] Resim verisi (blob) başarıyla alındı.');
+    const response = await fetch(url);
+    if (!response.ok) { throw new Error(`Resim yüklenemedi: ${response.statusText}`); }
+    const blob = await response.blob();
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+    });
+}
 
-        return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                console.log('[TEŞHİS] Resim Base64 formatına çevrildi.');
-                resolve(reader.result);
-            };
-            reader.onerror = (error) => {
-                console.error('[HATA] Resim Base64 formatına çevrilirken hata oluştu!', error);
-                reject(error);
-            };
-            reader.readAsDataURL(blob);
-        });
+async function olusturVeIndirPDF() {
+    if (!sonApiCevabi) {
+        alert("PDF oluşturmak için önce bir çalışma kağıdı oluşturmalısınız.");
+        return;
+    }
+    indirPdfButonu.disabled = true;
+    indirPdfButonu.textContent = "PDF Oluşturuluyor...";
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF('p', 'pt', 'a4');
+
+    try {
+        const fetchAssetAsBase64 = async (url) => {
+            const response = await fetch(url);
+            if (!response.ok) throw new Error(`${url} yüklenemedi.`);
+            const blob = await response.blob();
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onloadend = () => resolve(reader.result);
+                reader.onerror = reject;
+                reader.readAsDataURL(blob);
+            });
+        };
+
+        const [
+            loraRegular, loraBold, loraItalic,
+            playfairRegular, playfairBold,
+            logoBase64
+        ] = await Promise.all([
+            fetchAssetAsBase64('Lora-Regular.ttf'),
+            fetchAssetAsBase64('Lora-Bold.ttf'),
+            fetchAssetAsBase64('Lora-Italic.ttf'),
+            fetchAssetAsBase64('PlayfairDisplay-Regular.ttf'),
+            fetchAssetAsBase64('PlayfairDisplay-Bold.ttf'),
+            fetchAssetAsBase64('logo.png')
+        ]);
+        
+        doc.addFileToVFS('Lora-Regular.ttf', loraRegular.split(',')[1]); doc.addFont('Lora-Regular.ttf', 'Lora', 'normal');
+        doc.addFileToVFS('Lora-Bold.ttf', loraBold.split(',')[1]); doc.addFont('Lora-Bold.ttf', 'Lora', 'bold');
+        doc.addFileToVFS('Lora-Italic.ttf', loraItalic.split(',')[1]); doc.addFont('Lora-Italic.ttf', 'Lora', 'italic');
+        doc.addFileToVFS('PlayfairDisplay-Regular.ttf', playfairRegular.split(',')[1]); doc.addFont('PlayfairDisplay-Regular.ttf', 'Playfair', 'normal');
+        doc.addFileToVFS('PlayfairDisplay-Bold.ttf', playfairBold.split(',')[1]); doc.addFont('PlayfairDisplay-Bold.ttf', 'Playfair', 'bold');
+
+        let imageDataUrl = null;
+        const imageElement = document.querySelector('#kaynak-alani img');
+        if (imageElement && imageElement.src) { imageDataUrl = await fetchAssetAsBase64(imageElement.src); }
+
+        const kazanımSelect = document.getElementById('kazanim-secimi');
+        const seciliKazanimMetni = kazanımSelect.options[kazanımSelect.selectedIndex].text.substring(4);
+        const kaynakKunyesi = document.querySelector('.kaynak-item.selected label, .kaynak-item.selected span').textContent;
+
+        generatePdfContent(doc, sonApiCevabi, imageDataUrl, seciliKazanimMetni, kaynakKunyesi, logoBase64);
+
+        doc.save('calisma_kagidi.pdf');
+
     } catch (error) {
-        console.error('[HATA] getImageBase64 fonksiyonunda fetch sırasında ciddi bir hata oluştu:', error);
-        throw error;
+        console.error("PDF oluşturma hatası:", error);
+        alert(`PDF oluşturulurken bir hata oluştu: ${error.message}`);
+    } finally {
+        indirPdfButonu.disabled = false;
+        indirPdfButonu.textContent = "PDF Olarak İndir";
     }
 }
 
@@ -315,33 +360,10 @@ function generatePdfContent(doc, veri, imageDataUrl, kazanımMetni, kaynakKunyes
 
     if (imageDataUrl) {
         const imgProps = doc.getImageProperties(imageDataUrl);
-        const imgWidth = sayfaGenisligi;
-        const imgHeight = imgWidth * imgProps.height / imgProps.width;
-        
-        let kalanImgHeight = imgHeight;
-        let kaynakY = 0; 
-
-        while (kalanImgHeight > 0) {
-            sayfaKontrolu(1); 
-            const kalanSayfaAlani = sayfaYuksekligi - yPozisyonu - altBosluk;
-            const kesitYuksekligi = Math.min(kalanImgHeight, kalanSayfaAlani);
-
-            if (kesitYuksekligi <= 0) { 
-                altBilgiEkle(doc);
-                doc.addPage();
-                yPozisyonu = 70;
-                continue; 
-            }
-
-            const kaynakKesitYuksekligi = (kesitYuksekligi / imgHeight) * imgProps.height;
-
-            doc.addImage(imageDataUrl, 'JPEG', solKenar, yPozisyonu, imgWidth, kesitYuksekligi, null, 'NONE', 0, 0, kaynakY, imgProps.width, kaynakKesitYuksekligi);
-            
-            yPozisyonu += kesitYuksekligi;
-            kalanImgHeight -= kesitYuksekligi;
-            kaynakY += kaynakKesitYuksekligi;
-        }
-        yPozisyonu += 15;
+        const imgHeight = sayfaGenisligi * imgProps.height / imgProps.width;
+        sayfaKontrolu(imgHeight);
+        doc.addImage(imageDataUrl, 'JPEG', solKenar, yPozisyonu, sayfaGenisligi, imgHeight);
+        yPozisyonu += imgHeight + 15;
     }
     
     if (veri.kullanilan_kaynak) {
