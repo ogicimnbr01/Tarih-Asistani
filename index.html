@@ -338,7 +338,7 @@ function generatePdfContent(doc, veri, imageDataUrl, kazanımMetni, kaynakKunyes
     };
 
     doc.addImage(logoBase64, 'PNG', solKenar - 15, yPozisyonu - 35, 35, 35);
-    doc.setFont('Playfair', 'bold'); doc.setFontSize(24); doc.setTextColor(34, 34, 34);
+    doc.setFont('Playfair', 'bold'); doc.setFontSize(24); doc.setTextColor(42, 77, 122);
     doc.text('T.C. İnkılap Tarihi ve Atatürkçülük Dersi', doc.internal.pageSize.getWidth() / 2, yPozisyonu, { align: 'center' });
     yPozisyonu += 28;
 
@@ -365,10 +365,11 @@ sayfaKontrolu(50);
         yPozisyonu += imgHeight + 15;
     }
     
-if (veri.kullanilan_kaynak) {
+    if (veri.kullanilan_kaynak) {
         doc.setFont('Lora', 'italic');
         doc.setFontSize(11);
         doc.setTextColor(150);
+
         const metinSatirlari = doc.splitTextToSize(`"${veri.kullanilan_kaynak}"`, sayfaGenisligi);
         metinSatirlari.forEach(satir => {
             sayfaKontrolu(11 * 1.35);
