@@ -324,7 +324,6 @@ async function olusturVeIndirPDF() {
     }
 }
 
-
 function generatePdfContent(doc, veri, imageDataUrl, kazanımMetni, kaynakKunyesi, logoBase64) {
     const solKenar = 55;
     const sayfaGenisligi = doc.internal.pageSize.getWidth() - (solKenar * 2);
@@ -337,7 +336,7 @@ function generatePdfContent(doc, veri, imageDataUrl, kazanımMetni, kaynakKunyes
             yPozisyonu = 70;
         }
     };
-    
+
     doc.addImage(logoBase64, 'PNG', solKenar - 15, yPozisyonu - 35, 35, 35);
     doc.setFont('Playfair', 'bold'); doc.setFontSize(24); doc.setTextColor(34, 34, 34);
     doc.text('T.C. İnkılap Tarihi ve Atatürkçülük Dersi', doc.internal.pageSize.getWidth() / 2, yPozisyonu, { align: 'center' });
@@ -406,7 +405,6 @@ function generatePdfContent(doc, veri, imageDataUrl, kazanımMetni, kaynakKunyes
 
     altBilgiEkle(doc);
 }
-
 
 function altBilgiEkle(doc) {
     const totalPages = doc.internal.getNumberOfPages();
