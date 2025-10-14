@@ -335,86 +335,68 @@ function applyCurrentFont(doc) {
 }
 
 function generatePdfContent(doc, veri, imageDataUrl, kazanımMetni, kaynakKunyesi, logoBase64) {
-    console.log("veri.kullanilan_kaynak içeriği:", veri.kullanilan_kaynak);
     const solKenar = 55;
-    const sagKenar = doc.internal.pageSize.getWidth() - solKenar;
-    const sayfaGenisligi = sagKenar - solKenar;
+    const sayfaGenisligi = doc.internal.pageSize.getWidth() - (solKenar * 2);
     let yPozisyonu = 70;
-    const sayfaYuksekligi = doc.internal.pageSize.getHeight();
-    const altKenarBoslugu = 80;
-    const ustKenarBoslugu = 70;
+    const koyuGri = [34, 34, 34];
+    const lacivert = [42, 77, 122];
 
     const sayfaKontrolu = (gerekliBosluk) => {
-        if (yPozisyonu + gerekliBosluk > sayfaYuksekligi - altKenarBoslugu) {
+        if (yPozisyonu + gerekliBosluk > doc.internal.pageSize.getHeight() - 80) {
+            altBilgiEkle(doc);
             doc.addPage();
-            yPozisyonu = ustKenarBoslugu;
-            applyCurrentFont(doc);
+            yPozisyonu = 70;
+            doc.setFont('Lora', 'normal'); 
+            doc.setFontSize(11); 
+            doc.setTextColor(koyuGri[0], koyuGri[1], koyuGri[2]); 
         }
     };
     
-    currentFont = { family: 'Playfair', style: 'bold', size: 24, color: [42, 77, 122] };
-    applyCurrentFont(doc);
     doc.addImage(logoBase64, 'PNG', solKenar - 15, yPozisyonu - 35, 35, 35);
+    doc.setFont('Playfair', 'bold'); doc.setFontSize(24); doc.setTextColor(koyuGri[0], koyuGri[1], koyuGri[2]);
     doc.text('T.C. İnkılap Tarihi ve Atatürkçülük Dersi', doc.internal.pageSize.getWidth() / 2, yPozisyonu, { align: 'center' });
     yPozisyonu += 28;
 
-    currentFont = { family: 'Lora', style: 'italic', size: 10, color: [120, 120, 120] };
-    applyCurrentFont(doc);
+    doc.setFont('Lora', 'italic'); doc.setFontSize(10); doc.setTextColor(120);
     const kazanımSatirlari = doc.splitTextToSize(`Kazanım: ${kazanımMetni}`, sayfaGenisligi - 40);
     doc.text(kazanımSatirlari, doc.internal.pageSize.getWidth() / 2, yPozisyonu, { align: 'center' });
-    yPozisyonu += (kazanımSatirlari.length * currentFont.size * 1.35) + 15;
-
+    yPozisyonu += (kazanımSatirlari.length * 12) + 15;
+    
     doc.setDrawColor(220, 220, 220);
-    doc.line(solKenar, yPozisyonu, sagKenar, yPozisyonu);
+    doc.line(solKenar, yPozisyonu, doc.internal.pageSize.getWidth() - solKenar, yPozisyonu);
     yPozisyonu += 30;
 
     sayfaKontrolu(50);
-    currentFont = { family: 'Playfair', style: 'bold', size: 16, color: [42, 77, 122] };
-    applyCurrentFont(doc);
+    doc.setFont('Playfair', 'bold'); doc.setFontSize(16); doc.setTextColor(koyuGri[0], koyuGri[1], koyuGri[2]);
     doc.text('Tarihsel Kaynak', solKenar, yPozisyonu);
-    doc.setDrawColor(42, 77, 122); 
-    doc.line(solKenar, yPozisyonu + 5, solKenar + 100, yPozisyonu + 5);
     yPozisyonu += 25;
 
     if (imageDataUrl) {
         const imgProps = doc.getImageProperties(imageDataUrl);
         const imgHeight = sayfaGenisligi * imgProps.height / imgProps.width;
-        sayfaKontrolu(imgHeight + 20);
+        sayfaKontrolu(imgHeight);
         doc.addImage(imageDataUrl, 'JPEG', solKenar, yPozisyonu, sayfaGenisligi, imgHeight);
-        yPozisyonu += imgHeight + 20;
+        yPozisyonu += imgHeight + 15;
     }
     
     if (veri.kullanilan_kaynak) {
-        currentFont = { family: 'Lora', style: 'italic', size: 11, color: [50, 50, 50] };
-        applyCurrentFont(doc);
-        const alintiSolKenar = solKenar + 20;
-        const alintiSayfaGenisligi = sayfaGenisligi - 20;
-            doc.setDrawColor(150, 150, 150);
-            doc.setLineWidth(1);
-            doc.line(solKenar, yPozisyonu, solKenar, yPozisyonu + 10);
-
-        const metinSatirlari = doc.splitTextToSize(`"${veri.kullanilan_kaynak}"`, alintiSayfaGenisligi);
+        doc.setFont('Lora', 'normal'); doc.setFontSize(11); doc.setTextColor(koyuGri[0], koyuGri[1], koyuGri[2]);
+        const metinSatirlari = doc.splitTextToSize(`"${veri.kullanilan_kaynak}"`, sayfaGenisligi);
         metinSatirlari.forEach(satir => {
-            const satirYuksekligi = currentFont.size * 1.4; 
-            sayfaKontrolu(satirYuksekligi);
-            doc.text(satir, alintiSolKenar, yPozisyonu);
-            yPozisyonu += satirYuksekligi;
+            sayfaKontrolu(11 * 1.35);
+            doc.text(satir, solKenar, yPozisyonu);
+            yPozisyonu += 11 * 1.35;
         });
-        yPozisyonu += 15;
+        yPozisyonu += 10;
     }
 
-    currentFont = { family: 'Lora', style: 'italic', size: 9, color: [42, 77, 122] };
-    applyCurrentFont(doc);
-    doc.text(`Alıntılanan Belge: ${kaynakKunyesi}`, sagKenar, yPozisyonu, { align: 'right' });
+    doc.setFont('Lora', 'italic'); doc.setFontSize(9); doc.setTextColor(150);
+    doc.text(`Alıntılanan Belge: ${kaynakKunyesi}`, sayfaGenisligi + solKenar, yPozisyonu, { align: 'right' });
     yPozisyonu += 30;
 
     sayfaKontrolu(50);
-    currentFont = { family: 'Playfair', style: 'bold', size: 16, color: [42, 77, 122] };
-    applyCurrentFont(doc);
+    doc.setFont('Playfair', 'bold'); doc.setFontSize(16); doc.setTextColor(lacivert[0], lacivert[1], lacivert[2]);
     doc.text('Analiz ve Yorumlama Soruları', solKenar, yPozisyonu);
-
-    doc.setDrawColor(42, 77, 122);
-    doc.line(solKenar, yPozisyonu + 5, solKenar + 200, yPozisyonu + 5);
     yPozisyonu += 25;
 
     const sorular = (veri.calisma_kagidi || "").split('\n').filter(s => s.trim().match(/^\d+\./));
@@ -422,25 +404,21 @@ function generatePdfContent(doc, veri, imageDataUrl, kazanımMetni, kaynakKunyes
         const soruMetni = satir.substring(satir.indexOf('.') + 1).trim();
         const soruNumarasi = `${index + 1}.`;
         
-        currentFont = { family: 'Playfair', style: 'bold', size: 14, color: [42, 77, 122] };
-        applyCurrentFont(doc);
-        
-        const tahminiSoruBaslangicYuksekligi = currentFont.size * 1.35;
-        sayfaKontrolu(tahminiSoruBaslangicYuksekligi + 25);
-        
+        sayfaKontrolu(30);
+        doc.setFont('Playfair', 'bold'); doc.setFontSize(14); doc.setTextColor(lacivert[0], lacivert[1], lacivert[2]);
         doc.text(soruNumarasi, solKenar, yPozisyonu);
-        currentFont = { family: 'Lora', style: 'normal', size: 11, color: [34, 34, 34] };
-        applyCurrentFont(doc);
-
+        
+        doc.setFont('Lora', 'normal'); doc.setFontSize(11); doc.setTextColor(koyuGri[0], koyuGri[1], koyuGri[2]);
         const soruSatirlari = doc.splitTextToSize(soruMetni, sayfaGenisligi - 25);
         soruSatirlari.forEach(soruSatiri => {
-            const satirYuksekligi = currentFont.size * 1.4;
-            sayfaKontrolu(satirYuksekligi);
+            sayfaKontrolu(11 * 1.35);
             doc.text(soruSatiri, solKenar + 25, yPozisyonu);
-            yPozisyonu += satirYuksekligi;
+            yPozisyonu += 11 * 1.35;
         });
-        yPozisyonu += 25; 
+        yPozisyonu += 20;
     });
+
+    altBilgiEkle(doc);
 }
 
 function altBilgiEkle(doc) {
