@@ -337,18 +337,18 @@ function applyCurrentFont(doc) {
 function generatePdfContent(doc, veri, imageDataUrl, kazanımMetni, kaynakKunyesi, logoBase64) {
     console.log("veri.kullanilan_kaynak içeriği:", veri.kullanilan_kaynak);
     const solKenar = 55;
-    const sagKenar = doc.internal.pageSize.getWidth() - solKenar; 
+    const sagKenar = doc.internal.pageSize.getWidth() - solKenar;
     const sayfaGenisligi = sagKenar - solKenar;
     let yPozisyonu = 70;
     const sayfaYuksekligi = doc.internal.pageSize.getHeight();
-    const altKenarBoslugu = 80; 
+    const altKenarBoslugu = 80;
     const ustKenarBoslugu = 70;
 
     const sayfaKontrolu = (gerekliBosluk) => {
         if (yPozisyonu + gerekliBosluk > sayfaYuksekligi - altKenarBoslugu) {
             doc.addPage();
-            yPozisyonu = ustKenarBoslugu; 
-            applyCurrentFont(doc); 
+            yPozisyonu = ustKenarBoslugu;
+            applyCurrentFont(doc);
         }
     };
     
@@ -358,11 +358,11 @@ function generatePdfContent(doc, veri, imageDataUrl, kazanımMetni, kaynakKunyes
     doc.text('T.C. İnkılap Tarihi ve Atatürkçülük Dersi', doc.internal.pageSize.getWidth() / 2, yPozisyonu, { align: 'center' });
     yPozisyonu += 28;
 
-    currentFont = { family: 'Lora', style: 'italic', size: 10, color: [120, 120, 120] }; 
+    currentFont = { family: 'Lora', style: 'italic', size: 10, color: [120, 120, 120] };
     applyCurrentFont(doc);
     const kazanımSatirlari = doc.splitTextToSize(`Kazanım: ${kazanımMetni}`, sayfaGenisligi - 40);
     doc.text(kazanımSatirlari, doc.internal.pageSize.getWidth() / 2, yPozisyonu, { align: 'center' });
-    yPozisyonu += (kazanımSatirlari.length * currentFont.size * 1.35) + 15; 
+    yPozisyonu += (kazanımSatirlari.length * currentFont.size * 1.35) + 15;
 
     doc.setDrawColor(220, 220, 220);
     doc.line(solKenar, yPozisyonu, sagKenar, yPozisyonu);
@@ -372,38 +372,49 @@ function generatePdfContent(doc, veri, imageDataUrl, kazanımMetni, kaynakKunyes
     currentFont = { family: 'Playfair', style: 'bold', size: 16, color: [42, 77, 122] };
     applyCurrentFont(doc);
     doc.text('Tarihsel Kaynak', solKenar, yPozisyonu);
+    doc.setDrawColor(42, 77, 122); 
+    doc.line(solKenar, yPozisyonu + 5, solKenar + 100, yPozisyonu + 5);
     yPozisyonu += 25;
 
     if (imageDataUrl) {
         const imgProps = doc.getImageProperties(imageDataUrl);
         const imgHeight = sayfaGenisligi * imgProps.height / imgProps.width;
-        sayfaKontrolu(imgHeight + 15);
+        sayfaKontrolu(imgHeight + 20);
         doc.addImage(imageDataUrl, 'JPEG', solKenar, yPozisyonu, sayfaGenisligi, imgHeight);
-        yPozisyonu += imgHeight + 15;
+        yPozisyonu += imgHeight + 20;
     }
     
     if (veri.kullanilan_kaynak) {
-        currentFont = { family: 'Lora', style: 'italic', size: 11, color: [150, 150, 150] };
+        currentFont = { family: 'Lora', style: 'italic', size: 11, color: [50, 50, 50] };
         applyCurrentFont(doc);
+        const alintiSolKenar = solKenar + 20;
+        const alintiSayfaGenisligi = sayfaGenisligi - 20;
+            doc.setDrawColor(150, 150, 150);
+            doc.setLineWidth(1);
+            doc.line(solKenar, yPozisyonu, solKenar, yPozisyonu + 10);
 
-        const metinSatirlari = doc.splitTextToSize(`"${veri.kullanilan_kaynak}"`, sayfaGenisligi);
+        const metinSatirlari = doc.splitTextToSize(`"${veri.kullanilan_kaynak}"`, alintiSayfaGenisligi);
         metinSatirlari.forEach(satir => {
-            const satirYuksekligi = currentFont.size * 1.35;
+            const satirYuksekligi = currentFont.size * 1.4; 
             sayfaKontrolu(satirYuksekligi);
-            doc.text(satir, solKenar, yPozisyonu);
+            doc.text(satir, alintiSolKenar, yPozisyonu);
             yPozisyonu += satirYuksekligi;
         });
-        yPozisyonu += 10;
+        yPozisyonu += 15;
     }
+
     currentFont = { family: 'Lora', style: 'italic', size: 9, color: [42, 77, 122] };
     applyCurrentFont(doc);
     doc.text(`Alıntılanan Belge: ${kaynakKunyesi}`, sagKenar, yPozisyonu, { align: 'right' });
     yPozisyonu += 30;
 
-    sayfaKontrolu(50); 
+    sayfaKontrolu(50);
     currentFont = { family: 'Playfair', style: 'bold', size: 16, color: [42, 77, 122] };
     applyCurrentFont(doc);
     doc.text('Analiz ve Yorumlama Soruları', solKenar, yPozisyonu);
+
+    doc.setDrawColor(42, 77, 122);
+    doc.line(solKenar, yPozisyonu + 5, solKenar + 200, yPozisyonu + 5);
     yPozisyonu += 25;
 
     const sorular = (veri.calisma_kagidi || "").split('\n').filter(s => s.trim().match(/^\d+\./));
@@ -415,34 +426,32 @@ function generatePdfContent(doc, veri, imageDataUrl, kazanımMetni, kaynakKunyes
         applyCurrentFont(doc);
         
         const tahminiSoruBaslangicYuksekligi = currentFont.size * 1.35;
-        
-        sayfaKontrolu(tahminiSoruBaslangicYuksekligi + 20);
+        sayfaKontrolu(tahminiSoruBaslangicYuksekligi + 25);
         
         doc.text(soruNumarasi, solKenar, yPozisyonu);
-        
         currentFont = { family: 'Lora', style: 'normal', size: 11, color: [34, 34, 34] };
         applyCurrentFont(doc);
 
-        const soruSatirlari = doc.splitTextToSize(soruMetni, sayfaGenisligi - 25); 
+        const soruSatirlari = doc.splitTextToSize(soruMetni, sayfaGenisligi - 25);
         soruSatirlari.forEach(soruSatiri => {
-            const satirYuksekligi = currentFont.size * 1.35;
-            sayfaKontrolu(satirYuksekligi); 
+            const satirYuksekligi = currentFont.size * 1.4;
+            sayfaKontrolu(satirYuksekligi);
             doc.text(soruSatiri, solKenar + 25, yPozisyonu);
             yPozisyonu += satirYuksekligi;
         });
-        yPozisyonu += 20; 
+        yPozisyonu += 25; 
     });
 }
 
 function altBilgiEkle(doc) {
     const totalPages = doc.internal.getNumberOfPages();
+    const currentYear = new Date().getFullYear();
     for (let i = 1; i <= totalPages; i++) {
         doc.setPage(i);
         doc.setFont('Lora', 'italic');
         doc.setFontSize(8);
         doc.setTextColor(150, 150, 150);
-        
-        const footerText = `Akıllı Çalışma Kağıdı Asistanı © 2025 | Sayfa ${i} / ${totalPages}`;
+        const footerText = `Akıllı Çalışma Kağıdı Asistanı © ${currentYear} | Sayfa ${i} / ${totalPages}`;
         doc.text(footerText, doc.internal.pageSize.getWidth() / 2, doc.internal.pageSize.getHeight() - 30, { align: 'center' });
     }
 }
