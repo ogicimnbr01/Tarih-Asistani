@@ -264,10 +264,10 @@ const PDF_SETTINGS = {
     marginTop: 70,
     marginBottom: 80,
     headerTopMargin: 70, 
-    lineHeightMultiplier: 1.4, 
+    lineHeightMultiplier: 1.4,
     titleColor: [42, 77, 122],
     textColor: [34, 34, 34],
-    altTextColor: [120, 120, 120],
+    altTextColor: [120, 120, 120], 
     sourceLineColor: [150, 150, 150],
     sectionLineColor: [220, 220, 220],
     underlineColor: [42, 77, 122],
@@ -276,7 +276,7 @@ const PDF_SETTINGS = {
     kazanımLineHeight: 1.35,
     kaynakAlıntıMarginLeft: 20,
     soruNumarasıOffset: 25,
-    soruAltCizgiSayısı: 4,
+    soruAltCizgiSayısı: 4, 
     soruCevapCizgiRengi: [200, 200, 200],
     altBilgiYOffset: 30, 
 };
@@ -331,7 +331,7 @@ async function olusturVeIndirPDF() {
         if (imageElement && imageElement.src) { imageDataUrl = await fetchAssetAsBase64(imageElement.src); }
 
         const kazanımSelect = document.getElementById('kazanim-secimi');
-        const seciliKazanimMetni = kazanımSelect.options[kazanımSelect.selectedIndex].text.substring(4); // "Kazanım: " kısmını çıkarır
+        const seciliKazanimMetni = kazanımSelect.options[kazanımSelect.selectedIndex].text.substring(4); 
         
         const kaynakKunyesiElement = document.querySelector('.kaynak-item.selected span:last-of-type');
         const kaynakKunyesi = kaynakKunyesiElement ? kaynakKunyesiElement.textContent : "";
@@ -359,30 +359,27 @@ function applyCurrentFont(doc) {
     doc.setTextColor(currentFont.color[0], currentFont.color[1], currentFont.color[2]);
 }
 
-let docRef; 
-let yPozisyonuRef; 
-
-const sayfaKontrolu = (gerekliBosluk) => {
-    if (yPozisyonuRef + gerekliBosluk > docRef.internal.pageSize.getHeight() - PDF_SETTINGS.marginBottom) {
-        docRef.addPage();
-        yPozisyonuRef = PDF_SETTINGS.marginTop;
-        applyCurrentFont(docRef);
+const sayfaKontrolu = (doc, yPozisyonu, gerekliBosluk) => {
+    if (yPozisyonu + gerekliBosluk > doc.internal.pageSize.getHeight() - PDF_SETTINGS.marginBottom) {
+        doc.addPage();
+        yPozisyonu = PDF_SETTINGS.marginTop;
+        applyCurrentFont(doc); 
     }
+    return yPozisyonu; 
 };
 
 async function generatePdfContent(doc, veri, imageDataUrl, kazanımMetni, kaynakKunyesi, logoBase64) {
-    docRef = doc; 
-    yPozisyonuRef = PDF_SETTINGS.headerTopMargin; 
+    let yPozisyonu = PDF_SETTINGS.headerTopMargin;
 
     const solKenar = PDF_SETTINGS.marginLeft;
     const sagKenar = doc.internal.pageSize.getWidth() - PDF_SETTINGS.marginRight;
     const sayfaGenisligi = sagKenar - solKenar;
 
-    yPozisyonuRef = addHeaderSection(doc, yPozisyonuRef, logoBase64, kazanımMetni, sayfaGenisligi);
+    yPozisyonu = addHeaderSection(doc, yPozisyonu, logoBase64, kazanımMetni, sayfaGenisligi);
 
-    yPozisyonuRef = await addSourceSection(doc, yPozisyonuRef, imageDataUrl, veri.kullanilan_kaynak, kaynakKunyesi, sayfaGenisligi);
+    yPozisyonu = await addSourceSection(doc, yPozisyonu, imageDataUrl, veri.kullanilan_kaynak, kaynakKunyesi, sayfaGenisligi);
 
-    yPozisyonuRef = addQuestionSection(doc, yPozisyonuRef, veri.calisma_kagidi, sayfaGenisligi);
+    yPozisyonu = addQuestionSection(doc, yPozisyonu, veri.calisma_kagidi, sayfaGenisligi);
 }
 
 function addHeaderSection(doc, startY, logoBase64, kazanımMetni, sayfaGenisligi) {
@@ -413,7 +410,7 @@ async function addSourceSection(doc, startY, imageDataUrl, kullanilanKaynakMetni
     const solKenar = PDF_SETTINGS.marginLeft;
     const sagKenar = doc.internal.pageSize.getWidth() - PDF_SETTINGS.marginRight;
 
-    sayfaKontrolu(50);
+    y = sayfaKontrolu(doc, y, 50);
     currentFont = { family: 'Playfair', style: 'bold', size: 16, color: PDF_SETTINGS.titleColor };
     applyCurrentFont(doc);
     doc.text('Tarihsel Kaynak', solKenar, y);
@@ -424,13 +421,13 @@ async function addSourceSection(doc, startY, imageDataUrl, kullanilanKaynakMetni
     if (imageDataUrl) {
         const imgProps = doc.getImageProperties(imageDataUrl);
         const imgHeight = sayfaGenisligi * imgProps.height / imgProps.width;
-        sayfaKontrolu(imgHeight + 20);
+        y = sayfaKontrolu(doc, y, imgHeight + 20);
         doc.addImage(imageDataUrl, 'JPEG', solKenar, y, sayfaGenisligi, imgHeight);
         y += imgHeight + 20;
     }
     
     if (kullanilanKaynakMetni) {
-        currentFont = { family: 'Lora', style: 'italic', size: 11, color: [50, 50, 50] };
+        currentFont = { family: 'Lora', style: 'italic', size: 11, color: [50, 50, 50] }; 
         applyCurrentFont(doc);
         const alintiSolKenar = solKenar + PDF_SETTINGS.kaynakAlıntıMarginLeft;
         const alintiSayfaGenisligi = sayfaGenisligi - PDF_SETTINGS.kaynakAlıntıMarginLeft;
@@ -441,7 +438,7 @@ async function addSourceSection(doc, startY, imageDataUrl, kullanilanKaynakMetni
         const metinSatirlari = doc.splitTextToSize(`"${kullanilanKaynakMetni}"`, alintiSayfaGenisligi);
         
         const alıntıMetniYuksekligi = metinSatirlari.length * currentFont.size * PDF_SETTINGS.lineHeightMultiplier;
-        sayfaKontrolu(alıntıMetniYuksekligi + 10);
+        y = sayfaKontrolu(doc, y, alıntıMetniYuksekligi + 10); 
         doc.line(solKenar, y, solKenar, y + alıntıMetniYuksekligi); 
 
         metinSatirlari.forEach(satir => {
@@ -465,7 +462,7 @@ function addQuestionSection(doc, startY, calismaKagidiMetni, sayfaGenisligi) {
     const solKenar = PDF_SETTINGS.marginLeft;
     const sagKenar = doc.internal.pageSize.getWidth() - PDF_SETTINGS.marginRight;
 
-    sayfaKontrolu(50);
+    y = sayfaKontrolu(doc, y, 50); 
     currentFont = { family: 'Playfair', style: 'bold', size: 16, color: PDF_SETTINGS.titleColor };
     applyCurrentFont(doc);
     doc.text('Analiz ve Yorumlama Soruları', solKenar, y);
@@ -483,7 +480,8 @@ function addQuestionSection(doc, startY, calismaKagidiMetni, sayfaGenisligi) {
         applyCurrentFont(doc);
         
         const tahminiSoruBaslangicYuksekligi = currentFont.size * PDF_SETTINGS.lineHeightMultiplier;
-        sayfaKontrolu(tahminiSoruBaslangicYuksekligi + (PDF_SETTINGS.soruAltCizgiSayısı * currentFont.size * PDF_SETTINGS.lineHeightMultiplier) + 25);
+        
+        y = sayfaKontrolu(doc, y, tahminiSoruBaslangicYuksekligi + (PDF_SETTINGS.soruAltCizgiSayısı * currentFont.size * PDF_SETTINGS.lineHeightMultiplier) + 25);
         
         doc.text(soruNumarasi, solKenar, y);
         
