@@ -307,7 +307,9 @@ async function olusturVeIndirPDF() {
 
         const kazanımSelect = document.getElementById('kazanim-secimi');
         const seciliKazanimMetni = kazanımSelect.options[kazanımSelect.selectedIndex].text.substring(4);
-        const kaynakKunyesi = document.querySelector('.kaynak-item.selected label, .kaynak-item.selected span').textContent;
+        
+        const kaynakKunyesiElement = document.querySelector('.kaynak-item.selected span:last-of-type');
+        const kaynakKunyesi = kaynakKunyesiElement ? kaynakKunyesiElement.textContent : "";
 
         generatePdfContent(doc, sonApiCevabi, imageDataUrl, seciliKazanimMetni, kaynakKunyesi, logoBase64);
 
@@ -322,25 +324,22 @@ async function olusturVeIndirPDF() {
     }
 }
 
+
 function generatePdfContent(doc, veri, imageDataUrl, kazanımMetni, kaynakKunyesi, logoBase64) {
     const solKenar = 55;
     const sayfaGenisligi = doc.internal.pageSize.getWidth() - (solKenar * 2);
-    const sayfaYuksekligi = doc.internal.pageSize.getHeight();
-    const altBosluk = 80;
     let yPozisyonu = 70;
-    const koyuGri = [34, 34, 34];
-    const lacivert = [42, 77, 122];
 
     const sayfaKontrolu = (gerekliBosluk) => {
-        if (yPozisyonu + gerekliBosluk > sayfaYuksekligi - altBosluk) {
+        if (yPozisyonu + gerekliBosluk > doc.internal.pageSize.getHeight() - 80) {
             altBilgiEkle(doc);
             doc.addPage();
             yPozisyonu = 70;
         }
     };
-
+    
     doc.addImage(logoBase64, 'PNG', solKenar - 15, yPozisyonu - 35, 35, 35);
-    doc.setFont('Playfair', 'bold'); doc.setFontSize(24); doc.setTextColor(koyuGri[0], koyuGri[1], koyuGri[2]);
+    doc.setFont('Playfair', 'bold'); doc.setFontSize(24); doc.setTextColor(34, 34, 34);
     doc.text('T.C. İnkılap Tarihi ve Atatürkçülük Dersi', doc.internal.pageSize.getWidth() / 2, yPozisyonu, { align: 'center' });
     yPozisyonu += 28;
 
@@ -354,7 +353,7 @@ function generatePdfContent(doc, veri, imageDataUrl, kazanımMetni, kaynakKunyes
     yPozisyonu += 30;
 
     sayfaKontrolu(50);
-    doc.setFont('Playfair', 'bold'); doc.setFontSize(16); doc.setTextColor(koyuGri[0], koyuGri[1], koyuGri[2]);
+    doc.setFont('Playfair', 'bold'); doc.setFontSize(16); doc.setTextColor(34, 34, 34);
     doc.text('Tarihsel Kaynak', solKenar, yPozisyonu);
     yPozisyonu += 25;
 
@@ -367,7 +366,7 @@ function generatePdfContent(doc, veri, imageDataUrl, kazanımMetni, kaynakKunyes
     }
     
     if (veri.kullanilan_kaynak) {
-        doc.setFont('Lora', 'normal'); doc.setFontSize(11); doc.setTextColor(koyuGri[0], koyuGri[1], koyuGri[2]);
+        doc.setFont('Lora', 'normal'); doc.setFontSize(11); doc.setTextColor(34, 34, 34);
         const metinSatirlari = doc.splitTextToSize(`"${veri.kullanilan_kaynak}"`, sayfaGenisligi);
         metinSatirlari.forEach(satir => {
             sayfaKontrolu(11 * 1.35);
@@ -382,7 +381,7 @@ function generatePdfContent(doc, veri, imageDataUrl, kazanımMetni, kaynakKunyes
     yPozisyonu += 30;
 
     sayfaKontrolu(50);
-    doc.setFont('Playfair', 'bold'); doc.setFontSize(16); doc.setTextColor(lacivert[0], lacivert[1], lacivert[2]);
+    doc.setFont('Playfair', 'bold'); doc.setFontSize(16); doc.setTextColor(42, 77, 122);
     doc.text('Analiz ve Yorumlama Soruları', solKenar, yPozisyonu);
     yPozisyonu += 25;
 
@@ -392,10 +391,10 @@ function generatePdfContent(doc, veri, imageDataUrl, kazanımMetni, kaynakKunyes
         const soruNumarasi = `${index + 1}.`;
         
         sayfaKontrolu(30);
-        doc.setFont('Playfair', 'bold'); doc.setFontSize(14); doc.setTextColor(lacivert[0], lacivert[1], lacivert[2]);
+        doc.setFont('Playfair', 'bold'); doc.setFontSize(14); doc.setTextColor(42, 77, 122);
         doc.text(soruNumarasi, solKenar, yPozisyonu);
         
-        doc.setFont('Lora', 'normal'); doc.setFontSize(11); doc.setTextColor(koyuGri[0], koyuGri[1], koyuGri[2]);
+        doc.setFont('Lora', 'normal'); doc.setFontSize(11); doc.setTextColor(34, 34, 34);
         const soruSatirlari = doc.splitTextToSize(soruMetni, sayfaGenisligi - 25);
         soruSatirlari.forEach(soruSatiri => {
             sayfaKontrolu(11 * 1.35);
@@ -408,6 +407,7 @@ function generatePdfContent(doc, veri, imageDataUrl, kazanımMetni, kaynakKunyes
     altBilgiEkle(doc);
 }
 
+
 function altBilgiEkle(doc) {
     const totalPages = doc.internal.getNumberOfPages();
     for (let i = 1; i <= totalPages; i++) {
@@ -417,7 +417,6 @@ function altBilgiEkle(doc) {
         doc.text(footerText, doc.internal.pageSize.getWidth() / 2, doc.internal.pageSize.getHeight() - 30, { align: 'center' });
     }
 }
-
     indirPdfButonu.addEventListener('click', olusturVeIndirPDF);
 </script>
 </body>
