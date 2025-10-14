@@ -262,13 +262,13 @@ const PDF_SETTINGS = {
     marginLeft: 55,
     marginRight: 55,
     marginTop: 70,
-    marginBottom: 80,
+    marginBottom: 80, // Bu değer, alt bilginin içeriğe çakışmasını önlemek için önemli
     headerTopMargin: 70, 
     lineHeightMultiplier: 1.35,
     titleColor: [42, 77, 122],
     textColor: [34, 34, 34],
     altTextColor: [120, 120, 120], 
-    mediumGray: [100, 100, 100],
+    mediumGray: [100, 100, 100], 
     darkGray: [50, 50, 50],
     sourceLineColor: [150, 150, 150],
     sectionLineColor: [220, 220, 220],
@@ -283,10 +283,10 @@ const PDF_SETTINGS = {
     altBilgiYOffset: 30, 
     kazanımFontSize: 12, 
     quoteFontSize: 10,   
-    quoteLineHeightMultiplier: 1.35,
+    quoteLineHeightMultiplier: 1.5,
     footerFontSize: 9,   
     sectionTitleSize: 16, 
-    mainBodyFontSize: 11,
+    mainBodyFontSize: 11, 
 };
 
 async function olusturVeIndirPDF() {
@@ -420,80 +420,84 @@ async function addSourceSection(doc, startY, imageDataUrl, kullanilanKaynakMetni
     const sagKenar = doc.internal.pageSize.getWidth() - PDF_SETTINGS.marginRight;
 
     y = sayfaKontrolu(doc, y, 50);
-    currentFont = { family: 'Playfair', style: 'bold', size: 16, color: PDF_SETTINGS.titleColor };
+    currentFont = { family: 'Playfair', style: 'bold', size: PDF_SETTINGS.sectionTitleSize, color: PDF_SETTINGS.titleColor };
     applyCurrentFont(doc);
     doc.text('Tarihsel Kaynak', solKenar, y);
-    doc.setDrawColor(PDF_SETTINGS.underlineColor[0], PDF_SETTINGS.underlineColor[1], PDF_SETTINGS.underlineColor[2]); 
-    doc.line(solKenar, y + 5, solKenar + 100, y + 5);
+    doc.setDrawColor(PDF_SETTINGS.underlineColor[0], PDF_SETTINGS.underlineColor[1], PDF_SETTINGS.underlineColor[2]);
+    doc.line(solKenar, y + 5, solKenar + 100, y + 5); 
     y += 25;
 
-        let boxStartY = y;
-    let boxPadding = 15; 
-    let boxWidth = sayfaGenisligi;
+    const boxPadding = 15;
+    const boxWidth = sayfaGenisligi;
+    
     let boxContentHeight = 0;
+    let imgDisplayHeight = 0;
 
     if (imageDataUrl) {
         const imgProps = doc.getImageProperties(imageDataUrl);
-        boxContentHeight += (sayfaGenisligi * imgProps.height / imgProps.width) + 20; 
+        const imgTargetWidth = boxWidth - (boxPadding * 2); 
+        imgDisplayHeight = imgTargetWidth * imgProps.height / imgProps.width;
+        boxContentHeight += imgDisplayHeight + 20; 
     }
-    if (kullanilanKaynakMetni) {
-        currentFont = { family: 'Lora', style: 'italic', size: PDF_SETTINGS.quoteFontSize, color: [50, 50, 50] }; 
-        applyCurrentFont(doc);
-        const alintiSayfaGenisligi = sayfaGenisligi - PDF_SETTINGS.kaynakAlıntıMarginLeft;
-        const metinSatirlari = doc.splitTextToSize(`"${kullanilanKaynakMetni}"`, alintiSayfaGenisligi);
-        boxContentHeight += (metinSatirlari.length * currentFont.size * PDF_SETTINGS.quoteLineHeightMultiplier) + 15;
-    }
-    boxContentHeight += (currentFont.size * PDF_SETTINGS.lineHeightMultiplier) + 30; 
 
-    let boxHeight = boxContentHeight + (boxPadding * 2); 
+    if (kullanilanKaynakMetni) {
+        currentFont = { family: 'Lora', style: 'italic', size: PDF_SETTINGS.quoteFontSize, color: PDF_SETTINGS.darkGray };
+        applyCurrentFont(doc);
+        const alintiKutuIciGenislik = boxWidth - (boxPadding * 2) - PDF_SETTINGS.kaynakAlıntıMarginLeft; 
+        const metinSatirlari = doc.splitTextToSize(`"${kullanilanKaynakMetni}"`, alintiKutuIciGenislik);
+        boxContentHeight += (metinSatirlari.length * currentFont.size * PDF_SETTINGS.quoteLineHeightMultiplier) + 15; 
+    }
+    boxContentHeight += (PDF_SETTINGS.footerFontSize * PDF_SETTINGS.lineHeightMultiplier) + 30;
+
+    let boxHeight = boxContentHeight + (boxPadding * 2);
 
     y = sayfaKontrolu(doc, y, boxHeight + 20); 
 
-    doc.setFillColor(247, 247, 247); 
-    doc.rect(solKenar, y, boxWidth, boxHeight, 'F'); 
+    // Kutuyu çiz
+    doc.setFillColor(247, 247, 247);
+    doc.rect(solKenar, y, boxWidth, boxHeight, 'F');
+    doc.setDrawColor(220, 220, 220);
+    doc.setLineWidth(0.5);
+    doc.rect(solKenar, y, boxWidth, boxHeight, 'S'); 
 
-    doc.setDrawColor(220, 220, 220); 
-    doc.setLineWidth(0.5); 
-    doc.rect(solKenar, y, boxWidth, boxHeight, 'S');
-
-    y += boxPadding; 
-    let contentY = y; 
+    let contentY = y + boxPadding;
 
     if (imageDataUrl) {
-        const imgProps = doc.getImageProperties(imageDataUrl);
-        const imgHeight = sayfaGenisligi * imgProps.height / imgProps.width;
-        doc.addImage(imageDataUrl, 'JPEG', solKenar + boxPadding, contentY, sayfaGenisligi - (boxPadding * 2), imgHeight);
-        contentY += imgHeight + 20;
+        const imgTargetWidth = boxWidth - (boxPadding * 2);
+        const imgX = solKenar + boxPadding + (imgTargetWidth - imgTargetWidth) / 2;
+        doc.addImage(imageDataUrl, 'JPEG', imgX, contentY, imgTargetWidth, imgDisplayHeight);
+        contentY += imgDisplayHeight + 20; 
     }
-    
+
     if (kullanilanKaynakMetni) {
-        currentFont = { family: 'Lora', style: 'italic', size: PDF_SETTINGS.quoteFontSize, color: [50, 50, 50] }; 
+        currentFont = { family: 'Lora', style: 'italic', size: PDF_SETTINGS.quoteFontSize, color: PDF_SETTINGS.darkGray };
         applyCurrentFont(doc);
-        const alintiSolKenar = solKenar + boxPadding + PDF_SETTINGS.kaynakAlıntıMarginLeft; 
-        const alintiSayfaGenisligi = sayfaGenisligi - (boxPadding * 2) - PDF_SETTINGS.kaynakAlıntıMarginLeft;
+        
+        const alintiMetinBaslangicX = solKenar + boxPadding + PDF_SETTINGS.kaynakAlıntıMarginLeft;
+        const alintiKutuIciGenislik = boxWidth - (boxPadding * 2) - PDF_SETTINGS.kaynakAlıntıMarginLeft;
         
         doc.setDrawColor(PDF_SETTINGS.sourceLineColor[0], PDF_SETTINGS.sourceLineColor[1], PDF_SETTINGS.sourceLineColor[2]);
         doc.setLineWidth(1);
         
-        const metinSatirlari = doc.splitTextToSize(`"${kullanilanKaynakMetni}"`, alintiSayfaGenisligi);
+        const metinSatirlari = doc.splitTextToSize(`"${kullanilanKaynakMetni}"`, alintiKutuIciGenislik);
         const alıntıMetniYuksekligi = metinSatirlari.length * currentFont.size * PDF_SETTINGS.quoteLineHeightMultiplier;
         
-        doc.line(solKenar + boxPadding, contentY, solKenar + boxPadding, contentY + alıntıMetniYuksekligi); 
+        doc.line(solKenar + boxPadding + (PDF_SETTINGS.kaynakAlıntıMarginLeft / 2), contentY, solKenar + boxPadding + (PDF_SETTINGS.kaynakAlıntıMarginLeft / 2), contentY + alıntıMetniYuksekligi);
         
         metinSatirlari.forEach(satir => {
-            const satirYuksekligi = currentFont.size * PDF_SETTINGS.quoteLineHeightMultiplier; 
-            doc.text(satir, alintiSolKenar, contentY);
+            const satirYuksekligi = currentFont.size * PDF_SETTINGS.quoteLineHeightMultiplier;
+            doc.text(satir, alintiMetinBaslangicX, contentY);
             contentY += satirYuksekligi;
         });
-        contentY += 15;
+        contentY += 15; 
     }
 
     currentFont = { family: 'Lora', style: 'italic', size: PDF_SETTINGS.footerFontSize, color: PDF_SETTINGS.mediumGray };
     applyCurrentFont(doc);
-    doc.text(`Kaynak: ${kaynakKunyesi}`, sagKenar - boxPadding, contentY, { align: 'right' }); 
-    contentY += 30;
+    doc.text(`Kaynak: ${kaynakKunyesi}`, sagKenar - boxPadding, contentY, { align: 'right' });
+    contentY += 30; 
 
-    return contentY + boxPadding; 
+    return contentY;
 }
 
 function addQuestionSection(doc, startY, calismaKagidiMetni, sayfaGenisligi) {
@@ -559,18 +563,22 @@ function altBilgiEkle(doc) {
     const currentYear = new Date().getFullYear();
     for (let i = 1; i <= totalPages; i++) {
         doc.setPage(i);
+        
         doc.setFont('Lora', 'italic');
         doc.setFontSize(PDF_SETTINGS.footerFontSize);
         doc.setTextColor(150, 150, 150);
         
         const mainFooterText = `Akıllı Çalışma Kağıdı Asistanı © ${currentYear} | Sayfa ${i} / ${totalPages}`;
-        doc.text(mainFooterText, doc.internal.pageSize.getWidth() / 2, doc.internal.pageSize.getHeight() - PDF_SETTINGS.altBilgiYOffset, { align: 'center' });
+        const mainFooterTextY = doc.internal.pageSize.getHeight() - PDF_SETTINGS.altBilgiYOffset;
+        doc.text(mainFooterText, doc.internal.pageSize.getWidth() / 2, mainFooterTextY, { align: 'center' });
  
         const signatureText = `Bu belge, Akıllı Çalışma Kağıdı Asistanı Amazon Bulut Servisleri tarafından otomatik üretilmiştir.`;
         doc.setFont('Lora', 'normal');
         doc.setFontSize(PDF_SETTINGS.footerFontSize - 1);
         doc.setTextColor(100, 100, 100);
-        doc.text(signatureText, doc.internal.pageSize.getWidth() / 2, doc.internal.pageSize.getHeight() - PDF_SETTINGS.altBilgiYOffset - 15, { align: 'center' });
+
+        const signatureTextY = mainFooterTextY - 15; 
+        doc.text(signatureText, doc.internal.pageSize.getWidth() / 2, signatureTextY, { align: 'center' });
     }
 }
     indirPdfButonu.addEventListener('click', olusturVeIndirPDF);
