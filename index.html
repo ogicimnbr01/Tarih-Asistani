@@ -379,14 +379,15 @@ function applyCurrentFont(doc) {
     doc.setTextColor(currentFont.color[0], currentFont.color[1], currentFont.color[2]);
 }
 
+// sayfaKontrolu fonksiyonunu biraz değiştirelim.
+// Yeni bir sayfa ekleyip Y pozisyonunu resetleyecek, ancak ilk sayfa için bu işlemi yapmayacak.
 const sayfaKontrolu = (doc, yPozisyonu, gerekliBosluk) => {
     const sayfaAltSiniri = doc.internal.pageSize.getHeight() - PDF_SETTINGS.marginBottom;
 
-    // Sadece gerekli olduğunda yeni sayfa ekle
     if (yPozisyonu + gerekliBosluk > sayfaAltSiniri) {
         doc.addPage();
-        yPozisyonu = PDF_SETTINGS.marginTop; // Yeni sayfanın başlangıç y pozisyonu
-        applyCurrentFont(doc); // Yeni sayfada font ayarlarını tekrar uygula
+        yPozisyonu = PDF_SETTINGS.marginTop;
+        applyCurrentFont(doc);
     }
     return yPozisyonu;
 };
@@ -398,7 +399,7 @@ async function generatePdfContent(doc, veri, imageDataUrl, kazanımMetni, kaynak
     const sagKenar = doc.internal.pageSize.getWidth() - PDF_SETTINGS.marginRight;
     const sayfaGenisligi = sagKenar - solKenar;
 
-    // Header her zaman ilk sayfaya (veya mevcut sayfaya) eklenir
+    // 1. Header bölümünü kesinlikle ilk sayfaya ekle.
     yPozisyonu = addHeaderSection(doc, yPozisyonu, logoBase64, kazanımMetni, sayfaGenisligi);
 
     // Kaynak bölümünün yüksekliğini tahmin edelim
@@ -427,15 +428,14 @@ async function generatePdfContent(doc, veri, imageDataUrl, kazanımMetni, kaynak
     }
 
     if (veri.kullanilan_kaynak) {
-        // Geçici olarak font ayarlarını yapıp metin yüksekliğini hesapla
         doc.setFont('Lora', 'italic');
         doc.setFontSize(PDF_SETTINGS.quoteFontSize);
         const alintiKutuIciGenislik = contentWidthInsideBox - PDF_SETTINGS.kaynakAlıntıMarginLeft;
         const metinSatirlari = doc.splitTextToSize(`"${veri.kullanilan_kaynak}"`, alintiKutuIciGenislik);
         estimatedSourceContentHeight += (metinSatirlari.length * PDF_SETTINGS.quoteFontSize * PDF_SETTINGS.quoteLineHeightMultiplier);
         estimatedSourceContentHeight += 15;
-        doc.setFont('Lora', 'italic'); // Geri alıyoruz
-        doc.setFontSize(PDF_SETTINGS.footerFontSize); // Geri alıyoruz
+        doc.setFont('Lora', 'italic');
+        doc.setFontSize(PDF_SETTINGS.footerFontSize);
         estimatedSourceContentHeight += (PDF_SETTINGS.footerFontSize * PDF_SETTINGS.lineHeightMultiplier);
         estimatedSourceContentHeight += 30;
     }
@@ -448,19 +448,28 @@ async function generatePdfContent(doc, veri, imageDataUrl, kazanımMetni, kaynak
     const estimatedSourceSectionTitleHeight = PDF_SETTINGS.sectionTitleSize + 5 + PDF_SETTINGS.sourceSectionTitleSpacing;
     const totalRequiredSourceSectionHeight = estimatedSourceSectionTitleHeight + estimatedSourceBoxHeight + 10;
 
-    // Kaynak bölümünü eklemeden önce sayfa kontrolü yap
-    // Bu kontrol, başlık sonrası mevcut yPozisyonu'na kaynak bölümünün sığıp sığmadığına bakar.
-    yPozisyonu = sayfaKontrolu(doc, yPozisyonu, totalRequiredSourceSectionHeight);
+    // *** KRAL KISIM: Kaynak bölümü her zaman ilk sayfaya sığsın ***
+    // Mevcut yPozisyonu ve kaynak bölümünün toplam yüksekliği, ilk sayfaya sığıyor mu kontrol et
+    const sayfaAltSiniri = doc.internal.pageSize.getHeight() - PDF_SETTINGS.marginBottom;
+    if (yPozisyonu + totalRequiredSourceSectionHeight > sayfaAltSiniri) {
+        // Eğer kaynak bölümü ilk sayfaya sığmıyorsa, yeni bir sayfa ekleyip kaynak bölümünü oraya koy.
+        // Bu, soruların ikinci sayfaya geçmesi pahasına da olsa, kaynak bölümünü bir bütün olarak tutar.
+        doc.addPage();
+        yPozisyonu = PDF_SETTINGS.marginTop;
+        applyCurrentFont(doc);
+    }
 
     // Kaynak bölümünü ekle
     yPozisyonu = await addSourceSection(doc, yPozisyonu, imageDataUrl, veri.kullanilan_kaynak, kaynakKunyesi, sayfaGenisligi, estimatedSourceBoxHeight, calculatedImageHeight, actualImageWidth);
 
-    // Soru bölümünü ekle
-    // Soru bölümü başlığı için gerekli boşluğu tahmin et
-    const estimatedQuestionSectionTitleHeight = PDF_SETTINGS.sectionTitleSize + 25; // Başlık ve altındaki boşluk
+    // *** KRAL KISIM: Soru bölümü her zaman yeni bir sayfadan başlasın ***
+    // Kaynak bölümü eklendikten sonra, sorular için her zaman yeni bir sayfa açıyoruz.
+    doc.addPage();
+    yPozisyonu = PDF_SETTINGS.marginTop; // Yeni sayfanın başlangıç Y pozisyonu
+    applyCurrentFont(doc); // Yeni sayfada font ayarlarını tekrar uygula
 
-    // Soru bölümünü eklemeden önce sayfa kontrolü
-    yPozisyonu = sayfaKontrolu(doc, yPozisyonu, estimatedQuestionSectionTitleHeight);
+    // Soru bölümünü ekle
+    // addQuestionSection içindeki ilk sayfa kontrolü de artık ilk soru için geçerli olacak.
     yPozisyonu = addQuestionSection(doc, yPozisyonu, veri.calisma_kagidi, sayfaGenisligi);
 }
 
