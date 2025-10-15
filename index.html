@@ -289,7 +289,7 @@ const PDF_SETTINGS = {
     mainBodyFontSize: 10, // Ana metin boyutunu küçült
     sourceSectionTitleSpacing: 10, // Kaynak başlığı altındaki boşluğu azalt
     imageBottomSpacing: 10, // Görsel altındaki boşluğu azalt
-    minUsableImageHeight: 60, // Minimum görsel yüksekliğini düşür (daha küçük görsellerin kabul edilmesini sağlar)
+    minUsableImageHeight: 40, // Minimum görsel yüksekliğini düşür (daha küçük görsellerin kabul edilmesini sağlar)
     imagePaddingHorizontal: 10, // Görselin yatay boşluğunu azalt
     sourceSectionTitleLineLength: 90, // Kaynak başlığı alt çizgi uzunluğunu azalt
     questionSectionTitleLineLength: 180, // Soru başlığı alt çizgi uzunluğunu azalt
@@ -410,8 +410,8 @@ async function generatePdfContent(doc, veri, imageDataUrl, kazanımMetni, kaynak
     // *** GÖRSEL KÜÇÜLTME BÖLÜMÜ ***
     // Görsel için ayrılan alanı daha da küçültelim. Örneğin, toplam genişliğin %70'i kadar bir maks genişlik kullanabiliriz.
     // Bu değerleri daha da agresif hale getirdim.
-    const maxImageWidthForPage = contentWidthInsideBox * 0.7; // Sayfa genişliğinin %70'i kadar
-    const maxImageHeightForPage = doc.internal.pageSize.getHeight() * 0.20; // Sayfa yüksekliğinin %20'si kadar (tahmini)
+    const maxImageWidthForPage = contentWidthInsideBox * 0.9; // Sayfa genişliğinin %70'i kadar
+    const maxImageHeightForPage = doc.internal.pageSize.getHeight() * 0.40; // Sayfa yüksekliğinin %20'si kadar (tahmini)
 
     if (imageDataUrl) {
         const imgProps = doc.getImageProperties(imageDataUrl);
