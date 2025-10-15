@@ -666,7 +666,7 @@ function altBilgiEkle(doc) {
         doc.setFontSize(PDF_SETTINGS.footerFontSize);
         doc.setTextColor(150, 150, 150);
 
-        const mainFooterText = `Akıllı Çalışma Kağıdı Asistanı © ${currentYear} | Sayfa ${i} / ${totalPages}`;
+        const mainFooterText = `Akıllı Çalışma Kağıdı Asistanı © Oğuzhan Başsarı ${currentYear} | Sayfa ${i} / ${totalPages}`;
         const mainFooterTextY = doc.internal.pageSize.getHeight() - footerBottomMargin;
         doc.text(mainFooterText, doc.internal.pageSize.getWidth() / 2, mainFooterTextY, { align: 'center' });
     }
