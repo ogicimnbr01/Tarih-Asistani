@@ -119,14 +119,32 @@ resource "aws_s3_bucket" "belge_deposu" {
 resource "aws_s3_bucket_public_access_block" "belge_deposu_access_block" {
   bucket = aws_s3_bucket.belge_deposu.id
 
-  block_public_acls       = false
-  block_public_policy     = false
-  ignore_public_acls      = false
-  restrict_public_buckets = false
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
 }
 resource "aws_s3_bucket_policy" "belge_deposu_policy" {
   bucket = aws_s3_bucket.belge_deposu.id
-  policy = data.aws_iam_policy_document.s3_policy_for_cloudfront.json
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Sid       = "AllowCloudFrontOACAccess"
+        Effect    = "Allow"
+        Principal = {
+          Service = "cloudfront.amazonaws.com"
+        }
+        Action    = "s3:GetObject"
+        Resource  = "${aws_s3_bucket.belge_deposu.arn}/*"
+        Condition = {
+          StringEquals = {
+            "AWS:SourceArn" = aws_cloudfront_distribution.s3_distribution.arn
+          }
+        }
+      }
+    ]
+  })
 }
 resource "aws_iam_role" "belge_isleyici_lambda_role" {
   name = "tarih-projesi-belge-isleyici-role"
@@ -207,13 +225,13 @@ resource "aws_s3_bucket_cors_configuration" "belge_deposu_cors" {
 
   cors_rule {
     allowed_headers = ["*"]
-    allowed_methods = ["GET"]
+    allowed_methods = ["GET", "PUT"] 
     allowed_origins = [
         "https://main.d30pkxbqbjkexa.amplifyapp.com",
         "http://localhost:8000",
         "http://127.0.0.1:5500"
     ]
-    expose_headers  = []
+    expose_headers  = ["ETag"]
     max_age_seconds = 3000
   }
 }
