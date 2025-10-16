@@ -262,9 +262,9 @@ const PDF_SETTINGS = {
     marginLeft: 55,
     marginRight: 55,
     marginTop: 70,
-    marginBottom: 120,
+    marginBottom: 100, // Footer'ın kapladığı alanı biraz düşürdük, daha fazla kullanılabilir alan için
     headerTopMargin: 70,
-    lineHeightMultiplier: 1.2, // Metin satır yüksekliğini azalt
+    lineHeightMultiplier: 1.2,
     titleColor: [42, 77, 122],
     textColor: [34, 34, 34],
     altTextColor: [120, 120, 120],
@@ -275,26 +275,29 @@ const PDF_SETTINGS = {
     underlineColor: [42, 77, 122],
     logoOffset: 15,
     logoSize: 35,
-    kazanımLineHeight: 1.2, // Kazanım metin satır yüksekliğini azalt
-    kaynakAlıntıMarginLeft: 15, // Kaynak alıntı sol boşluğunu azalt
+    kazanımLineHeight: 1.2,
+    kaynakAlıntıMarginLeft: 15,
     soruNumarasıOffset: 25,
     soruAltCizgiSayısı: 4,
     soruCevapCizgiRengi: [200, 200, 200],
     altBilgiYOffset: 30,
     kazanımFontSize: 12,
-    quoteFontSize: 9,   // Alıntı metin boyutunu küçült
-    quoteLineHeightMultiplier: 1.3, // Alıntı metin satır yüksekliğini azalt
-    footerFontSize: 8,   // Footer metin boyutunu küçült
-    sectionTitleSize: 15, // Bölüm başlık boyutunu küçült
-    mainBodyFontSize: 10, // Ana metin boyutunu küçült
-    sourceSectionTitleSpacing: 10, // Kaynak başlığı altındaki boşluğu azalt
-    imageBottomSpacing: 10, // Görsel altındaki boşluğu azalt
-    minUsableImageHeight: 40, // Minimum görsel yüksekliğini düşür (daha küçük görsellerin kabul edilmesini sağlar)
-    imagePaddingHorizontal: 10, // Görselin yatay boşluğunu azalt
-    sourceSectionTitleLineLength: 90, // Kaynak başlığı alt çizgi uzunluğunu azalt
-    questionSectionTitleLineLength: 180, // Soru başlığı alt çizgi uzunluğunu azalt
+    quoteFontSize: 9,
+    quoteLineHeightMultiplier: 1.3,
+    footerFontSize: 8,
+    sectionTitleSize: 15,
+    mainBodyFontSize: 10,
+    sourceSectionTitleSpacing: 10,
+    imageBottomSpacing: 10,
+    minUsableImageHeight: 60,
+    imagePaddingHorizontal: 10,
+    sourceSectionTitleLineLength: 90,
+    questionSectionTitleLineLength: 180,
     lineThickness: 1,
-    sourceSectionPaddingBottom: 30
+
+    // Yeni ayarlar:
+    sourceSectionBottomPadding: 40, // Kaynak bölümü sonrası ek boşluk, boş sayfa atlamayı engellemek için
+    headerBottomSpacing: 20, // Header sonrası ek boşluk, header ve kaynak arasına çok boşluk girmemesi için
 };
 
 async function olusturVeIndirPDF() {
@@ -398,17 +401,18 @@ async function generatePdfContent(doc, veri, imageDataUrl, kazanımMetni, kaynak
     const sagKenar = doc.internal.pageSize.getWidth() - PDF_SETTINGS.marginRight;
     const sayfaGenisligi = sagKenar - solKenar;
 
+    // 1. Header bölümünü kesinlikle ilk sayfaya ekle.
     yPozisyonu = addHeaderSection(doc, yPozisyonu, logoBase64, kazanımMetni, sayfaGenisligi);
 
-    const boxPadding = 15; 
+    // Kaynak bölümünün yüksekliğini tahmin edelim
+    const boxPadding = 15;
     const contentWidthInsideBox = sayfaGenisligi - (boxPadding * 2);
     let estimatedSourceContentHeight = 0;
     let calculatedImageHeight = 0;
     let actualImageWidth = 0;
 
-
-    const maxImageWidthForPage = contentWidthInsideBox * 0.9; 
-    const maxImageHeightForPage = doc.internal.pageSize.getHeight() * 0.40; 
+    const maxImageWidthForPage = contentWidthInsideBox * 0.9; // Resim genişliğini artırdık
+    const maxImageHeightForPage = doc.internal.pageSize.getHeight() * 0.40; // Resim yüksekliğini artırdık
 
     if (imageDataUrl) {
         const imgProps = doc.getImageProperties(imageDataUrl);
@@ -430,7 +434,6 @@ async function generatePdfContent(doc, veri, imageDataUrl, kazanımMetni, kaynak
             calculatedImageHeight = tempCalculatedImageHeight;
         }
 
-
         if (calculatedImageHeight < PDF_SETTINGS.minUsableImageHeight) {
             calculatedImageHeight = 0;
             actualImageWidth = 0;
@@ -440,23 +443,26 @@ async function generatePdfContent(doc, veri, imageDataUrl, kazanımMetni, kaynak
     }
 
     if (veri.kullanilan_kaynak) {
+        // Kaynak metin hesaplamaları için geçici olarak font ayarlarını yap
         doc.setFont('Lora', 'italic');
-        doc.setFontSize(PDF_SETTINGS.quoteFontSize); 
+        doc.setFontSize(PDF_SETTINGS.quoteFontSize);
 
         const alintiKutuIciGenislik = contentWidthInsideBox - PDF_SETTINGS.kaynakAlıntıMarginLeft;
         const metinSatirlari = doc.splitTextToSize(`"${veri.kullanilan_kaynak}"`, alintiKutuIciGenislik);
-
+        
+        // Alıntı metninin gerçek yüksekliğini hesapla
         let alıntıMetniGercekYukseklik = 0;
         if (metinSatirlari.length > 0) {
-        alıntıMetniGercekYukseklik = metinSatirlari.length * PDF_SETTINGS.quoteFontSize * PDF_SETTINGS.quoteLineHeightMultiplier;
-    }
+            alıntıMetniGercekYukseklik = metinSatirlari.length * PDF_SETTINGS.quoteFontSize * PDF_SETTINGS.quoteLineHeightMultiplier;
+        }
+        estimatedSourceContentHeight += alıntıMetniGercekYukseklik;
+        estimatedSourceContentHeight += 10; // Metin sonrası boşluk
 
-        estimatedSourceContentHeight += (metinSatirlari.length * PDF_SETTINGS.quoteFontSize * PDF_SETTINGS.quoteLineHeightMultiplier);
-        estimatedSourceContentHeight += 10;
+        // Kaynak künyesi için font ayarlarını yap
         doc.setFont('Lora', 'italic');
         doc.setFontSize(PDF_SETTINGS.footerFontSize);
-        estimatedSourceContentHeight += (PDF_SETTINGS.footerFontSize * PDF_SETTINGS.lineHeightMultiplier);
-        estimatedSourceContentHeight += 20; 
+        estimatedSourceContentHeight += (PDF_SETTINGS.footerFontSize * PDF_SETTINGS.lineHeightMultiplier); // Kaynak künyesi yüksekliği
+        estimatedSourceContentHeight += 20; // Kaynak sonrası boşluk (bu da ekstra bir güvenlik boşluğu)
     }
 
     let estimatedSourceBoxHeight = 0;
@@ -465,18 +471,24 @@ async function generatePdfContent(doc, veri, imageDataUrl, kazanımMetni, kaynak
     }
 
     const estimatedSourceSectionTitleHeight = PDF_SETTINGS.sectionTitleSize + 5 + PDF_SETTINGS.sourceSectionTitleSpacing;
-    const totalRequiredSourceSectionHeight = estimatedSourceSectionTitleHeight + estimatedSourceBoxHeight + 40; 
+    // totalRequiredSourceSectionHeight'a ekstra bir boşluk payı ekliyoruz
+    const totalRequiredSourceSectionHeight = estimatedSourceSectionTitleHeight + estimatedSourceBoxHeight + PDF_SETTINGS.sourceSectionBottomPadding;
 
     const sayfaAltSiniri = doc.internal.pageSize.getHeight() - PDF_SETTINGS.marginBottom;
 
+    // ÖNEMLİ KONTROL: Eğer kaynak bölümü ilk sayfaya sığmıyorsa yeni sayfa ekle.
+    // Ancak sığıyorsa, ilk sayfada devam etmeli.
     if (yPozisyonu + totalRequiredSourceSectionHeight > sayfaAltSiniri) {
         doc.addPage();
         yPozisyonu = PDF_SETTINGS.marginTop;
         applyCurrentFont(doc);
     }
+    // else durumda yPozisyonu olduğu gibi kalacak ve kaynak ilk sayfadan devam edecek.
+
 
     yPozisyonu = await addSourceSection(doc, yPozisyonu, imageDataUrl, veri.kullanilan_kaynak, kaynakKunyesi, sayfaGenisligi, estimatedSourceBoxHeight, calculatedImageHeight, actualImageWidth);
 
+    // Sorular için her zaman yeni bir sayfa açıyoruz.
     doc.addPage();
     yPozisyonu = PDF_SETTINGS.marginTop;
     applyCurrentFont(doc);
@@ -488,7 +500,7 @@ function addHeaderSection(doc, startY, logoBase64, kazanımMetni, sayfaGenisligi
     let y = startY;
     const solKenar = PDF_SETTINGS.marginLeft;
 
-    currentFont = { family: 'Playfair', style: 'bold', size: 24, color: PDF_SETTINGS.titleColor }; // Header başlık boyutunu koru
+    currentFont = { family: 'Playfair', style: 'bold', size: 24, color: PDF_SETTINGS.titleColor };
     applyCurrentFont(doc);
     doc.addImage(logoBase64, 'PNG', solKenar, y - PDF_SETTINGS.logoOffset, PDF_SETTINGS.logoSize, PDF_SETTINGS.logoSize);
     doc.text('T.C. İnkılap Tarihi ve Atatürkçülük Dersi', solKenar + PDF_SETTINGS.logoSize + 10, y, { align: 'left' });
@@ -498,7 +510,7 @@ function addHeaderSection(doc, startY, logoBase64, kazanımMetni, sayfaGenisligi
     applyCurrentFont(doc);
     const kazanımSatirlari = doc.splitTextToSize(`Kazanım: ${kazanımMetni}`, sayfaGenisligi);
     doc.text(kazanımSatirlari, solKenar, y, { align: 'left' });
-    y += (kazanımSatirlari.length * currentFont.size * PDF_SETTINGS.kazanımLineHeight) + 10;
+    y += (kazanımSatirlari.length * currentFont.size * PDF_SETTINGS.kazanımLineHeight) + PDF_SETTINGS.headerBottomSpacing; // Yeni boşluk ayarı
 
     doc.setDrawColor(PDF_SETTINGS.sectionLineColor[0], PDF_SETTINGS.sectionLineColor[1], PDF_SETTINGS.sectionLineColor[2]);
     doc.setLineWidth(PDF_SETTINGS.lineThickness);
@@ -534,13 +546,11 @@ async function addSourceSection(doc, startY, imageDataUrl, kullanilanKaynakMetni
     doc.rect(solKenar, currentBoxY, sayfaGenisligi, requiredBoxHeight, 'F');
     doc.setDrawColor(220, 220, 220);
     doc.setLineWidth(0.5);
-    doc.setDrawColor(255, 0, 0);
     doc.rect(solKenar, currentBoxY, sayfaGenisligi, requiredBoxHeight, 'S');
 
     let contentYInsideBox = currentBoxY + boxPadding;
 
     if (imageDataUrl && calculatedImageHeight > 0) {
-
         const imgX = solKenar + boxPadding + ( (contentWidthInsideBox - (PDF_SETTINGS.imagePaddingHorizontal * 2) - actualImageWidth) / 2 ) + PDF_SETTINGS.imagePaddingHorizontal;
 
         doc.addImage(imageDataUrl, 'JPEG', imgX, contentYInsideBox, actualImageWidth, calculatedImageHeight);
@@ -558,6 +568,7 @@ async function addSourceSection(doc, startY, imageDataUrl, kullanilanKaynakMetni
         doc.setLineWidth(PDF_SETTINGS.lineThickness);
 
         const metinSatirlari = doc.splitTextToSize(`"${kullanilanKaynakMetni}"`, alintiKutuIciGenislik);
+        // Bu yükseklik hesabı artık daha doğru
         const alıntıMetniYuksekligi = metinSatirlari.length * currentFont.size * PDF_SETTINGS.quoteLineHeightMultiplier;
 
         doc.line(solKenar + boxPadding + (PDF_SETTINGS.kaynakAlıntıMarginLeft / 2), contentYInsideBox,
@@ -568,16 +579,16 @@ async function addSourceSection(doc, startY, imageDataUrl, kullanilanKaynakMetni
             doc.text(satir, alintiMetinBaslangicX, contentYInsideBox);
             contentYInsideBox += satirYuksekligi;
         });
-        contentYInsideBox += 20; 
+        contentYInsideBox += 15; // Metin sonrası boşluk
         
         currentFont = { family: 'Lora', style: 'italic', size: PDF_SETTINGS.footerFontSize, color: PDF_SETTINGS.mediumGray };
         applyCurrentFont(doc);
         doc.text(`Kaynak: ${kaynakKunyesi}`, sagKenar - boxPadding, contentYInsideBox, { align: 'right' });
-        contentYInsideBox += 40; 
+        contentYInsideBox += 30; // Kaynak sonrası boşluk
     }
 
-    y = currentBoxY + requiredBoxHeight + 30; 
-return y;
+    y = currentBoxY + requiredBoxHeight + PDF_SETTINGS.sourceSectionBottomPadding; // Yeni boşluk ayarı
+    return y;
 }
 
 function addQuestionSection(doc, startY, calismaKagidiMetni, sayfaGenisligi) {
@@ -585,6 +596,7 @@ function addQuestionSection(doc, startY, calismaKagidiMetni, sayfaGenisligi) {
     const solKenar = PDF_SETTINGS.marginLeft;
     const sagKenar = doc.internal.pageSize.getWidth() - PDF_SETTINGS.marginRight;
 
+    // Soru bölümü başlığını ekle (sayfa kontrolü generatePdfContent'ta yapıldı)
     currentFont = { family: 'Playfair', style: 'bold', size: PDF_SETTINGS.sectionTitleSize, color: PDF_SETTINGS.titleColor };
     applyCurrentFont(doc);
     doc.text('Analiz ve Yorumlama Soruları', solKenar, y);
@@ -613,6 +625,7 @@ function addQuestionSection(doc, startY, calismaKagidiMetni, sayfaGenisligi) {
 
         let estimatedQuestionHeight = estimatedQuestionTextHeight + 10 + estimatedQuestionLineHeight + 15;
 
+        // Her soru için sayfa kontrolü
         y = sayfaKontrolu(doc, y, estimatedQuestionHeight);
 
         currentFont = { family: 'Playfair', style: 'bold', size: PDF_SETTINGS.mainBodyFontSize, color: PDF_SETTINGS.mediumGray };
