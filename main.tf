@@ -223,11 +223,12 @@ resource "aws_lambda_permission" "allow_s3_to_call_lambda" {
 resource "aws_s3_bucket_cors_configuration" "belge_deposu_cors" {
   bucket = aws_s3_bucket.belge_deposu.id
 
-  cors_rule {
+cors_rule {
     allowed_headers = ["*"]
     allowed_methods = ["GET", "PUT"] 
     allowed_origins = [
         "https://main.d30pkxbqbjkexa.amplifyapp.com",
+        "https://www.tarihasistani.com.tr",
         "http://localhost:8000",
         "http://127.0.0.1:5500"
     ]
@@ -314,8 +315,13 @@ cors_config {
     access_control_allow_methods {
       items = ["GET", "HEAD", "OPTIONS"]
     }
-    access_control_allow_origins {
-      items = ["https://main.d30pkxbqbjkexa.amplifyapp.com", "http://localhost:8000", "http://127.0.0.1:5500"]
+access_control_allow_origins {
+      items = [
+        "https://main.d30pkxbqbjkexa.amplifyapp.com", 
+        "https://www.tarihasistani.com.tr", 
+        "http://localhost:8000", 
+        "http://127.0.0.1:5500"
+      ]
     }
     origin_override = true
   }
