@@ -442,8 +442,15 @@ async function generatePdfContent(doc, veri, imageDataUrl, kazanımMetni, kaynak
     if (veri.kullanilan_kaynak) {
         doc.setFont('Lora', 'italic');
         doc.setFontSize(PDF_SETTINGS.quoteFontSize); 
+
         const alintiKutuIciGenislik = contentWidthInsideBox - PDF_SETTINGS.kaynakAlıntıMarginLeft;
         const metinSatirlari = doc.splitTextToSize(`"${veri.kullanilan_kaynak}"`, alintiKutuIciGenislik);
+
+        let alıntıMetniGercekYukseklik = 0;
+        if (metinSatirlari.length > 0) {
+        alıntıMetniGercekYukseklik = metinSatirlari.length * PDF_SETTINGS.quoteFontSize * PDF_SETTINGS.quoteLineHeightMultiplier;
+    }
+
         estimatedSourceContentHeight += (metinSatirlari.length * PDF_SETTINGS.quoteFontSize * PDF_SETTINGS.quoteLineHeightMultiplier);
         estimatedSourceContentHeight += 10;
         doc.setFont('Lora', 'italic');
@@ -458,7 +465,7 @@ async function generatePdfContent(doc, veri, imageDataUrl, kazanımMetni, kaynak
     }
 
     const estimatedSourceSectionTitleHeight = PDF_SETTINGS.sectionTitleSize + 5 + PDF_SETTINGS.sourceSectionTitleSpacing;
-    const totalRequiredSourceSectionHeight = estimatedSourceSectionTitleHeight + estimatedSourceBoxHeight + PDF_SETTINGS.sourceSectionPaddingBottom;
+    const totalRequiredSourceSectionHeight = estimatedSourceSectionTitleHeight + estimatedSourceBoxHeight + 40; 
 
     const sayfaAltSiniri = doc.internal.pageSize.getHeight() - PDF_SETTINGS.marginBottom;
 
@@ -569,7 +576,7 @@ async function addSourceSection(doc, startY, imageDataUrl, kullanilanKaynakMetni
         contentYInsideBox += 40; 
     }
 
-    y = currentBoxY + requiredBoxHeight + PDF_SETTINGS.sourceSectionPaddingBottom; 
+    y = currentBoxY + requiredBoxHeight + 30; 
 return y;
 }
 
