@@ -465,7 +465,7 @@ async function generatePdfContent(doc, veri, imageDataUrl, kazanımMetni, kaynak
     }
 
     const estimatedSourceSectionTitleHeight = PDF_SETTINGS.sectionTitleSize + 5 + PDF_SETTINGS.sourceSectionTitleSpacing;
-    const totalRequiredSourceSectionHeight = estimatedSourceSectionTitleHeight + estimatedSourceBoxHeight + 10; // Box sonrası boşluğu azalt
+    const totalRequiredSourceSectionHeight = estimatedSourceSectionTitleHeight + estimatedSourceBoxHeight + 20; // Box sonrası boşluğu azalt
 
     const sayfaAltSiniri = doc.internal.pageSize.getHeight() - PDF_SETTINGS.marginBottom;
 
@@ -537,6 +537,7 @@ async function addSourceSection(doc, startY, imageDataUrl, kullanilanKaynakMetni
     doc.rect(solKenar, currentBoxY, sayfaGenisligi, requiredBoxHeight, 'F');
     doc.setDrawColor(220, 220, 220);
     doc.setLineWidth(0.5);
+    doc.setDrawColor(255, 0, 0);
     doc.rect(solKenar, currentBoxY, sayfaGenisligi, requiredBoxHeight, 'S');
 
     let contentYInsideBox = currentBoxY + boxPadding;
