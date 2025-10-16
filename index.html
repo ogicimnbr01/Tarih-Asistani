@@ -386,16 +386,6 @@ function applyCurrentFont(doc) {
 const sayfaKontrolu = (doc, yPozisyonu, gerekliBosluk) => {
     const sayfaAltSiniri = doc.internal.pageSize.getHeight() - PDF_SETTINGS.marginBottom;
 
-    console.log("--- Sayfa Kontrol Değerleri ---");
-    console.log("Header sonrası yPozisyonu:", yPozisyonu);
-    console.log("Tahmini Kaynak Bölümü Başlık Yüksekliği (estimatedSourceSectionTitleHeight):", estimatedSourceSectionTitleHeight);
-    console.log("Tahmini Kaynak Kutu Yüksekliği (estimatedSourceBoxHeight):", estimatedSourceBoxHeight);
-    console.log("Total Gerekli Kaynak Bölümü Yüksekliği (totalRequiredSourceSectionHeight):", totalRequiredSourceSectionHeight);
-    console.log("Sayfa Alt Sınırı (sayfaAltSiniri):", sayfaAltSiniri);
-    console.log("İlk Sayfada Kalan Kullanılabilir Alan (sayfaAltSiniri - yPozisyonu):", sayfaAltSiniri - yPozisyonu);
-    console.log("Koşul Sonucu (yPozisyonu + totalRequiredSourceSectionHeight > sayfaAltSiniri):", (yPozisyonu + totalRequiredSourceSectionHeight > sayfaAltSiniri));
-    console.log("--- // Sayfa Kontrol Değerleri ---");
-
     if (yPozisyonu + gerekliBosluk > sayfaAltSiniri) {
         doc.addPage();
         yPozisyonu = PDF_SETTINGS.marginTop;
@@ -485,6 +475,16 @@ async function generatePdfContent(doc, veri, imageDataUrl, kazanımMetni, kaynak
     const totalRequiredSourceSectionHeight = estimatedSourceSectionTitleHeight + estimatedSourceBoxHeight + PDF_SETTINGS.sourceSectionBottomPadding;
 
     const sayfaAltSiniri = doc.internal.pageSize.getHeight() - PDF_SETTINGS.marginBottom;
+
+    console.log("--- Sayfa Kontrol Değerleri ---");
+    console.log("Header sonrası yPozisyonu:", yPozisyonu);
+    console.log("Tahmini Kaynak Bölümü Başlık Yüksekliği (estimatedSourceSectionTitleHeight):", estimatedSourceSectionTitleHeight);
+    console.log("Tahmini Kaynak Kutu Yüksekliği (estimatedSourceBoxHeight):", estimatedSourceBoxHeight);
+    console.log("Total Gerekli Kaynak Bölümü Yüksekliği (totalRequiredSourceSectionHeight):", totalRequiredSourceSectionHeight);
+    console.log("Sayfa Alt Sınırı (sayfaAltSiniri):", sayfaAltSiniri);
+    console.log("İlk Sayfada Kalan Kullanılabilir Alan (sayfaAltSiniri - yPozisyonu):", sayfaAltSiniri - yPozisyonu);
+    console.log("Koşul Sonucu (yPozisyonu + totalRequiredSourceSectionHeight > sayfaAltSiniri):", (yPozisyonu + totalRequiredSourceSectionHeight > sayfaAltSiniri));
+    console.log("--- // Sayfa Kontrol Değerleri ---");
 
     // ÖNEMLİ KONTROL: Eğer kaynak bölümü ilk sayfaya sığmıyorsa yeni sayfa ekle.
     // Ancak sığıyorsa, ilk sayfada devam etmeli.
