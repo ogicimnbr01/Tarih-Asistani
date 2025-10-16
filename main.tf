@@ -302,3 +302,83 @@ cors_config {
     origin_override = true
   }
 }
+
+resource "aws_iam_role" "admin_lambda_role" {
+  name = "tarih-projesi-admin-lambda-role"
+  assume_role_policy = jsonencode({
+    Version   = "2012-10-17",
+    Statement = [{
+      Action    = "sts:AssumeRole",
+      Effect    = "Allow",
+      Principal = { Service = "lambda.amazonaws.com" }
+    }]
+  })
+}
+
+resource "aws_iam_role_policy" "admin_lambda_policy" {
+  name = "tarih-projesi-admin-lambda-policy"
+  role = aws_iam_role.admin_lambda_role.id
+  policy = jsonencode({
+    Version   = "2012-10-17",
+    Statement = [
+      {
+        Action   = ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"],
+        Effect   = "Allow",
+        Resource = "arn:aws:logs:*:*:*"
+      },
+      {
+        Action   = "s3:PutObject",
+        Effect   = "Allow",
+        Resource = "${aws_s3_bucket.belge_deposu.arn}/*"
+      },
+      {
+        Action   = "dynamodb:PutItem",
+        Effect   = "Allow",
+        Resource = aws_dynamodb_table.kaynak_kutuphanesi.arn
+      }
+    ]
+  })
+}
+
+data "archive_file" "admin_lambda_zip" {
+  type        = "zip"
+  source_dir  = "${path.module}/admin_lambda"
+  output_path = "${path.module}/admin_lambda.zip"
+}
+
+resource "aws_lambda_function" "admin_lambda" {
+  function_name    = "TarihProjesiAdminFonksiyonu"
+  role             = aws_iam_role.admin_lambda_role.arn
+  handler          = "admin_handler.lambda_handler"
+  runtime          = "python3.12"
+  filename         = data.archive_file.admin_lambda_zip.output_path
+  source_code_hash = data.archive_file.admin_lambda_zip.output_base64sha256
+  timeout          = 30
+
+  environment {
+    variables = {
+      S3_BUCKET_NAME      = aws_s3_bucket.belge_deposu.id
+      DYNAMODB_TABLE_NAME = aws_dynamodb_table.kaynak_kutuphanesi.name
+    }
+  }
+}
+
+resource "aws_apigatewayv2_integration" "admin_lambda_integration" {
+  api_id           = aws_apigatewayv2_api.http_api.id
+  integration_type = "AWS_PROXY"
+  integration_uri  = aws_lambda_function.admin_lambda.invoke_arn
+}
+
+resource "aws_apigatewayv2_route" "admin_api_route" {
+  api_id    = aws_apigatewayv2_api.http_api.id
+  route_key = "POST /admin" 
+  target    = "integrations/${aws_apigatewayv2_integration.admin_lambda_integration.id}"
+}
+
+resource "aws_lambda_permission" "admin_api_gw_permission" {
+  statement_id  = "AllowAPIGatewayInvokeAdmin"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.admin_lambda.function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_apigatewayv2_api.http_api.execution_arn}/*/*"
+}
