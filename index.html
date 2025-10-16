@@ -262,7 +262,7 @@ const PDF_SETTINGS = {
     marginLeft: 55,
     marginRight: 55,
     marginTop: 70,
-    marginBottom: 80,
+    marginBottom: 70,
     headerTopMargin: 70,
     lineHeightMultiplier: 1.2,
     titleColor: [42, 77, 122],
@@ -294,7 +294,7 @@ const PDF_SETTINGS = {
     sourceSectionTitleLineLength: 90,
     questionSectionTitleLineLength: 180,
     lineThickness: 1,
-    sourceSectionBottomPadding: 20,
+    sourceSectionBottomPadding: 10,
     headerBottomSpacing: 10, 
 };
 
@@ -455,7 +455,7 @@ async function generatePdfContent(doc, veri, imageDataUrl, kazanımMetni, kaynak
         doc.setFont('Lora', 'italic');
         doc.setFontSize(PDF_SETTINGS.footerFontSize);
         estimatedSourceContentHeight += (PDF_SETTINGS.footerFontSize * PDF_SETTINGS.lineHeightMultiplier);
-        estimatedSourceContentHeight += 15; 
+        estimatedSourceContentHeight += 5; 
     }
 
     let estimatedSourceBoxHeight = 0;
@@ -478,19 +478,16 @@ async function generatePdfContent(doc, veri, imageDataUrl, kazanımMetni, kaynak
     console.log("Koşul Sonucu (yPozisyonu + totalRequiredSourceSectionHeight > sayfaAltSiniri):", (yPozisyonu + totalRequiredSourceSectionHeight > sayfaAltSiniri));
     console.log("--- // Sayfa Kontrol Değerleri ---");
 
-    // ÖNEMLİ KONTROL: Eğer kaynak bölümü ilk sayfaya sığmıyorsa yeni sayfa ekle.
-    // Ancak sığıyorsa, ilk sayfada devam etmeli.
+
     if (yPozisyonu + totalRequiredSourceSectionHeight > sayfaAltSiniri) {
         doc.addPage();
         yPozisyonu = PDF_SETTINGS.marginTop;
         applyCurrentFont(doc);
     }
-    // else durumda yPozisyonu olduğu gibi kalacak ve kaynak ilk sayfadan devam edecek.
 
 
     yPozisyonu = await addSourceSection(doc, yPozisyonu, imageDataUrl, veri.kullanilan_kaynak, kaynakKunyesi, sayfaGenisligi, estimatedSourceBoxHeight, calculatedImageHeight, actualImageWidth);
 
-    // Sorular için her zaman yeni bir sayfa açıyoruz.
     doc.addPage();
     yPozisyonu = PDF_SETTINGS.marginTop;
     applyCurrentFont(doc);
@@ -512,7 +509,7 @@ function addHeaderSection(doc, startY, logoBase64, kazanımMetni, sayfaGenisligi
     applyCurrentFont(doc);
     const kazanımSatirlari = doc.splitTextToSize(`Kazanım: ${kazanımMetni}`, sayfaGenisligi);
     doc.text(kazanımSatirlari, solKenar, y, { align: 'left' });
-    y += (kazanımSatirlari.length * currentFont.size * PDF_SETTINGS.kazanımLineHeight) + PDF_SETTINGS.headerBottomSpacing; // Yeni boşluk ayarı
+    y += (kazanımSatirlari.length * currentFont.size * PDF_SETTINGS.kazanımLineHeight) + PDF_SETTINGS.headerBottomSpacing; 
 
     doc.setDrawColor(PDF_SETTINGS.sectionLineColor[0], PDF_SETTINGS.sectionLineColor[1], PDF_SETTINGS.sectionLineColor[2]);
     doc.setLineWidth(PDF_SETTINGS.lineThickness);
@@ -526,7 +523,6 @@ async function addSourceSection(doc, startY, imageDataUrl, kullanilanKaynakMetni
     const solKenar = PDF_SETTINGS.marginLeft;
     const sagKenar = doc.internal.pageSize.getWidth() - PDF_SETTINGS.marginRight;
 
-    // Başlık ve alt çizgi
     currentFont = { family: 'Playfair', style: 'bold', size: PDF_SETTINGS.sectionTitleSize, color: PDF_SETTINGS.titleColor };
     applyCurrentFont(doc);
     doc.text('Tarihsel Kaynak', solKenar, y);
@@ -570,7 +566,6 @@ async function addSourceSection(doc, startY, imageDataUrl, kullanilanKaynakMetni
         doc.setLineWidth(PDF_SETTINGS.lineThickness);
 
         const metinSatirlari = doc.splitTextToSize(`"${kullanilanKaynakMetni}"`, alintiKutuIciGenislik);
-        // Bu yükseklik hesabı artık daha doğru
         const alıntıMetniYuksekligi = metinSatirlari.length * currentFont.size * PDF_SETTINGS.quoteLineHeightMultiplier;
 
         doc.line(solKenar + boxPadding + (PDF_SETTINGS.kaynakAlıntıMarginLeft / 2), contentYInsideBox,
@@ -581,15 +576,15 @@ async function addSourceSection(doc, startY, imageDataUrl, kullanilanKaynakMetni
             doc.text(satir, alintiMetinBaslangicX, contentYInsideBox);
             contentYInsideBox += satirYuksekligi;
         });
-        contentYInsideBox += 5; // Metin sonrası boşluk
+        contentYInsideBox += 5; 
         
         currentFont = { family: 'Lora', style: 'italic', size: PDF_SETTINGS.footerFontSize, color: PDF_SETTINGS.mediumGray };
         applyCurrentFont(doc);
         doc.text(`Kaynak: ${kaynakKunyesi}`, sagKenar - boxPadding, contentYInsideBox, { align: 'right' });
-        contentYInsideBox += 15; // Kaynak sonrası boşluk
+        contentYInsideBox += 5; 
     }
 
-    y = currentBoxY + requiredBoxHeight + PDF_SETTINGS.sourceSectionBottomPadding; // Yeni boşluk ayarı
+    y = currentBoxY + requiredBoxHeight + PDF_SETTINGS.sourceSectionBottomPadding; 
     return y;
 }
 
@@ -598,7 +593,6 @@ function addQuestionSection(doc, startY, calismaKagidiMetni, sayfaGenisligi) {
     const solKenar = PDF_SETTINGS.marginLeft;
     const sagKenar = doc.internal.pageSize.getWidth() - PDF_SETTINGS.marginRight;
 
-    // Soru bölümü başlığını ekle (sayfa kontrolü generatePdfContent'ta yapıldı)
     currentFont = { family: 'Playfair', style: 'bold', size: PDF_SETTINGS.sectionTitleSize, color: PDF_SETTINGS.titleColor };
     applyCurrentFont(doc);
     doc.text('Analiz ve Yorumlama Soruları', solKenar, y);
@@ -627,7 +621,6 @@ function addQuestionSection(doc, startY, calismaKagidiMetni, sayfaGenisligi) {
 
         let estimatedQuestionHeight = estimatedQuestionTextHeight + 10 + estimatedQuestionLineHeight + 15;
 
-        // Her soru için sayfa kontrolü
         y = sayfaKontrolu(doc, y, estimatedQuestionHeight);
 
         currentFont = { family: 'Playfair', style: 'bold', size: PDF_SETTINGS.mainBodyFontSize, color: PDF_SETTINGS.mediumGray };
