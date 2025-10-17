@@ -29,7 +29,7 @@ resource "aws_iam_role" "lambda_exec_role" {
 }
 resource "aws_iam_role_policy" "lambda_policy" {
   name = "tarih-projesi-lambda-policy"
-  role = aws_iam_role.lambda_exec_role.id 
+  role = aws_iam_role.lambda_exec_role.id
   policy = jsonencode({
     Version   = "2012-10-17",
     Statement = [
@@ -47,10 +47,13 @@ resource "aws_iam_role_policy" "lambda_policy" {
         Effect   = "Allow",
         Resource = "*"
       },
-{
+      {
         Action   = ["dynamodb:Query", "dynamodb:GetItem"],
         Effect   = "Allow",
-        Resource = aws_dynamodb_table.kaynak_kutuphanesi.arn
+        Resource = [
+          aws_dynamodb_table.kaynak_kutuphanesi.arn,
+          "${aws_dynamodb_table.kaynak_kutuphanesi.arn}/index/*"
+        ]
       }
     ]
   })
@@ -72,6 +75,18 @@ resource "aws_lambda_function" "tarih_projesi_lambda" {
 resource "aws_apigatewayv2_api" "http_api" {
   name          = "TarihProjesiAPI"
   protocol_type = "HTTP"
+
+  cors_configuration {
+    allow_headers = ["Authorization", "Content-Type"]
+    allow_methods = ["GET", "POST", "PUT", "DELETE", "OPTIONS"] 
+    allow_origins = [
+      "https://www.tarihasistani.com.tr", 
+      "https://main.d30pkxbqbjkexa.amplifyapp.com", 
+      "http://localhost:8000",
+      "http://127.0.0.1:5500"
+    ]
+    max_age       = 300 
+  }
 }
 resource "aws_apigatewayv2_integration" "lambda_integration" {
   api_id           = aws_apigatewayv2_api.http_api.id
@@ -98,16 +113,37 @@ resource "aws_lambda_permission" "api_gw_permission" {
 resource "aws_dynamodb_table" "kaynak_kutuphanesi" {
   name           = "TarihProjesiKaynakKutuphanesi"
   billing_mode   = "PAY_PER_REQUEST"
-  hash_key       = "unit_id"         
-  range_key      = "source_id"      
+  hash_key       = "unit_id"
+  range_key      = "source_id"
 
   attribute {
     name = "unit_id"
     type = "S"
   }
   attribute {
-    name = "source_id" 
+    name = "source_id"
     type = "S"
+  }
+  attribute {
+    name = "status"
+    type = "S"
+  }
+  attribute {
+    name = "outcome_id"
+    type = "S"
+  }
+
+  global_secondary_index {
+    name            = "StatusIndex"
+    hash_key        = "status"
+    projection_type = "ALL"
+  }
+
+  global_secondary_index {
+    name            = "UnitOutcomeIndex"
+    hash_key        = "unit_id"
+    range_key       = "outcome_id"
+    projection_type = "ALL"
   }
 }
 resource "random_id" "bucket_suffix" {
@@ -351,15 +387,23 @@ resource "aws_iam_role_policy" "admin_lambda_policy" {
         Resource = "arn:aws:logs:*:*:*"
       },
       {
-        Action   = "s3:PutObject",
+        Action   = ["s3:PutObject", "s3:GetObject"], 
         Effect   = "Allow",
         Resource = "${aws_s3_bucket.belge_deposu.arn}/*"
       },
       {
-        Action   = "dynamodb:PutItem",
+        Action   = ["dynamodb:PutItem", "dynamodb:UpdateItem"],
         Effect   = "Allow",
         Resource = aws_dynamodb_table.kaynak_kutuphanesi.arn
-      }
+      },
+      {
+        Action   = [
+            "textract:StartDocumentTextDetection",
+            "textract:GetDocumentTextDetection"
+        ],
+        Effect   = "Allow",
+        Resource = "*"
+      },
     ]
   })
 }
@@ -369,6 +413,7 @@ data "archive_file" "admin_lambda_zip" {
   source_dir  = "${path.module}/admin_lambda"
   output_path = "${path.module}/admin_lambda.zip"
 }
+
 
 resource "aws_lambda_function" "admin_lambda" {
   function_name    = "TarihProjesiAdminFonksiyonu"
@@ -405,4 +450,84 @@ resource "aws_lambda_permission" "admin_api_gw_permission" {
   function_name = aws_lambda_function.admin_lambda.function_name
   principal     = "apigateway.amazonaws.com"
   source_arn    = "${aws_apigatewayv2_api.http_api.execution_arn}/*/*"
+}
+
+resource "aws_iam_role" "polling_lambda_role" {
+  name = "tarih-projesi-polling-lambda-role"
+  assume_role_policy = jsonencode({
+    Version   = "2012-10-17",
+    Statement = [{
+      Action    = "sts:AssumeRole",
+      Effect    = "Allow",
+      Principal = { Service = "lambda.amazonaws.com" }
+    }]
+  })
+}
+
+resource "aws_iam_role_policy" "polling_lambda_policy" {
+  name = "tarih-projesi-polling-lambda-policy"
+  role = aws_iam_role.polling_lambda_role.id
+  policy = jsonencode({
+    Version   = "2012-10-17",
+    Statement = [
+      {
+        Action   = ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"],
+        Effect   = "Allow",
+        Resource = "arn:aws:logs:*:*:*"
+      },
+      {
+        Action   = "textract:GetDocumentTextDetection",
+        Effect   = "Allow",
+        Resource = "*"
+      },
+      {
+        Action   = ["dynamodb:UpdateItem", "dynamodb:Query"],
+        Effect   = "Allow",
+        Resource = [
+          aws_dynamodb_table.kaynak_kutuphanesi.arn,
+          "${aws_dynamodb_table.kaynak_kutuphanesi.arn}/index/*"
+        ]
+      }
+    ]
+  })
+}
+
+data "archive_file" "polling_lambda_zip" {
+  type        = "zip"
+  source_dir  = "${path.module}/polling_lambda" 
+  output_path = "${path.module}/polling_lambda.zip"
+}
+
+resource "aws_lambda_function" "polling_lambda" {
+  function_name    = "TarihProjesiPollingHandler"
+  role             = aws_iam_role.polling_lambda_role.arn
+  handler          = "polling_handler.lambda_handler"
+  runtime          = "python3.12"
+  filename         = data.archive_file.polling_lambda_zip.output_path
+  source_code_hash = data.archive_file.polling_lambda_zip.output_base64sha256
+  timeout          = 120 
+  environment {
+    variables = {
+      DYNAMODB_TABLE_NAME = aws_dynamodb_table.kaynak_kutuphanesi.name
+    }
+  }
+}
+
+resource "aws_cloudwatch_event_rule" "lambda_scheduler" {
+  name                = "HerIkiDakikadaBir"
+  description         = "TarihProjesiPollingHandler'ı tetikler"
+  schedule_expression = "rate(2 minutes)"
+}
+
+resource "aws_cloudwatch_event_target" "lambda_target" {
+  rule      = aws_cloudwatch_event_rule.lambda_scheduler.name
+  arn       = aws_lambda_function.polling_lambda.arn
+}
+
+resource "aws_lambda_permission" "allow_cloudwatch_to_call_lambda" {
+  statement_id  = "AllowCloudwatchInvoke"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.polling_lambda.function_name
+  principal     = "events.amazonaws.com"
+  source_arn    = aws_cloudwatch_event_rule.lambda_scheduler.arn
 }

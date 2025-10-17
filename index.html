@@ -616,9 +616,9 @@ function addQuestionSection(doc, startY, calismaKagidiMetni, sayfaGenisligi) {
     doc.line(solKenar, y + 5, solKenar + PDF_SETTINGS.questionSectionTitleLineLength, y + 5);
     y += 25;
 
-    const sorular = (calismaKagidiMetni || "").split('\n').filter(s => s.trim().match(/^\d+\./));
-    sorular.forEach((satir, index) => {
-        const soruMetni = satir.substring(satir.indexOf('.') + 1).trim();
+    const sorular = (calismaKagidiMetni || "").split('\n').filter(s => s.trim() !== '');
+
+    sorular.forEach((soruMetni, index) => { 
         const soruNumarasi = `${index + 1}.`;
 
         currentFont = { family: 'Lora', style: 'normal', size: PDF_SETTINGS.mainBodyFontSize, color: PDF_SETTINGS.darkGray };
@@ -632,7 +632,6 @@ function addQuestionSection(doc, startY, calismaKagidiMetni, sayfaGenisligi) {
 
         let estimatedQuestionTextHeight = tempSoruSatirlari.length * currentFont.size * PDF_SETTINGS.lineHeightMultiplier;
         let estimatedQuestionLineHeight = PDF_SETTINGS.soruAltCizgiSayısı * (currentFont.size * PDF_SETTINGS.lineHeightMultiplier);
-
         let estimatedQuestionHeight = estimatedQuestionTextHeight + 10 + estimatedQuestionLineHeight + 15;
 
         y = sayfaKontrolu(doc, y, estimatedQuestionHeight);
