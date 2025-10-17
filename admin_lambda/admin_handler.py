@@ -34,28 +34,34 @@ def lambda_handler(event, context):
             )
             return response(200, {'upload_url': presigned_url, 'object_key': object_key})
 
-        elif mode == 'save_metadata':
+elif mode == 'save_metadata':
             metadata = body.get('metadata', {})
             
             unit_id = metadata.get('unit_id')
             outcome_id = metadata.get('outcome_id')
             source_title = metadata.get('source_title')
+            source_citation = metadata.get('source_citation')
             
             if not all([unit_id, outcome_id, source_title]):
                 raise ValueError("Eksik metadata bilgileri.")
 
             source_id = f"{outcome_id}_{source_title.replace(' ', '-')}"
             
+            item_attributes = {
+                'unit_id': unit_id,
+                'source_id': source_id,
+                'outcome_id': outcome_id,
+                'source_type': metadata.get('source_type'),
+                'source_title': source_title,
+                'extracted_text': metadata.get('extracted_text'),
+                'source_url': metadata.get('source_url')
+            }
+            
+            if source_citation:
+                item_attributes['source_citation'] = source_citation
+
             table.put_item(
-                Item={
-                    'unit_id': unit_id,
-                    'source_id': source_id,
-                    'outcome_id': outcome_id,
-                    'source_type': metadata.get('source_type'),
-                    'source_title': source_title,
-                    'extracted_text': metadata.get('extracted_text'),
-                    'source_url': metadata.get('source_url')
-                }
+                Item=item_attributes
             )
             return response(200, {'message': 'Belge başarıyla kütüphaneye eklendi!'})
 

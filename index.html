@@ -536,6 +536,7 @@ async function addSourceSection(doc, startY, imageDataUrl, kullanilanKaynakMetni
     currentFont = { family: 'Playfair', style: 'bold', size: PDF_SETTINGS.sectionTitleSize, color: PDF_SETTINGS.titleColor };
     applyCurrentFont(doc);
     doc.text('Tarihsel Kaynak', solKenar, y);
+
     doc.setDrawColor(PDF_SETTINGS.underlineColor[0], PDF_SETTINGS.underlineColor[1], PDF_SETTINGS.underlineColor[2]);
     doc.setLineWidth(PDF_SETTINGS.lineThickness);
     doc.line(solKenar, y + 5, solKenar + PDF_SETTINGS.sourceSectionTitleLineLength, y + 5);
@@ -590,7 +591,10 @@ async function addSourceSection(doc, startY, imageDataUrl, kullanilanKaynakMetni
         
         currentFont = { family: 'Lora', style: 'italic', size: PDF_SETTINGS.footerFontSize, color: PDF_SETTINGS.mediumGray };
         applyCurrentFont(doc);
-        doc.text(`Kaynak: ${kaynakKunyesi}`, sagKenar - boxPadding, contentYInsideBox, { align: 'right' });
+
+        const kaynakcaBilgisi = kaynakKunyesi || "Kaynak Belirtilmemiş"; 
+        doc.text(`Kaynakça: ${kaynakcaBilgisi}`, sagKenar - boxPadding, contentYInsideBox, { align: 'right' });
+
         contentYInsideBox += 5; 
     }
 

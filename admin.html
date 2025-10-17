@@ -53,6 +53,10 @@
                 <label for="extracted-text">Belge Metni (OCR ile okunamazsa burayı doldurun):</label>
                 <textarea id="extracted-text" placeholder="Bu alan boş bırakılırsa, PDF dosyaları için OCR otomatik çalışır. Resim dosyaları için bu alanı doldurmak zorunludur."></textarea>
             </div>
+            <div class="form-group">
+                <label for="source-citation">Kaynakça:</label>
+                <textarea id="source-citation" placeholder="Belgenin tam kaynakçasını buraya yazınız (Yazar, Eser Adı, Yayınevi, Basım Yılı, Sayfa vb.)"></textarea>
+            </div>
             <button type="submit" id="submit-button">Kütüphaneye Ekle</button>
             <div id="status-message" class="status"></div>
         </form>
@@ -183,7 +187,8 @@
                 source_type: document.getElementById('source-type').value,
                 source_title: document.getElementById('source-title').value,
                 extracted_text: document.getElementById('extracted-text').value,
-                source_url: source_url
+                source_url: source_url,
+                source_citation: document.getElementById('source-citation').value
             };
 
             const saveMetadataResponse = await fetch(ADMIN_API_ENDPOINT, {
