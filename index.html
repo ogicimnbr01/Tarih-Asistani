@@ -269,12 +269,13 @@ async function getImageBase64(url) {
     });
 }
 
+// ÖNERİ 2: EĞER GEREKİRSE BU KODU KULLAN
 const PDF_SETTINGS = {
     marginLeft: 55,
     marginRight: 55,
-    marginTop: 70,
-    marginBottom: 70,
-    headerTopMargin: 70,
+    marginTop: 60,               // DEĞİŞİKLİK: 70'ten 60'a düşürüldü
+    marginBottom: 60,            // DEĞİŞİKLİK: 70'ten 60'a düşürüldü
+    headerTopMargin: 60,         // DEĞİŞİKLİK: 70'ten 60'a düşürüldü
     lineHeightMultiplier: 1.2,
     titleColor: [42, 77, 122],
     textColor: [34, 34, 34],
@@ -294,7 +295,7 @@ const PDF_SETTINGS = {
     altBilgiYOffset: 30,
     kazanımFontSize: 12,
     quoteFontSize: 9,
-    quoteLineHeightMultiplier: 1.3,
+    quoteLineHeightMultiplier: 1.2, // DEĞİŞİKLİK: 1.3'ten 1.2'ye düşürüldü
     footerFontSize: 8,
     sectionTitleSize: 15,
     mainBodyFontSize: 10,
@@ -305,8 +306,8 @@ const PDF_SETTINGS = {
     sourceSectionTitleLineLength: 90,
     questionSectionTitleLineLength: 180,
     lineThickness: 1,
-    sourceSectionBottomPadding: 10,
-    headerBottomSpacing: 10, 
+    sourceSectionBottomPadding: 5,
+    headerBottomSpacing: 5,
 };
 
 async function olusturVeIndirPDF() {
