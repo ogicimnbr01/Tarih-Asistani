@@ -528,7 +528,7 @@ function addHeaderSection(doc, startY, logoBase64, kazanımMetni, sayfaGenisligi
     return y;
 }
 
-async function addSourceSection(doc, startY, imageDataUrl, kullanilanKaynakMetni, kaynakKunyesi, sayfaGenisligi, requiredBoxHeight, calculatedImageHeight, actualImageWidth) {
+async function addSourceSection(doc, startY, imageDataUrl, kullanilanKaynakMetni, kaynakKunyesi, sayfaGenisligi, initialEstimatedBoxHeight, calculatedImageHeight, actualImageWidth) {
     let y = startY;
     const solKenar = PDF_SETTINGS.marginLeft;
     const sagKenar = doc.internal.pageSize.getWidth() - PDF_SETTINGS.marginRight;
@@ -542,11 +542,6 @@ async function addSourceSection(doc, startY, imageDataUrl, kullanilanKaynakMetni
     doc.setLineWidth(PDF_SETTINGS.lineThickness);
     doc.line(solKenar, y + 5, solKenar + PDF_SETTINGS.sourceSectionTitleLineLength, y + 5);
     y += PDF_SETTINGS.sourceSectionTitleSpacing;
-
-    // Eğer başlangıçta kutu yüksekliği 0 ise (yani kaynakta resim veya metin yoksa) hemen çık.
-    if (requiredBoxHeight === 0) {
-        return y;
-    }
 
     const boxPadding = 15;
     const contentWidthInsideBox = sayfaGenisligi - (boxPadding * 2);
@@ -568,8 +563,8 @@ async function addSourceSection(doc, startY, imageDataUrl, kullanilanKaynakMetni
         currentContentY += finalImageHeight + PDF_SETTINGS.imageBottomSpacing;
     }
 
-    let metinGercekYukseklik = 0; // Kaynakça metninin yüksekliği
-    let kaynakcaRowHeight = 0;     // Kaynakça künyesinin yüksekliği
+    let metinGercekYukseklik = 0; 
+    let kaynakcaRowHeight = 0; 
 
     // Kaynakça metni
     if (kullanilanKaynakMetni) {
@@ -596,7 +591,7 @@ async function addSourceSection(doc, startY, imageDataUrl, kullanilanKaynakMetni
                 doc.text(satir, alintiMetinBaslangicX, currentContentY);
                 currentContentY += satirYuksekligi;
             });
-            currentContentY += 5; // Metin sonrası boşluk
+            currentContentY += 5; 
         }
 
         // Kaynakça künye ekleme
@@ -604,19 +599,19 @@ async function addSourceSection(doc, startY, imageDataUrl, kullanilanKaynakMetni
         applyCurrentFont(doc);
         
         const kaynakcaBilgisi = kaynakKunyesi || "Kaynak Belirtilmemiş"; 
-        // Kaynakça künyesinin yüksekliğini hesapla
         kaynakcaRowHeight = (PDF_SETTINGS.footerFontSize * PDF_SETTINGS.lineHeightMultiplier) + 5; 
         
         doc.text(`Kaynakça: ${kaynakcaBilgisi}`, sagKenar - boxPadding, currentContentY, { align: 'right' });
         currentContentY += kaynakcaRowHeight;
     }
     
-    // Toplam içeriğin kutu içindeki yüksekliğini hesapla
+    // Toplam kutu içeriğinin yüksekliğini hesapla (resim + metin + kaynakça künye)
     const totalBoxContentHeight = (finalImageHeight > 0 ? finalImageHeight + PDF_SETTINGS.imageBottomSpacing : 0) + 
-                                 (metinGercekYukseklik > 0 ? metinGercekYukseklik + 5 : 0) + // Metin ve sonrası boşluk
-                                 kaynakcaRowHeight; // Kaynakça künye ve boşluğu
+                                 (metinGercekYukseklik > 0 ? metinGercekYukseklik + 5 : 0) + 
+                                 kaynakcaRowHeight; 
     
     // Kutu yüksekliğini ayarla (içerik yüksekliği + üst/alt padding)
+    // Bu, kutunun her zaman tüm içeriği kapsamasını sağlar.
     const finalBoxHeight = boxPadding + totalBoxContentHeight + boxPadding; 
 
     // Kutuyu çiz
@@ -626,7 +621,7 @@ async function addSourceSection(doc, startY, imageDataUrl, kullanilanKaynakMetni
     doc.setLineWidth(0.5);
     doc.rect(solKenar, currentBoxY, sayfaGenisligi, finalBoxHeight, 'S');
 
-    // Fonksiyonun sonundaki y pozisyonunu güncelle
+    // Fonksiyonun sonundaki y pozisyonunu güncelle. Bu, kutunun alt kenarına göre ayarlanır.
     y = currentBoxY + finalBoxHeight + PDF_SETTINGS.sourceSectionBottomPadding; 
 
     return y;
