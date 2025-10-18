@@ -404,7 +404,6 @@ const sayfaKontrolu = (doc, yPozisyonu, gerekliBosluk) => {
 
 async function generatePdfContent(doc, veri, imageDataUrl, kazanımMetni, kaynakKunyesi, logoBase64) {
     let yPozisyonu = PDF_SETTINGS.headerTopMargin;
-
     const solKenar = PDF_SETTINGS.marginLeft;
     const sagKenar = doc.internal.pageSize.getWidth() - PDF_SETTINGS.marginRight;
     const sayfaGenisligi = sagKenar - solKenar;
@@ -623,6 +622,13 @@ async function addSourceSection(doc, startY, imageDataUrl, kullanilanKaynakMetni
 
     // Fonksiyonun sonundaki y pozisyonunu güncelle. Bu, kutunun alt kenarına göre ayarlanır.
     y = currentBoxY + finalBoxHeight + PDF_SETTINGS.sourceSectionBottomPadding; 
+
+        const sayfaAltSiniri = doc.internal.pageSize.getHeight() - PDF_SETTINGS.marginBottom;
+    if (y > sayfaAltSiniri) {
+        doc.addPage();
+        y = PDF_SETTINGS.marginTop; // Yeni sayfada başlangıç pozisyonu
+        applyCurrentFont(doc); // Fontu tekrar uygula
+    }
 
     return y;
 }
