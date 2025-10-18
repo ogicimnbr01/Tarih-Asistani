@@ -403,24 +403,22 @@ const sayfaKontrolu = (doc, yPozisyonu, gerekliBosluk) => {
 };
 
 // BU FONKSİYONU KOPYALA VE ESKİSİYLE DEĞİŞTİR
+// BU FONKSİYONU KOPYALA VE ESKİSİYLE DEĞİŞTİR
+// LÜTFEN SADECE BU FONKSİYONU KULLAN
 async function generatePdfContent(doc, veri, imageDataUrl, kazanımMetni, kaynakKunyesi, logoBase64) {
-    console.group("--- generatePdfContent İŞLEM AKIŞI ---");
-
     let yPozisyonu = PDF_SETTINGS.headerTopMargin;
     const solKenar = PDF_SETTINGS.marginLeft;
     const sagKenar = doc.internal.pageSize.getWidth() - PDF_SETTINGS.marginRight;
     const sayfaGenisligi = sagKenar - solKenar;
-    console.log("Fonksiyon başlangıcı, yPozisyonu:", yPozisyonu);
 
     // 1. Header'ı ekle
     yPozisyonu = addHeaderSection(doc, yPozisyonu, logoBase64, kazanımMetni, sayfaGenisligi);
-    console.log("Header eklendi, yeni yPozisyonu:", yPozisyonu);
 
     // 2. Resim boyutlarını hesapla
     let calculatedImageHeight = 0;
     let actualImageWidth = 0;
     if (imageDataUrl) {
-        const contentWidthInsideBox = sayfaGenisligi - (15 * 2); // 15 boxPadding
+        const contentWidthInsideBox = sayfaGenisligi - (15 * 2);
         const maxImageWidthForPage = contentWidthInsideBox * 0.9;
         const maxImageHeightForPage = doc.internal.pageSize.getHeight() * 0.40;
         const imgProps = doc.getImageProperties(imageDataUrl);
@@ -446,25 +444,13 @@ async function generatePdfContent(doc, veri, imageDataUrl, kazanımMetni, kaynak
             actualImageWidth = 0;
         }
     }
-    console.log("Resim boyutları hesaplandı:", { calculatedImageHeight, actualImageWidth });
 
-    // 3. Kaynak bölümünü ekle
-    console.log("addSourceSection çağrılmadan ÖNCE yPozisyonu:", yPozisyonu);
+    // 3. Kaynak bölümünü ekle. Bu fonksiyon kendi sayfa kontrolünü yapıyor.
     yPozisyonu = await addSourceSection(doc, yPozisyonu, imageDataUrl, veri.kullanilan_kaynak, kaynakKunyesi, sayfaGenisligi, calculatedImageHeight, actualImageWidth);
-    console.log("addSourceSection çağrıldıktan SONRA yPozisyonu:", yPozisyonu);
 
-    // 4. Soru bölümü için her zaman yeni bir sayfa aç.
-    console.log("Soru bölümü için yeni sayfa ekleniyor...");
-    doc.addPage();
-    yPozisyonu = PDF_SETTINGS.marginTop;
-    applyCurrentFont(doc);
-    console.log("Yeni sayfa eklendi, yPozisyonu sıfırlandı:", yPozisyonu);
-
-    // 5. Soru bölümünü ekle
+    // 4. Soru bölümünü ekle. Bu fonksiyon da kendi sayfa kontrolünü yapıyor.
+    // ARADAKİ GEREKSİZ doc.addPage() KOMUTLARI KALDIRILDI.
     yPozisyonu = addQuestionSection(doc, yPozisyonu, veri.calisma_kagidi, sayfaGenisligi);
-    console.log("Soru bölümü eklendi, son yPozisyonu:", yPozisyonu);
-
-    console.groupEnd();
 }
 
 function addHeaderSection(doc, startY, logoBase64, kazanımMetni, sayfaGenisligi) {
