@@ -364,8 +364,7 @@ async function olusturVeIndirPDF() {
         const kazanımSelect = document.getElementById('kazanim-secimi');
         const seciliKazanimMetni = kazanımSelect && kazanımSelect.options[kazanımSelect.selectedIndex] ? kazanımSelect.options[kazanımSelect.selectedIndex].text.substring(4) : "Belirtilmemiş Kazanım";
 
-        const kaynakKunyesiElement = document.querySelector('.kaynak-item.selected span:last-of-type');
-        const kaynakKunyesi = kaynakKunyesiElement ? kaynakKunyesiElement.textContent : "";
+        const kaynakKunyesi = sonApiCevabi.source_citation || "Kaynak Belirtilmemiş";
 
         await generatePdfContent(doc, sonApiCevabi, imageDataUrl, seciliKazanimMetni, kaynakKunyesi, logoBase64);
 
