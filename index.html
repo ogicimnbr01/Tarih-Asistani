@@ -550,18 +550,10 @@ async function addSourceSection(doc, startY, imageDataUrl, kullanilanKaynakMetni
     const contentWidthInsideBox = sayfaGenisligi - (boxPadding * 2);
 
     const currentBoxY = y;
-
-    doc.setFillColor(247, 247, 247);
-    doc.rect(solKenar, currentBoxY, sayfaGenisligi, requiredBoxHeight, 'F');
-    doc.setDrawColor(220, 220, 220);
-    doc.setLineWidth(0.5);
-    doc.rect(solKenar, currentBoxY, sayfaGenisligi, requiredBoxHeight, 'S');
-
-    let contentYInsideBox = currentBoxY + boxPadding;
+    let contentYInsideBox = currentBoxY + boxPadding; 
 
     if (imageDataUrl && calculatedImageHeight > 0) {
-        const imgX = solKenar + boxPadding + ( (contentWidthInsideBox - (PDF_SETTINGS.imagePaddingHorizontal * 2) - actualImageWidth) / 2 ) + PDF_SETTINGS.imagePaddingHorizontal;
-
+        const imgX = solKenar + boxPadding + ((contentWidthInsideBox - actualImageWidth) / 2);
         doc.addImage(imageDataUrl, 'JPEG', imgX, contentYInsideBox, actualImageWidth, calculatedImageHeight);
         contentYInsideBox += calculatedImageHeight + PDF_SETTINGS.imageBottomSpacing;
     }
@@ -573,14 +565,17 @@ async function addSourceSection(doc, startY, imageDataUrl, kullanilanKaynakMetni
         const alintiMetinBaslangicX = solKenar + boxPadding + PDF_SETTINGS.kaynakAlıntıMarginLeft;
         const alintiKutuIciGenislik = contentWidthInsideBox - PDF_SETTINGS.kaynakAlıntıMarginLeft;
 
+        const metinSatirlari = doc.splitTextToSize(`"${kullanilanKaynakMetni}"`, alintiKutuIciGenislik);
+        
+        let metinGercekYukseklik = 0;
+        if (metinSatirlari.length > 0) {
+            metinGercekYukseklik = metinSatirlari.length * currentFont.size * PDF_SETTINGS.quoteLineHeightMultiplier;
+        }
+
         doc.setDrawColor(PDF_SETTINGS.sourceLineColor[0], PDF_SETTINGS.sourceLineColor[1], PDF_SETTINGS.sourceLineColor[2]);
         doc.setLineWidth(PDF_SETTINGS.lineThickness);
-
-        const metinSatirlari = doc.splitTextToSize(`"${kullanilanKaynakMetni}"`, alintiKutuIciGenislik);
-        const alıntıMetniYuksekligi = metinSatirlari.length * currentFont.size * PDF_SETTINGS.quoteLineHeightMultiplier;
-
         doc.line(solKenar + boxPadding + (PDF_SETTINGS.kaynakAlıntıMarginLeft / 2), contentYInsideBox,
-                 solKenar + boxPadding + (PDF_SETTINGS.kaynakAlıntıMarginLeft / 2), contentYInsideBox + alıntıMetniYuksekligi);
+                 solKenar + boxPadding + (PDF_SETTINGS.kaynakAlıntıMarginLeft / 2), contentYInsideBox + metinGercekYukseklik);
 
         metinSatirlari.forEach(satir => {
             const satirYuksekligi = currentFont.size * PDF_SETTINGS.lineHeightMultiplier;
@@ -588,17 +583,22 @@ async function addSourceSection(doc, startY, imageDataUrl, kullanilanKaynakMetni
             contentYInsideBox += satirYuksekligi;
         });
         contentYInsideBox += 5; 
-        
+
         currentFont = { family: 'Lora', style: 'italic', size: PDF_SETTINGS.footerFontSize, color: PDF_SETTINGS.mediumGray };
         applyCurrentFont(doc);
 
         const kaynakcaBilgisi = kaynakKunyesi || "Kaynak Belirtilmemiş"; 
         doc.text(`Kaynakça: ${kaynakcaBilgisi}`, sagKenar - boxPadding, contentYInsideBox, { align: 'right' });
-
-        contentYInsideBox += 5; 
+        
+        contentYInsideBox += PDF_SETTINGS.footerFontSize * PDF_SETTINGS.lineHeightMultiplier + 5; 
     }
+    
+    const newRequiredBoxHeight = boxPadding + (calculatedImageHeight > 0 ? calculatedImageHeight + PDF_SETTINGS.imageBottomSpacing : 0) + (kullanilanKaynakMetni ? (metinGercekYukseklik + 5 + (PDF_SETTINGS.footerFontSize * PDF_SETTINGS.lineHeightMultiplier) + 5) : 0) + boxPadding;
+    const actualBoxBottomY = contentYInsideBox;
+    const actualBoxHeight = actualBoxBottomY - currentBoxY;
 
-    y = currentBoxY + requiredBoxHeight + PDF_SETTINGS.sourceSectionBottomPadding; 
+    y = currentBoxY + actualBoxHeight + PDF_SETTINGS.sourceSectionBottomPadding; 
+
     return y;
 }
 

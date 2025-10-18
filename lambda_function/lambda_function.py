@@ -87,7 +87,7 @@ Sevr Antlaşması'nın tamamen uygulanması durumunda günümüz Türkiye harita
             'calisma_kagidi': generated_text.strip(),
             'kullanilan_kaynak': tarihi_metin,
             'source_type': item.get('source_type'),
-            'source_url': item.get('source_url')
+            'source_url': item.get('source_url'),
             'source_citation': item.get('source_citation')
             }, ensure_ascii=False)
     }
