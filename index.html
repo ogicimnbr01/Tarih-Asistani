@@ -403,19 +403,14 @@ const sayfaKontrolu = (doc, yPozisyonu, gerekliBosluk) => {
     return yPozisyonu;
 };
 
-// BU FONKSİYONU KOPYALA VE ESKİSİYLE DEĞİŞTİR
-// BU FONKSİYONU KOPYALA VE ESKİSİYLE DEĞİŞTİR
-// LÜTFEN SADECE BU FONKSİYONU KULLAN
 async function generatePdfContent(doc, veri, imageDataUrl, kazanımMetni, kaynakKunyesi, logoBase64) {
     let yPozisyonu = PDF_SETTINGS.headerTopMargin;
     const solKenar = PDF_SETTINGS.marginLeft;
     const sagKenar = doc.internal.pageSize.getWidth() - PDF_SETTINGS.marginRight;
     const sayfaGenisligi = sagKenar - solKenar;
 
-    // 1. Header'ı ekle
     yPozisyonu = addHeaderSection(doc, yPozisyonu, logoBase64, kazanımMetni, sayfaGenisligi);
 
-    // 2. Resim boyutlarını hesapla
     let calculatedImageHeight = 0;
     let actualImageWidth = 0;
     if (imageDataUrl) {
@@ -446,11 +441,12 @@ async function generatePdfContent(doc, veri, imageDataUrl, kazanımMetni, kaynak
         }
     }
 
-    // 3. Kaynak bölümünü ekle. Bu fonksiyon kendi sayfa kontrolünü yapıyor.
     yPozisyonu = await addSourceSection(doc, yPozisyonu, imageDataUrl, veri.kullanilan_kaynak, kaynakKunyesi, sayfaGenisligi, calculatedImageHeight, actualImageWidth);
 
-    // 4. Soru bölümünü ekle. Bu fonksiyon da kendi sayfa kontrolünü yapıyor.
-    // ARADAKİ GEREKSİZ doc.addPage() KOMUTLARI KALDIRILDI.
+    doc.addPage();
+    yPozisyonu = PDF_SETTINGS.marginTop; 
+    applyCurrentFont(doc);
+
     yPozisyonu = addQuestionSection(doc, yPozisyonu, veri.calisma_kagidi, sayfaGenisligi);
 }
 
@@ -477,7 +473,6 @@ function addHeaderSection(doc, startY, logoBase64, kazanımMetni, sayfaGenisligi
     return y;
 }
 
-// BU FONKSİYONU KOPYALA VE ESKİSİYLE DEĞİŞTİR
 async function addSourceSection(doc, startY, imageDataUrl, kullanilanKaynakMetni, kaynakKunyesi, sayfaGenisligi, calculatedImageHeight, actualImageWidth) {
     console.group("--- addSourceSection İŞLEM AKIŞI ---");
     console.log("Fonksiyona gelen parametreler:", { startY, calculatedImageHeight, actualImageWidth });
@@ -488,7 +483,6 @@ async function addSourceSection(doc, startY, imageDataUrl, kullanilanKaynakMetni
     const boxPadding = 15;
     const contentWidthInsideBox = sayfaGenisligi - (boxPadding * 2);
 
-    // --- 1. ADIM: GEREKLİ TOPLAM YÜKSEKLİĞİ HESAPLA ---
     console.log("Gerekli yükseklik hesaplanıyor...");
     let totalContentHeight = 0;
     
@@ -519,7 +513,6 @@ async function addSourceSection(doc, startY, imageDataUrl, kullanilanKaynakMetni
     console.log("Hesaplanan Toplam Bölüm Yüksekliği:", totalSectionHeight);
     console.log("Hesaplanan Kutu Yüksekliği:", boxHeight);
 
-    // --- 2. ADIM: SAYFA KONTROLÜ YAP ---
     console.log("*** Sayfa Kontrolü ***");
     console.log(`Koşul: (y + totalSectionHeight > sayfaAltSiniri) => (${y} + ${totalSectionHeight} > ${sayfaAltSiniri})`);
     console.log("Koşul Sonucu:", y + totalSectionHeight > sayfaAltSiniri);
@@ -532,12 +525,10 @@ async function addSourceSection(doc, startY, imageDataUrl, kullanilanKaynakMetni
         console.log("Yeni sayfa eklendi, y pozisyonu sıfırlandı:", y);
     }
     
-    // --- 3. ADIM: BÖLÜMÜ GÜVENLE ÇİZ ---
     console.log("Bölüm çiziliyor, başlangıç y:", y);
     currentFont = { family: 'Playfair', style: 'bold', size: PDF_SETTINGS.sectionTitleSize, color: PDF_SETTINGS.titleColor };
     applyCurrentFont(doc);
     doc.text('Tarihsel Kaynak', solKenar, y);
-    // ... başlığın geri kalanı
     const sagKenar = doc.internal.pageSize.getWidth() - PDF_SETTINGS.marginRight;
     doc.setDrawColor(PDF_SETTINGS.underlineColor[0], PDF_SETTINGS.underlineColor[1], PDF_SETTINGS.underlineColor[2]);
     doc.setLineWidth(PDF_SETTINGS.lineThickness);
