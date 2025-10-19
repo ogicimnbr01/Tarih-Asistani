@@ -328,6 +328,8 @@ const sayfaKontrolu = (doc, yPozisyonu, gerekliBosluk) => {
     return yPozisyonu;
 };
 
+// LÜTFEN MEVCUT olusturVeIndirPDF FONKSİYONUNU BU KODLA DEĞİŞTİRİN
+
 async function olusturVeIndirPDF() {
     if (!sonApiCevabi) {
         alert("PDF oluşturmak için önce bir çalışma kağıdı oluşturmalısınız.");
@@ -380,9 +382,10 @@ async function olusturVeIndirPDF() {
         }
 
         let kaynakMetni = null;
-        const metinElementi = document.querySelector('#kaynak-alani p');
-        if (metinElementi) {
-            kaynakMetni = metinElementi.textContent;
+
+        const kaynakAlaniElementi = document.getElementById('kaynak-alani');
+        if (kaynakAlaniElementi) {
+            kaynakMetni = kaynakAlaniElementi.textContent.trim();
         }
 
         const kazanımSelect = document.getElementById('kazanim-secimi');
