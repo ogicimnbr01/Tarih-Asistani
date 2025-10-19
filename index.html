@@ -479,7 +479,6 @@ async function addSourceSection(doc, startY, imageDataUrl, kullanilanKaynakMetni
     
     // --- Resim ---
     if (imageDataUrl) {
-        // ... (Resim boyut hesaplama kodları - Değişiklik yok)
         const contentWidthInsideBox = sayfaGenisligi;
         const maxImageWidthForPage = contentWidthInsideBox * 0.9;
         const maxImageHeightForPage = doc.internal.pageSize.getHeight() * 0.40;
@@ -488,7 +487,8 @@ async function addSourceSection(doc, startY, imageDataUrl, kullanilanKaynakMetni
         let tempActualImageWidth = maxImageWidthForPage - (PDF_SETTINGS.imagePaddingHorizontal * 2);
         let tempCalculatedImageHeight = tempActualImageWidth / originalImageRatio;
         if (tempCalculatedImageHeight > maxImageHeightForPage) { tempCalculatedImageHeight = maxImageHeightForPage; tempActualImageWidth = tempCalculatedImageHeight * originalImageRatio; }
-        if (imgProps.width < tempActualImageWidth && imgProps.height < tempCalculatedImageHeight) { actualImageWidth = imgProps.width; calculatedImageHeight = imgProps.height; } else { actualImageWidth = tempActualImageWidth; calculatedImageHeight = tempCalculatedImageHeight; }
+        let actualImageWidth = tempActualImageWidth, calculatedImageHeight = tempCalculatedImageHeight;
+        if (imgProps.width < tempActualImageWidth && imgProps.height < tempCalculatedImageHeight) { actualImageWidth = imgProps.width; calculatedImageHeight = imgProps.height; }
         if (calculatedImageHeight < PDF_SETTINGS.minUsableImageHeight) { calculatedImageHeight = 0; actualImageWidth = 0; }
         
         if(calculatedImageHeight > 0) {
@@ -503,32 +503,26 @@ async function addSourceSection(doc, startY, imageDataUrl, kullanilanKaynakMetni
     if (kullanilanKaynakMetni) {
         const boxPadding = 15;
         
-        // Önce tüm metin ve kaynakça satırlarını birleştirelim
+        // Önce tüm metin ve kaynakça satırlarını bir diziye alalım
         const tumSatirlar = [];
         
-        // Alıntı Metni
         currentFont = { family: 'Lora', style: 'italic', size: PDF_SETTINGS.quoteFontSize, color: PDF_SETTINGS.darkGray };
         applyCurrentFont(doc);
         const alintiKutuIciGenislik = sayfaGenisligi - (boxPadding * 2);
         const metinSatirlari = doc.splitTextToSize(`${kullanilanKaynakMetni}`, alintiKutuIciGenislik);
         metinSatirlari.forEach(satir => tumSatirlar.push({ text: satir, type: 'main' }));
 
-        // Metin ve Kaynakça arasına boşluk ekleyelim
         tumSatirlar.push({ text: '', type: 'spacer' });
 
-        // Kaynakça Metni
         currentFont = { family: 'Lora', style: 'italic', size: PDF_SETTINGS.footerFontSize, color: PDF_SETTINGS.mediumGray };
         applyCurrentFont(doc);
         const kaynakcaMetni = `Kaynakça: ${kaynakKunyesi || "Kaynak Belirtilmemiş"}`;
         const kaynakcaSatirlari = doc.splitTextToSize(kaynakcaMetni, alintiKutuIciGenislik);
         kaynakcaSatirlari.forEach(satir => tumSatirlar.push({ text: satir, type: 'citation' }));
 
-        // Şimdi çizime başlayalım
-        if (y + boxPadding > sayfaAltSiniri) { doc.addPage(); y = PDF_SETTINGS.marginTop; }
-        let kutuBaslangicY = y; // Her sayfadaki kutunun başlangıç Y'si
-
-        // Kutu üst boşluğu
-        y += boxPadding;
+        // === 1. AŞAMA: HESAPLAMA VE ARKA PLANLARI ÇİZME ===
+        let hesaplamaY = y;
+        let kutuBaslangicY = hesaplamaY;
 
         tumSatirlar.forEach(satirData => {
             let satirYuksekligi = 0;
@@ -537,47 +531,69 @@ async function addSourceSection(doc, startY, imageDataUrl, kullanilanKaynakMetni
             } else if (satirData.type === 'citation') {
                 satirYuksekligi = PDF_SETTINGS.footerFontSize * PDF_SETTINGS.lineHeightMultiplier;
             } else if (satirData.type === 'spacer') {
-                satirYuksekligi = 10; // Boşluk yüksekliği
+                satirYuksekligi = 10;
             }
 
-            if (y + satirYuksekligi > sayfaAltSiniri) {
+            if (hesaplamaY + satirYuksekligi + boxPadding > sayfaAltSiniri) {
                 // ÖNCEKİ SAYFANIN KUTUSUNU TAMAMLA
+                const mevcutKutuYuksekligi = (hesaplamaY - kutuBaslangicY) + boxPadding;
                 doc.setFillColor(247, 247, 247);
-                doc.rect(solKenar, kutuBaslangicY, sayfaGenisligi, sayfaAltSiniri - kutuBaslangicY + 5, 'F'); // Sayfa sonuna kadar çiz
+                doc.rect(solKenar, kutuBaslangicY, sayfaGenisligi, mevcutKutuYuksekligi, 'F');
                 doc.setDrawColor(PDF_SETTINGS.sourceLineColor[0], PDF_SETTINGS.sourceLineColor[1], PDF_SETTINGS.sourceLineColor[2]);
-                doc.setLineWidth(PDF_SETTINGS.lineThickness);
-                doc.line(solKenar + (boxPadding / 2), kutuBaslangicY, solKenar + (boxPadding / 2), sayfaAltSiniri + 5);
-
+                doc.line(solKenar + (boxPadding / 2), kutuBaslangicY, solKenar + (boxPadding / 2), kutuBaslangicY + mevcutKutuYuksekligi);
+                
                 // YENİ SAYFAYI BAŞLAT
                 doc.addPage();
-                y = PDF_SETTINGS.marginTop;
-                kutuBaslangicY = y; // Yeni sayfadaki kutunun başlangıcını ayarla
-                y += boxPadding; // Yeni sayfada kutu üst boşluğu
+                hesaplamaY = PDF_SETTINGS.marginTop;
+                kutuBaslangicY = hesaplamaY;
+            }
+            hesaplamaY += satirYuksekligi;
+        });
+
+        // SON SAYFANIN KUTUSUNU TAMAMLA
+        const sonKutuYuksekligi = (hesaplamaY - kutuBaslangicY) + boxPadding;
+        doc.setFillColor(247, 247, 247);
+        doc.rect(solKenar, kutuBaslangicY, sayfaGenisligi, sonKutuYuksekligi, 'F');
+        doc.setDrawColor(PDF_SETTINGS.sourceLineColor[0], PDF_SETTINGS.sourceLineColor[1], PDF_SETTINGS.sourceLineColor[2]);
+        doc.line(solKenar + (boxPadding / 2), kutuBaslangicY, solKenar + (boxPadding / 2), kutuBaslangicY + sonKutuYuksekligi);
+
+
+        // === 2. AŞAMA: METNİ ARKA PLANIN ÜZERİNE YAZDIRMA ===
+        let metinY = y;
+        let metinKutuBaslangicY = metinY; // Bu gereksiz olabilir ama mantık tutarlılığı için
+
+        tumSatirlar.forEach(satirData => {
+            let satirYuksekligi = 0;
+             if (satirData.type === 'main') {
+                satirYuksekligi = PDF_SETTINGS.quoteFontSize * PDF_SETTINGS.quoteLineHeightMultiplier;
+            } else if (satirData.type === 'citation') {
+                satirYuksekligi = PDF_SETTINGS.footerFontSize * PDF_SETTINGS.lineHeightMultiplier;
+            } else if (satirData.type === 'spacer') {
+                satirYuksekligi = 10;
+            }
+            
+            // Sayfa sonu kontrolü. Sadece Y pozisyonunu resetle, çizim yapma.
+            if (metinY + satirYuksekligi + boxPadding > sayfaAltSiniri) {
+                doc.addPage();
+                metinY = PDF_SETTINGS.marginTop;
             }
 
             // Metni yazdır
             if (satirData.type === 'main') {
                 currentFont = { family: 'Lora', style: 'italic', size: PDF_SETTINGS.quoteFontSize, color: PDF_SETTINGS.darkGray };
                 applyCurrentFont(doc);
-                doc.text(satirData.text, solKenar + boxPadding, y);
+                doc.text(satirData.text, solKenar + boxPadding, metinY + boxPadding);
             } else if (satirData.type === 'citation') {
                 currentFont = { family: 'Lora', style: 'italic', size: PDF_SETTINGS.footerFontSize, color: PDF_SETTINGS.mediumGray };
                 applyCurrentFont(doc);
-                doc.text(satirData.text, sagKenar - boxPadding, y, { align: 'right' });
+                // Sağdan hizalamak için metnin başlangıç Y pozisyonu aynı olmalı
+                doc.text(satirData.text, sagKenar - boxPadding, metinY + boxPadding, { align: 'right' });
             }
             
-            y += satirYuksekligi;
+            metinY += satirYuksekligi;
         });
 
-        // SON SAYFANIN KUTUSUNU TAMAMLA
-        const sonKutuYuksekligi = (y - kutuBaslangicY) + boxPadding;
-        doc.setFillColor(247, 247, 247);
-        doc.rect(solKenar, kutuBaslangicY, sayfaGenisligi, sonKutuYuksekligi, 'F');
-        doc.setDrawColor(PDF_SETTINGS.sourceLineColor[0], PDF_SETTINGS.sourceLineColor[1], PDF_SETTINGS.sourceLineColor[2]);
-        doc.setLineWidth(PDF_SETTINGS.lineThickness);
-        doc.line(solKenar + (boxPadding / 2), kutuBaslangicY, solKenar + (boxPadding / 2), y + boxPadding);
-        
-        y += boxPadding; // Kutu alt boşluğu
+        y = metinY + boxPadding * 2; // Kutu alt boşluğunu da ekleyerek Y'yi güncelle
     }
 
     return y;
