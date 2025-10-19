@@ -482,8 +482,6 @@ async function addSourceSection(doc, startY, imageDataUrl, kullanilanKaynakMetni
     const solKenar = PDF_SETTINGS.marginLeft;
     const sagKenar = doc.internal.pageSize.getWidth() - PDF_SETTINGS.marginRight;
     const sayfaAltSiniri = doc.internal.pageSize.getHeight() - PDF_SETTINGS.marginBottom;
-    const boxPadding = 15;
-    const contentWidthInsideBox = sayfaGenisligi - (boxPadding * 2);
 
     // Helper fonksiyonu: Bir sonraki içeriği çizmeden önce sayfa kontrolü yapar
     const checkPageBreak = (requiredHeight) => {
@@ -508,10 +506,9 @@ async function addSourceSection(doc, startY, imageDataUrl, kullanilanKaynakMetni
     y += titleHeight;
     
     // --- Resim ---
-    let calculatedImageHeight = 0;
-    let actualImageWidth = 0;
     if (imageDataUrl) {
         // ... (Resim boyut hesaplama kodları)
+        const contentWidthInsideBox = sayfaGenisligi;
         const maxImageWidthForPage = contentWidthInsideBox * 0.9;
         const maxImageHeightForPage = doc.internal.pageSize.getHeight() * 0.40;
         const imgProps = doc.getImageProperties(imageDataUrl);
@@ -545,36 +542,59 @@ async function addSourceSection(doc, startY, imageDataUrl, kullanilanKaynakMetni
     
     // --- Metin ve Kaynakça ---
     if (kullanilanKaynakMetni) {
+        const boxPadding = 15;
+        
         // Alıntı Metni
         currentFont = { family: 'Lora', style: 'italic', size: PDF_SETTINGS.quoteFontSize, color: PDF_SETTINGS.darkGray };
         applyCurrentFont(doc);
-        const alintiKutuIciGenislik = contentWidthInsideBox; // Artık kutu yok, sayfa genişliği kullanılabilir
+        const alintiKutuIciGenislik = sayfaGenisligi - (boxPadding * 2);
         const metinSatirlari = doc.splitTextToSize(`${kullanilanKaynakMetni}`, alintiKutuIciGenislik);
         
-        metinSatirlari.forEach(satir => {
+        checkPageBreak(boxPadding * 2); // Kutu için en azından biraz yer var mı?
+        y += boxPadding; // Kutu üst boşluğu
+
+        metinSatirlari.forEach((satir, index) => {
             const satirYuksekligi = currentFont.size * PDF_SETTINGS.quoteLineHeightMultiplier;
-            checkPageBreak(satirYuksekligi);
-            doc.text(satir, solKenar, y);
+            
+            // Eğer yeni sayfaya geçiyorsak, kutunun üst boşluğunu tekrar ekle
+            if (checkPageBreak(satirYuksekligi)) {
+                y += boxPadding;
+            }
+            
+            // Her satırın arkasına gri bir dikdörtgen çiz
+            doc.setFillColor(247, 247, 247);
+            doc.rect(solKenar, y - (satirYuksekligi * 0.8), sayfaGenisligi, satirYuksekligi, 'F');
+            
+            doc.text(satir, solKenar + boxPadding, y);
             y += satirYuksekligi;
         });
-        y += 10; // Metin sonrası boşluk
 
         // Kaynakça Metni
-        checkPageBreak(20); // Kaynakça için en azından biraz yer var mı kontrol et
         currentFont = { family: 'Lora', style: 'italic', size: PDF_SETTINGS.footerFontSize, color: PDF_SETTINGS.mediumGray };
         applyCurrentFont(doc);
         const kaynakcaMetni = `Kaynakça: ${kaynakKunyesi || "Kaynak Belirtilmemiş"}`;
-        const kaynakcaSatirlari = doc.splitTextToSize(kaynakcaMetni, sayfaGenisligi);
+        const kaynakcaSatirlari = doc.splitTextToSize(kaynakcaMetni, alintiKutuIciGenislik);
+
         kaynakcaSatirlari.forEach(satir => {
             const satirYuksekligi = PDF_SETTINGS.footerFontSize * PDF_SETTINGS.lineHeightMultiplier;
-            checkPageBreak(satirYuksekligi);
-            doc.text(satir, sagKenar, y, { align: 'right' });
+            if (checkPageBreak(satirYuksekligi)) {
+                y += boxPadding; // Yeni sayfada kutu başı boşluğu
+            }
+
+            // Kaynakçanın da arkasına gri kutu çiz
+            doc.setFillColor(247, 247, 247);
+            doc.rect(solKenar, y - (satirYuksekligi * 0.8), sayfaGenisligi, satirYuksekligi, 'F');
+
+            doc.text(satir, sagKenar - boxPadding, y, { align: 'right' });
             y += satirYuksekligi;
         });
+
+        y += boxPadding; // Kutu alt boşluğu
     }
 
     return y + PDF_SETTINGS.sourceSectionBottomPadding;
 }
+
 function addQuestionSection(doc, startY, calismaKagidiMetni, sayfaGenisligi) {
     let y = startY;
     const solKenar = PDF_SETTINGS.marginLeft;
