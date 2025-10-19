@@ -477,21 +477,22 @@ function addHeaderSection(doc, startY, logoBase64, kazanımMetni, sayfaGenisligi
 }
 
 // LÜTFEN MEVCUT addSourceSection FONKSİYONUNU BU YENİ VE SON KODLA DEĞİŞTİR
+// LÜTFEN MEVCUT addSourceSection FONKSİYONUNU BU FİNAL KODUYLA DEĞİŞTİR
 async function addSourceSection(doc, startY, imageDataUrl, kullanilanKaynakMetni, kaynakKunyesi, sayfaGenisligi) {
     let y = startY;
     const solKenar = PDF_SETTINGS.marginLeft;
     const sagKenar = doc.internal.pageSize.getWidth() - PDF_SETTINGS.marginRight;
     const sayfaAltSiniri = doc.internal.pageSize.getHeight() - PDF_SETTINGS.marginBottom;
 
-    // Helper fonksiyonu: Bir sonraki içeriği çizmeden önce sayfa kontrolü yapar
+    // Helper fonksiyonu: Sayfa sonu kontrolü yapar
     const checkPageBreak = (requiredHeight) => {
         if (y + requiredHeight > sayfaAltSiniri) {
             doc.addPage();
             y = PDF_SETTINGS.marginTop;
             applyCurrentFont(doc);
-            return true; // Yeni sayfa açıldı
+            return true;
         }
-        return false; // Aynı sayfada devam
+        return false;
     };
 
     // --- Başlık ---
@@ -534,13 +535,13 @@ async function addSourceSection(doc, startY, imageDataUrl, kullanilanKaynakMetni
         
         if(calculatedImageHeight > 0) {
             checkPageBreak(calculatedImageHeight + PDF_SETTINGS.imageBottomSpacing);
-            const imgX = solKenar + ((sayfaGenisligi - actualImageWidth) / 2); // Resmi sayfaya ortala
+            const imgX = solKenar + ((sayfaGenisligi - actualImageWidth) / 2);
             doc.addImage(imageDataUrl, 'JPEG', imgX, y, actualImageWidth, calculatedImageHeight);
             y += calculatedImageHeight + PDF_SETTINGS.imageBottomSpacing;
         }
     }
     
-    // --- Metin ve Kaynakça ---
+    // --- Metin ve Kaynakça Bloğu ---
     if (kullanilanKaynakMetni) {
         const boxPadding = 15;
         
@@ -550,21 +551,25 @@ async function addSourceSection(doc, startY, imageDataUrl, kullanilanKaynakMetni
         const alintiKutuIciGenislik = sayfaGenisligi - (boxPadding * 2);
         const metinSatirlari = doc.splitTextToSize(`${kullanilanKaynakMetni}`, alintiKutuIciGenislik);
         
-        checkPageBreak(boxPadding * 2); // Kutu için en azından biraz yer var mı?
-        y += boxPadding; // Kutu üst boşluğu
+        checkPageBreak(boxPadding * 2); // Kutu için başlangıç boşluğu
+        y += boxPadding;
 
-        metinSatirlari.forEach((satir, index) => {
+        metinSatirlari.forEach((satir) => {
             const satirYuksekligi = currentFont.size * PDF_SETTINGS.quoteLineHeightMultiplier;
             
-            // Eğer yeni sayfaya geçiyorsak, kutunun üst boşluğunu tekrar ekle
             if (checkPageBreak(satirYuksekligi)) {
                 y += boxPadding;
             }
             
-            // Her satırın arkasına gri bir dikdörtgen çiz
+            // Arka plan kutusu
             doc.setFillColor(247, 247, 247);
             doc.rect(solKenar, y - (satirYuksekligi * 0.8), sayfaGenisligi, satirYuksekligi, 'F');
             
+            // *** YENİ: Dikey Çizgi Eklendi ***
+            doc.setDrawColor(PDF_SETTINGS.sourceLineColor[0], PDF_SETTINGS.sourceLineColor[1], PDF_SETTINGS.sourceLineColor[2]);
+            doc.setLineWidth(PDF_SETTINGS.lineThickness);
+            doc.line(solKenar + (boxPadding / 2), y - (satirYuksekligi * 0.8), solKenar + (boxPadding / 2), y + (satirYuksekligi * 0.2));
+
             doc.text(satir, solKenar + boxPadding, y);
             y += satirYuksekligi;
         });
@@ -575,15 +580,32 @@ async function addSourceSection(doc, startY, imageDataUrl, kullanilanKaynakMetni
         const kaynakcaMetni = `Kaynakça: ${kaynakKunyesi || "Kaynak Belirtilmemiş"}`;
         const kaynakcaSatirlari = doc.splitTextToSize(kaynakcaMetni, alintiKutuIciGenislik);
 
+        // *** DÜZELTME: Beyaz boşluğu gidermek için metin ve kaynakça arasına boşluk ekle ***
+        const kaynakcaOncesiBosluk = 10;
+        if (checkPageBreak(kaynakcaOncesiBosluk)) {
+             y += boxPadding;
+        }
+        // Arka planı bu boşluk için de çiz
+        doc.setFillColor(247, 247, 247);
+        doc.rect(solKenar, y - (kaynakcaOncesiBosluk * 0.8), sayfaGenisligi, kaynakcaOncesiBosluk, 'F');
+        // Dikey çizgiyi bu boşlukta devam ettir
+        doc.setDrawColor(PDF_SETTINGS.sourceLineColor[0], PDF_SETTINGS.sourceLineColor[1], PDF_SETTINGS.sourceLineColor[2]);
+        doc.line(solKenar + (boxPadding / 2), y - (kaynakcaOncesiBosluk * 0.8), solKenar + (boxPadding / 2), y + (kaynakcaOncesiBosluk * 0.2));
+        y += kaynakcaOncesiBosluk;
+
+
         kaynakcaSatirlari.forEach(satir => {
             const satirYuksekligi = PDF_SETTINGS.footerFontSize * PDF_SETTINGS.lineHeightMultiplier;
             if (checkPageBreak(satirYuksekligi)) {
-                y += boxPadding; // Yeni sayfada kutu başı boşluğu
+                y += boxPadding;
             }
 
-            // Kaynakçanın da arkasına gri kutu çiz
             doc.setFillColor(247, 247, 247);
             doc.rect(solKenar, y - (satirYuksekligi * 0.8), sayfaGenisligi, satirYuksekligi, 'F');
+            
+            // Dikey çizgiyi kaynakçada da devam ettir
+            doc.setDrawColor(PDF_SETTINGS.sourceLineColor[0], PDF_SETTINGS.sourceLineColor[1], PDF_SETTINGS.sourceLineColor[2]);
+            doc.line(solKenar + (boxPadding / 2), y - (satirYuksekligi * 0.8), solKenar + (boxPadding / 2), y + (satirYuksekligi * 0.2));
 
             doc.text(satir, sagKenar - boxPadding, y, { align: 'right' });
             y += satirYuksekligi;
