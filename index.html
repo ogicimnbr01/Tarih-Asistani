@@ -476,11 +476,8 @@ function addHeaderSection(doc, startY, logoBase64, kazanımMetni, sayfaGenisligi
     return y;
 }
 
-// MEVCUT addSourceSection FONKSİYONUNU SİLİP YERİNE BU KODU YAPIŞTIR
+// LÜTFEN MEVCUT addSourceSection FONKSİYONUNU BU YENİ VE SON KODLA DEĞİŞTİR
 async function addSourceSection(doc, startY, imageDataUrl, kullanilanKaynakMetni, kaynakKunyesi, sayfaGenisligi) {
-    console.groupCollapsed("%c--- Tarihsel Kaynak Bölümü Detayları (Süper Detaylı) ---", "color: orange; font-weight: bold;");
-    console.log(`[addSourceSection] ➡️ Fonksiyon Başladı. Gelen y: ${startY}, Resim Var Mı: ${!!imageDataUrl}`);
-
     let y = startY;
     const solKenar = PDF_SETTINGS.marginLeft;
     const sagKenar = doc.internal.pageSize.getWidth() - PDF_SETTINGS.marginRight;
@@ -488,10 +485,33 @@ async function addSourceSection(doc, startY, imageDataUrl, kullanilanKaynakMetni
     const boxPadding = 15;
     const contentWidthInsideBox = sayfaGenisligi - (boxPadding * 2);
 
-    // --- 1. ADIM: RESİM BOYUTLARINI HESAPLA ---
+    // Helper fonksiyonu: Bir sonraki içeriği çizmeden önce sayfa kontrolü yapar
+    const checkPageBreak = (requiredHeight) => {
+        if (y + requiredHeight > sayfaAltSiniri) {
+            doc.addPage();
+            y = PDF_SETTINGS.marginTop;
+            applyCurrentFont(doc);
+            return true; // Yeni sayfa açıldı
+        }
+        return false; // Aynı sayfada devam
+    };
+
+    // --- Başlık ---
+    const titleHeight = PDF_SETTINGS.sectionTitleSize + PDF_SETTINGS.sourceSectionTitleSpacing;
+    checkPageBreak(titleHeight);
+    currentFont = { family: 'Playfair', style: 'bold', size: PDF_SETTINGS.sectionTitleSize, color: PDF_SETTINGS.titleColor };
+    applyCurrentFont(doc);
+    doc.text('Tarihsel Kaynak', solKenar, y);
+    doc.setDrawColor(PDF_SETTINGS.underlineColor[0], PDF_SETTINGS.underlineColor[1], PDF_SETTINGS.underlineColor[2]);
+    doc.setLineWidth(PDF_SETTINGS.lineThickness);
+    doc.line(solKenar, y + 5, solKenar + PDF_SETTINGS.sourceSectionTitleLineLength, y + 5);
+    y += titleHeight;
+    
+    // --- Resim ---
     let calculatedImageHeight = 0;
     let actualImageWidth = 0;
     if (imageDataUrl) {
+        // ... (Resim boyut hesaplama kodları)
         const maxImageWidthForPage = contentWidthInsideBox * 0.9;
         const maxImageHeightForPage = doc.internal.pageSize.getHeight() * 0.40;
         const imgProps = doc.getImageProperties(imageDataUrl);
@@ -514,117 +534,47 @@ async function addSourceSection(doc, startY, imageDataUrl, kullanilanKaynakMetni
             calculatedImageHeight = 0;
             actualImageWidth = 0;
         }
+        
+        if(calculatedImageHeight > 0) {
+            checkPageBreak(calculatedImageHeight + PDF_SETTINGS.imageBottomSpacing);
+            const imgX = solKenar + ((sayfaGenisligi - actualImageWidth) / 2); // Resmi sayfaya ortala
+            doc.addImage(imageDataUrl, 'JPEG', imgX, y, actualImageWidth, calculatedImageHeight);
+            y += calculatedImageHeight + PDF_SETTINGS.imageBottomSpacing;
+        }
     }
-    console.log(`[addSourceSection] 🖼️ Resim boyutları: Yükseklik=${calculatedImageHeight.toFixed(2)}, Genişlik=${actualImageWidth.toFixed(2)}`);
-
-    // --- 2. ADIM: GEREKLİ TOPLAM YÜKSEKLİĞİ HESAPLA ---
-    console.log("%c[addSourceSection] 📏 Kutu Yüksekliği Hesaplanıyor...", "color: cyan;");
-    let totalContentHeight = 0;
-    if (imageDataUrl && calculatedImageHeight > 0) {
-        totalContentHeight += calculatedImageHeight + PDF_SETTINGS.imageBottomSpacing;
-    }
-    console.log(`[addSourceSection] Adım 2.1 - Resim sonrası totalContentHeight: ${totalContentHeight.toFixed(2)}`);
-
-    let metinSatirlari = [];
+    
+    // --- Metin ve Kaynakça ---
     if (kullanilanKaynakMetni) {
-        console.log("[addSourceSection] Adım 2.2 - Metin verisi var, hesaplama başlıyor.");
-        console.log("[addSourceSection] Gelen metin (ilk 100 karakter):", kullanilanKaynakMetni.substring(0, 100) + "...");
-
-        doc.setFont('Lora', 'italic');
-        doc.setFontSize(PDF_SETTINGS.quoteFontSize);
-        const alintiKutuIciGenislik = contentWidthInsideBox - PDF_SETTINGS.kaynakAlıntıMarginLeft;
-        metinSatirlari = doc.splitTextToSize(`${kullanilanKaynakMetni}`, alintiKutuIciGenislik); // Tırnak işaretini çizim sırasında ekleyelim
-        console.log(`[addSourceSection] Metin, ${metinSatirlari.length} satıra bölündü.`);
-        
-        let metinBloguYuksekligi = 0;
-        if (metinSatirlari.length > 0) {
-            metinBloguYuksekligi = (metinSatirlari.length * PDF_SETTINGS.quoteFontSize * PDF_SETTINGS.quoteLineHeightMultiplier) + 5;
-            totalContentHeight += metinBloguYuksekligi;
-        }
-        console.log(`[addSourceSection] Hesaplanan Metin Bloğu Yüksekliği: ${metinBloguYuksekligi.toFixed(2)}`);
-        console.log(`[addSourceSection] Metin sonrası totalContentHeight: ${totalContentHeight.toFixed(2)}`);
-
-        doc.setFontSize(PDF_SETTINGS.footerFontSize);
-        const kaynakcaMetni = `Kaynakça: ${kaynakKunyesi || "Kaynak Belirtilmemiş"}`;
-        const kaynakcaSatirlari = doc.splitTextToSize(kaynakcaMetni, contentWidthInsideBox);
-        let kaynakcaYuksekligi = (kaynakcaSatirlari.length * PDF_SETTINGS.footerFontSize * PDF_SETTINGS.lineHeightMultiplier) + 5;
-        totalContentHeight += kaynakcaYuksekligi;
-        console.log(`[addSourceSection] Hesaplanan Kaynakça Yüksekliği: ${kaynakcaYuksekligi.toFixed(2)}`);
-        console.log(`[addSourceSection] Kaynakça sonrası SON totalContentHeight: ${totalContentHeight.toFixed(2)}`);
-    }
-    
-    const titleHeight = PDF_SETTINGS.sectionTitleSize + PDF_SETTINGS.sourceSectionTitleSpacing;
-    const boxHeight = totalContentHeight > 0 ? totalContentHeight + (boxPadding * 2) : 0;
-    const totalSectionHeight = titleHeight + boxHeight + PDF_SETTINGS.sourceSectionBottomPadding;
-    console.log(`[addSourceSection] ✅ HESAPLAMA TAMAMLANDI -> Nihai Kutu Yüksekliği: ${boxHeight.toFixed(2)}, Toplam Bölüm Yüksekliği: ${totalSectionHeight.toFixed(2)}`);
-
-    // --- 3. ADIM: SAYFA KONTROLÜ YAP ---
-    if (y + totalSectionHeight > sayfaAltSiniri && totalContentHeight > 0) {
-        console.warn(`[addSourceSection] ⚠️ Bölüm sığmadı! YENİ SAYFA EKLENİYOR.`);
-        doc.addPage();
-        y = PDF_SETTINGS.marginTop;
+        // Alıntı Metni
+        currentFont = { family: 'Lora', style: 'italic', size: PDF_SETTINGS.quoteFontSize, color: PDF_SETTINGS.darkGray };
         applyCurrentFont(doc);
-    }
-    
-    // --- 4. ADIM: BÖLÜMÜ ÇİZ ---
-    console.log(`[addSourceSection] ✏️ Bölüm çizilmeye başlanıyor, y: ${y.toFixed(2)}`);
-    currentFont = { family: 'Playfair', style: 'bold', size: PDF_SETTINGS.sectionTitleSize, color: PDF_SETTINGS.titleColor };
-    applyCurrentFont(doc);
-    doc.text('Tarihsel Kaynak', solKenar, y);
-    doc.setDrawColor(PDF_SETTINGS.underlineColor[0], PDF_SETTINGS.underlineColor[1], PDF_SETTINGS.underlineColor[2]);
-    doc.setLineWidth(PDF_SETTINGS.lineThickness);
-    doc.line(solKenar, y + 5, solKenar + PDF_SETTINGS.sourceSectionTitleLineLength, y + 5);
-    y += titleHeight;
-
-    if (totalContentHeight > 0) {
-        const currentBoxY = y;
-        let contentYInsideBox = currentBoxY + boxPadding;
+        const alintiKutuIciGenislik = contentWidthInsideBox; // Artık kutu yok, sayfa genişliği kullanılabilir
+        const metinSatirlari = doc.splitTextToSize(`${kullanilanKaynakMetni}`, alintiKutuIciGenislik);
         
-        doc.setFillColor(247, 247, 247);
-        doc.rect(solKenar, currentBoxY, sayfaGenisligi, boxHeight, 'F');
-        doc.setDrawColor(220, 220, 220);
-        doc.setLineWidth(0.5);
-        doc.rect(solKenar, currentBoxY, sayfaGenisligi, boxHeight, 'S');
+        metinSatirlari.forEach(satir => {
+            const satirYuksekligi = currentFont.size * PDF_SETTINGS.quoteLineHeightMultiplier;
+            checkPageBreak(satirYuksekligi);
+            doc.text(satir, solKenar, y);
+            y += satirYuksekligi;
+        });
+        y += 10; // Metin sonrası boşluk
 
-        if (imageDataUrl && calculatedImageHeight > 0) {
-            const imgX = solKenar + boxPadding + ((contentWidthInsideBox - actualImageWidth) / 2);
-            doc.addImage(imageDataUrl, 'JPEG', imgX, contentYInsideBox, actualImageWidth, calculatedImageHeight);
-            contentYInsideBox += calculatedImageHeight + PDF_SETTINGS.imageBottomSpacing;
-        }
-
-        if (kullanilanKaynakMetni) {
-            currentFont = { family: 'Lora', style: 'italic', size: PDF_SETTINGS.quoteFontSize, color: PDF_SETTINGS.darkGray };
-            applyCurrentFont(doc);
-            const alintiMetinBaslangicX = solKenar + boxPadding + PDF_SETTINGS.kaynakAlıntıMarginLeft;
-            const metinGercekYukseklik = metinSatirlari.length * currentFont.size * PDF_SETTINGS.quoteLineHeightMultiplier;
-
-            doc.setDrawColor(PDF_SETTINGS.sourceLineColor[0], PDF_SETTINGS.sourceLineColor[1], PDF_SETTINGS.sourceLineColor[2]);
-            doc.setLineWidth(PDF_SETTINGS.lineThickness);
-            doc.line(solKenar + boxPadding + (PDF_SETTINGS.kaynakAlıntıMarginLeft / 2), contentYInsideBox, solKenar + boxPadding + (PDF_SETTINGS.kaynakAlıntıMarginLeft / 2), contentYInsideBox + metinGercekYukseklik);
-
-            metinSatirlari.forEach(satir => {
-                doc.text(satir, alintiMetinBaslangicX, contentYInsideBox);
-                contentYInsideBox += currentFont.size * PDF_SETTINGS.quoteLineHeightMultiplier;
-            });
-            contentYInsideBox += 5;
-
-            currentFont = { family: 'Lora', style: 'italic', size: PDF_SETTINGS.footerFontSize, color: PDF_SETTINGS.mediumGray };
-            applyCurrentFont(doc);
-            const kaynakcaMetni = `Kaynakça: ${kaynakKunyesi || "Kaynak Belirtilmemiş"}`;
-            const kaynakcaSatirlari = doc.splitTextToSize(kaynakcaMetni, contentWidthInsideBox);
-            kaynakcaSatirlari.forEach(satir => {
-                doc.text(satir, sagKenar - boxPadding, contentYInsideBox, { align: 'right' });
-                contentYInsideBox += PDF_SETTINGS.footerFontSize * PDF_SETTINGS.lineHeightMultiplier;
-            });
-        }
-        y = currentBoxY + boxHeight + PDF_SETTINGS.sourceSectionBottomPadding;
+        // Kaynakça Metni
+        checkPageBreak(20); // Kaynakça için en azından biraz yer var mı kontrol et
+        currentFont = { family: 'Lora', style: 'italic', size: PDF_SETTINGS.footerFontSize, color: PDF_SETTINGS.mediumGray };
+        applyCurrentFont(doc);
+        const kaynakcaMetni = `Kaynakça: ${kaynakKunyesi || "Kaynak Belirtilmemiş"}`;
+        const kaynakcaSatirlari = doc.splitTextToSize(kaynakcaMetni, sayfaGenisligi);
+        kaynakcaSatirlari.forEach(satir => {
+            const satirYuksekligi = PDF_SETTINGS.footerFontSize * PDF_SETTINGS.lineHeightMultiplier;
+            checkPageBreak(satirYuksekligi);
+            doc.text(satir, sagKenar, y, { align: 'right' });
+            y += satirYuksekligi;
+        });
     }
-    
-    console.log(`[addSourceSection] ✅ Fonksiyondan dönülen son y değeri: ${y.toFixed(2)}`);
-    console.groupEnd();
-    return y;
-}
 
+    return y + PDF_SETTINGS.sourceSectionBottomPadding;
+}
 function addQuestionSection(doc, startY, calismaKagidiMetni, sayfaGenisligi) {
     let y = startY;
     const solKenar = PDF_SETTINGS.marginLeft;
