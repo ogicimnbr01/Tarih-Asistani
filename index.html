@@ -319,6 +319,17 @@ function applyCurrentFont(doc) {
     doc.setTextColor(currentFont.color[0], currentFont.color[1], currentFont.color[2]);
 }
 
+const sayfaKontrolu = (doc, yPozisyonu, gerekliBosluk) => {
+    const sayfaAltSiniri = doc.internal.pageSize.getHeight() - PDF_SETTINGS.marginBottom;
+
+    if (yPozisyonu + gerekliBosluk > sayfaAltSiniri) {
+        doc.addPage();
+        yPozisyonu = PDF_SETTINGS.marginTop;
+        applyCurrentFont(doc);
+    }
+    return yPozisyonu;
+};
+
 // LÜTFEN MEVCUT olusturVeIndirPDF FONKSİYONUNU BU YENİ KODLA DEĞİŞTİR
 async function olusturVeIndirPDF() {
     if (!sonApiCevabi) {
