@@ -395,7 +395,7 @@ async function olusturVeIndirPDF() {
     }
 }
 
-/// LÜTFEN MEVCUT generatePdfContent FONKSİYONUNU BU YENİ KODLA DEĞİŞTİR
+// LÜTFEN MEVCUT generatePdfContent FONKSİYONUNU BU YENİ KODLA DEĞİŞTİR
 async function generatePdfContent(doc, kaynakMetni, calismaKagidiMetni, imageDataUrl, kazanımMetni, kaynakKunyesi, logoBase64) {
     let yPozisyonu = PDF_SETTINGS.headerTopMargin;
     const solKenar = PDF_SETTINGS.marginLeft;
@@ -415,6 +415,29 @@ async function generatePdfContent(doc, kaynakMetni, calismaKagidiMetni, imageDat
 
     // 4. Soru bölümünü yeni sayfaya ekle.
     yPozisyonu = addQuestionSection(doc, yPozisyonu, calismaKagidiMetni, sayfaGenisligi);
+}
+
+function addHeaderSection(doc, startY, logoBase64, kazanımMetni, sayfaGenisligi) {
+    let y = startY;
+    const solKenar = PDF_SETTINGS.marginLeft;
+
+    currentFont = { family: 'Playfair', style: 'bold', size: 24, color: PDF_SETTINGS.titleColor };
+    applyCurrentFont(doc);
+    doc.addImage(logoBase64, 'PNG', solKenar, y - PDF_SETTINGS.logoOffset, PDF_SETTINGS.logoSize, PDF_SETTINGS.logoSize);
+    doc.text('T.C. İnkılap Tarihi ve Atatürkçülük Dersi', solKenar + PDF_SETTINGS.logoSize + 10, y, { align: 'left' });
+    y += 28;
+
+    currentFont = { family: 'Lora', style: 'italic', size: PDF_SETTINGS.kazanımFontSize, color: PDF_SETTINGS.mediumGray };
+    applyCurrentFont(doc);
+    const kazanımSatirlari = doc.splitTextToSize(`Kazanım: ${kazanımMetni}`, sayfaGenisligi);
+    doc.text(kazanımSatirlari, solKenar, y, { align: 'left' });
+    y += (kazanımSatirlari.length * currentFont.size * PDF_SETTINGS.kazanımLineHeight) + PDF_SETTINGS.headerBottomSpacing; 
+
+    doc.setDrawColor(PDF_SETTINGS.sectionLineColor[0], PDF_SETTINGS.sectionLineColor[1], PDF_SETTINGS.sectionLineColor[2]);
+    doc.setLineWidth(PDF_SETTINGS.lineThickness);
+    doc.line(solKenar, y, doc.internal.pageSize.getWidth() - PDF_SETTINGS.marginRight, y);
+    y += 15;
+    return y;
 }
 
 // LÜTFEN MEVCUT addSourceSection FONKSİYONUNU BU FİNAL KODUYLA DEĞİŞTİR
