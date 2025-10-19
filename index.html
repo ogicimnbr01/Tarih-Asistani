@@ -459,7 +459,6 @@ function addHeaderSection(doc, startY, logoBase64, kazanımMetni, sayfaGenisligi
     return y;
 }
 
-// LÜTFEN MEVCUT addSourceSection FONKSİYONUNU BU FİNAL KODUYLA DEĞİŞTİR
 async function addSourceSection(doc, startY, imageDataUrl, kullanilanKaynakMetni, kaynakKunyesi, sayfaGenisligi) {
     let y = startY;
     const solKenar = PDF_SETTINGS.marginLeft;
@@ -499,106 +498,83 @@ async function addSourceSection(doc, startY, imageDataUrl, kullanilanKaynakMetni
         }
     }
     
-    // --- Metin ve Kaynakça Bloğu (YENİ MANTIK) ---
+    // --- Metin ve Kaynakça Bloğu (YENİ "PLANLA ve ÇİZ" MANTIĞI) ---
     if (kullanilanKaynakMetni) {
         const boxPadding = 15;
-        
-        // Önce tüm metin ve kaynakça satırlarını bir diziye alalım
-        const tumSatirlar = [];
-        
-        currentFont = { family: 'Lora', style: 'italic', size: PDF_SETTINGS.quoteFontSize, color: PDF_SETTINGS.darkGray };
-        applyCurrentFont(doc);
         const alintiKutuIciGenislik = sayfaGenisligi - (boxPadding * 2);
-        const metinSatirlari = doc.splitTextToSize(`${kullanilanKaynakMetni}`, alintiKutuIciGenislik);
-        metinSatirlari.forEach(satir => tumSatirlar.push({ text: satir, type: 'main' }));
+        
+        const tumSatirlar = [];
+        const calculateLineHeight = (lineData) => {
+            if (lineData.type === 'main') return PDF_SETTINGS.quoteFontSize * PDF_SETTINGS.quoteLineHeightMultiplier;
+            if (lineData.type === 'citation') return PDF_SETTINGS.footerFontSize * PDF_SETTINGS.lineHeightMultiplier;
+            if (lineData.type === 'spacer') return 10;
+            return 0;
+        };
 
+        // Tüm satırları ve tiplerini hazırla
+        currentFont = { family: 'Lora', style: 'italic', size: PDF_SETTINGS.quoteFontSize, color: PDF_SETTINGS.darkGray }; applyCurrentFont(doc);
+        doc.splitTextToSize(`${kullanilanKaynakMetni}`, alintiKutuIciGenislik).forEach(satir => tumSatirlar.push({ text: satir, type: 'main' }));
         tumSatirlar.push({ text: '', type: 'spacer' });
-
-        currentFont = { family: 'Lora', style: 'italic', size: PDF_SETTINGS.footerFontSize, color: PDF_SETTINGS.mediumGray };
-        applyCurrentFont(doc);
+        currentFont = { family: 'Lora', style: 'italic', size: PDF_SETTINGS.footerFontSize, color: PDF_SETTINGS.mediumGray }; applyCurrentFont(doc);
         const kaynakcaMetni = `Kaynakça: ${kaynakKunyesi || "Kaynak Belirtilmemiş"}`;
-        const kaynakcaSatirlari = doc.splitTextToSize(kaynakcaMetni, alintiKutuIciGenislik);
-        kaynakcaSatirlari.forEach(satir => tumSatirlar.push({ text: satir, type: 'citation' }));
+        doc.splitTextToSize(kaynakcaMetni, alintiKutuIciGenislik).forEach(satir => tumSatirlar.push({ text: satir, type: 'citation' }));
 
-        // === 1. AŞAMA: HESAPLAMA VE ARKA PLANLARI ÇİZME ===
-        let hesaplamaY = y;
-        let kutuBaslangicY = hesaplamaY;
+        // --- PASS 1: YERLEŞİMİ HESAPLA ---
+        const pagesLayout = [];
+        let currentPageLines = [];
+        let ySim = y; 
 
-        tumSatirlar.forEach(satirData => {
-            let satirYuksekligi = 0;
-            if (satirData.type === 'main') {
-                satirYuksekligi = PDF_SETTINGS.quoteFontSize * PDF_SETTINGS.quoteLineHeightMultiplier;
-            } else if (satirData.type === 'citation') {
-                satirYuksekligi = PDF_SETTINGS.footerFontSize * PDF_SETTINGS.lineHeightMultiplier;
-            } else if (satirData.type === 'spacer') {
-                satirYuksekligi = 10;
+        tumSatirlar.forEach(line => {
+            const lineHeight = calculateLineHeight(line);
+            if (ySim + lineHeight > sayfaAltSiniri && currentPageLines.length > 0) {
+                pagesLayout.push(currentPageLines);
+                currentPageLines = [];
+                ySim = PDF_SETTINGS.marginTop;
             }
-
-            if (hesaplamaY + satirYuksekligi + boxPadding > sayfaAltSiniri) {
-                // ÖNCEKİ SAYFANIN KUTUSUNU TAMAMLA
-                const mevcutKutuYuksekligi = (hesaplamaY - kutuBaslangicY) + boxPadding;
-                doc.setFillColor(247, 247, 247);
-                doc.rect(solKenar, kutuBaslangicY, sayfaGenisligi, mevcutKutuYuksekligi, 'F');
-                doc.setDrawColor(PDF_SETTINGS.sourceLineColor[0], PDF_SETTINGS.sourceLineColor[1], PDF_SETTINGS.sourceLineColor[2]);
-                doc.line(solKenar + (boxPadding / 2), kutuBaslangicY, solKenar + (boxPadding / 2), kutuBaslangicY + mevcutKutuYuksekligi);
-                
-                // YENİ SAYFAYI BAŞLAT
-                doc.addPage();
-                hesaplamaY = PDF_SETTINGS.marginTop;
-                kutuBaslangicY = hesaplamaY;
-            }
-            hesaplamaY += satirYuksekligi;
+            currentPageLines.push(line);
+            ySim += lineHeight;
         });
+        pagesLayout.push(currentPageLines);
 
-        // SON SAYFANIN KUTUSUNU TAMAMLA
-        const sonKutuYuksekligi = (hesaplamaY - kutuBaslangicY) + boxPadding;
-        doc.setFillColor(247, 247, 247);
-        doc.rect(solKenar, kutuBaslangicY, sayfaGenisligi, sonKutuYuksekligi, 'F');
-        doc.setDrawColor(PDF_SETTINGS.sourceLineColor[0], PDF_SETTINGS.sourceLineColor[1], PDF_SETTINGS.sourceLineColor[2]);
-        doc.line(solKenar + (boxPadding / 2), kutuBaslangicY, solKenar + (boxPadding / 2), kutuBaslangicY + sonKutuYuksekligi);
-
-
-        // === 2. AŞAMA: METNİ ARKA PLANIN ÜZERİNE YAZDIRMA ===
-        let metinY = y;
-        let metinKutuBaslangicY = metinY; // Bu gereksiz olabilir ama mantık tutarlılığı için
-
-        tumSatirlar.forEach(satirData => {
-            let satirYuksekligi = 0;
-             if (satirData.type === 'main') {
-                satirYuksekligi = PDF_SETTINGS.quoteFontSize * PDF_SETTINGS.quoteLineHeightMultiplier;
-            } else if (satirData.type === 'citation') {
-                satirYuksekligi = PDF_SETTINGS.footerFontSize * PDF_SETTINGS.lineHeightMultiplier;
-            } else if (satirData.type === 'spacer') {
-                satirYuksekligi = 10;
+        // --- PASS 2: HESAPLANAN YERLEŞİME GÖRE ÇİZ ---
+        pagesLayout.forEach((pageLines, pageIndex) => {
+            if (pageIndex > 0) {
+                doc.addPage();
+                y = PDF_SETTINGS.marginTop;
             }
             
-            // Sayfa sonu kontrolü. Sadece Y pozisyonunu resetle, çizim yapma.
-            if (metinY + satirYuksekligi + boxPadding > sayfaAltSiniri) {
-                doc.addPage();
-                metinY = PDF_SETTINGS.marginTop;
-            }
+            let kutuBaslangicY = y;
+            let contentHeight = 0;
+            pageLines.forEach(line => contentHeight += calculateLineHeight(line));
+            const kutuYuksekligi = contentHeight + boxPadding * 2;
 
-            // Metni yazdır
-            if (satirData.type === 'main') {
-                currentFont = { family: 'Lora', style: 'italic', size: PDF_SETTINGS.quoteFontSize, color: PDF_SETTINGS.darkGray };
-                applyCurrentFont(doc);
-                doc.text(satirData.text, solKenar + boxPadding, metinY + boxPadding);
-            } else if (satirData.type === 'citation') {
-                currentFont = { family: 'Lora', style: 'italic', size: PDF_SETTINGS.footerFontSize, color: PDF_SETTINGS.mediumGray };
-                applyCurrentFont(doc);
-                // Sağdan hizalamak için metnin başlangıç Y pozisyonu aynı olmalı
-                doc.text(satirData.text, sagKenar - boxPadding, metinY + boxPadding, { align: 'right' });
-            }
-            
-            metinY += satirYuksekligi;
+            // ÖNCE ARKA PLANI ÇİZ
+            doc.setFillColor(247, 247, 247);
+            doc.rect(solKenar, kutuBaslangicY, sayfaGenisligi, kutuYuksekligi, 'F');
+            doc.setDrawColor(PDF_SETTINGS.sourceLineColor[0], PDF_SETTINGS.sourceLineColor[1], PDF_SETTINGS.sourceLineColor[2]);
+            doc.setLineWidth(PDF_SETTINGS.lineThickness);
+            doc.line(solKenar + (boxPadding / 2), kutuBaslangicY, solKenar + (boxPadding / 2), kutuBaslangicY + kutuYuksekligi);
+
+            // SONRA METNİ ÜZERİNE YAZ
+            let textY = kutuBaslangicY + boxPadding;
+            pageLines.forEach(line => {
+                if (line.type === 'main') {
+                    currentFont = { family: 'Lora', style: 'italic', size: PDF_SETTINGS.quoteFontSize, color: PDF_SETTINGS.darkGray };
+                    applyCurrentFont(doc);
+                    doc.text(line.text, solKenar + boxPadding, textY);
+                } else if (line.type === 'citation') {
+                    currentFont = { family: 'Lora', style: 'italic', size: PDF_SETTINGS.footerFontSize, color: PDF_SETTINGS.mediumGray };
+                    applyCurrentFont(doc);
+                    doc.text(line.text, sagKenar - boxPadding, textY, { align: 'right' });
+                }
+                textY += calculateLineHeight(line);
+            });
+            y = kutuBaslangicY + kutuYuksekligi;
         });
-
-        y = metinY + boxPadding * 2; // Kutu alt boşluğunu da ekleyerek Y'yi güncelle
     }
 
     return y;
 }
-
 function addQuestionSection(doc, startY, calismaKagidiMetni, sayfaGenisligi) {
     let y = startY;
     const solKenar = PDF_SETTINGS.marginLeft;
