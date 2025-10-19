@@ -476,7 +476,7 @@ function addHeaderSection(doc, startY, logoBase64, kazanımMetni, sayfaGenisligi
     return y;
 }
 
-// LÜTFEN MEVCUT addSourceSection FONKSİYONUNU BU YENİ KODLA DEĞİŞTİR
+// MEVCUT addSourceSection FONKSİYONUNU SİLİP YERİNE BU KODU YAPIŞTIR
 async function addSourceSection(doc, startY, imageDataUrl, kullanilanKaynakMetni, kaynakKunyesi, sayfaGenisligi) {
     console.groupCollapsed("%c--- Tarihsel Kaynak Bölümü Detayları (Süper Detaylı) ---", "color: orange; font-weight: bold;");
     console.log(`[addSourceSection] ➡️ Fonksiyon Başladı. Gelen y: ${startY}, Resim Var Mı: ${!!imageDataUrl}`);
@@ -492,7 +492,6 @@ async function addSourceSection(doc, startY, imageDataUrl, kullanilanKaynakMetni
     let calculatedImageHeight = 0;
     let actualImageWidth = 0;
     if (imageDataUrl) {
-        // ... (resim hesaplama kodları)
         const maxImageWidthForPage = contentWidthInsideBox * 0.9;
         const maxImageHeightForPage = doc.internal.pageSize.getHeight() * 0.40;
         const imgProps = doc.getImageProperties(imageDataUrl);
@@ -528,14 +527,13 @@ async function addSourceSection(doc, startY, imageDataUrl, kullanilanKaynakMetni
 
     let metinSatirlari = [];
     if (kullanilanKaynakMetni) {
-        // --- METİN HESAPLAMA LOGLARI ---
         console.log("[addSourceSection] Adım 2.2 - Metin verisi var, hesaplama başlıyor.");
         console.log("[addSourceSection] Gelen metin (ilk 100 karakter):", kullanilanKaynakMetni.substring(0, 100) + "...");
 
         doc.setFont('Lora', 'italic');
         doc.setFontSize(PDF_SETTINGS.quoteFontSize);
         const alintiKutuIciGenislik = contentWidthInsideBox - PDF_SETTINGS.kaynakAlıntıMarginLeft;
-        metinSatirlari = doc.splitTextToSize(`"${kullanilanKaynakMetni}"`, alintiKutuIciGenislik);
+        metinSatirlari = doc.splitTextToSize(`${kullanilanKaynakMetni}`, alintiKutuIciGenislik); // Tırnak işaretini çizim sırasında ekleyelim
         console.log(`[addSourceSection] Metin, ${metinSatirlari.length} satıra bölündü.`);
         
         let metinBloguYuksekligi = 0;
@@ -546,7 +544,6 @@ async function addSourceSection(doc, startY, imageDataUrl, kullanilanKaynakMetni
         console.log(`[addSourceSection] Hesaplanan Metin Bloğu Yüksekliği: ${metinBloguYuksekligi.toFixed(2)}`);
         console.log(`[addSourceSection] Metin sonrası totalContentHeight: ${totalContentHeight.toFixed(2)}`);
 
-        // --- KAYNAKÇA HESAPLAMA LOGLARI ---
         doc.setFontSize(PDF_SETTINGS.footerFontSize);
         const kaynakcaMetni = `Kaynakça: ${kaynakKunyesi || "Kaynak Belirtilmemiş"}`;
         const kaynakcaSatirlari = doc.splitTextToSize(kaynakcaMetni, contentWidthInsideBox);
@@ -570,10 +567,60 @@ async function addSourceSection(doc, startY, imageDataUrl, kullanilanKaynakMetni
     }
     
     // --- 4. ADIM: BÖLÜMÜ ÇİZ ---
-    // (Çizim kodlarında değişiklik yok)
-    // ...
+    console.log(`[addSourceSection] ✏️ Bölüm çizilmeye başlanıyor, y: ${y.toFixed(2)}`);
+    currentFont = { family: 'Playfair', style: 'bold', size: PDF_SETTINGS.sectionTitleSize, color: PDF_SETTINGS.titleColor };
+    applyCurrentFont(doc);
+    doc.text('Tarihsel Kaynak', solKenar, y);
+    doc.setDrawColor(PDF_SETTINGS.underlineColor[0], PDF_SETTINGS.underlineColor[1], PDF_SETTINGS.underlineColor[2]);
+    doc.setLineWidth(PDF_SETTINGS.lineThickness);
+    doc.line(solKenar, y + 5, solKenar + PDF_SETTINGS.sourceSectionTitleLineLength, y + 5);
+    y += titleHeight;
 
-    // --- FONKSİYON SONU ---
+    if (totalContentHeight > 0) {
+        const currentBoxY = y;
+        let contentYInsideBox = currentBoxY + boxPadding;
+        
+        doc.setFillColor(247, 247, 247);
+        doc.rect(solKenar, currentBoxY, sayfaGenisligi, boxHeight, 'F');
+        doc.setDrawColor(220, 220, 220);
+        doc.setLineWidth(0.5);
+        doc.rect(solKenar, currentBoxY, sayfaGenisligi, boxHeight, 'S');
+
+        if (imageDataUrl && calculatedImageHeight > 0) {
+            const imgX = solKenar + boxPadding + ((contentWidthInsideBox - actualImageWidth) / 2);
+            doc.addImage(imageDataUrl, 'JPEG', imgX, contentYInsideBox, actualImageWidth, calculatedImageHeight);
+            contentYInsideBox += calculatedImageHeight + PDF_SETTINGS.imageBottomSpacing;
+        }
+
+        if (kullanilanKaynakMetni) {
+            currentFont = { family: 'Lora', style: 'italic', size: PDF_SETTINGS.quoteFontSize, color: PDF_SETTINGS.darkGray };
+            applyCurrentFont(doc);
+            const alintiMetinBaslangicX = solKenar + boxPadding + PDF_SETTINGS.kaynakAlıntıMarginLeft;
+            const metinGercekYukseklik = metinSatirlari.length * currentFont.size * PDF_SETTINGS.quoteLineHeightMultiplier;
+
+            doc.setDrawColor(PDF_SETTINGS.sourceLineColor[0], PDF_SETTINGS.sourceLineColor[1], PDF_SETTINGS.sourceLineColor[2]);
+            doc.setLineWidth(PDF_SETTINGS.lineThickness);
+            doc.line(solKenar + boxPadding + (PDF_SETTINGS.kaynakAlıntıMarginLeft / 2), contentYInsideBox, solKenar + boxPadding + (PDF_SETTINGS.kaynakAlıntıMarginLeft / 2), contentYInsideBox + metinGercekYukseklik);
+
+            metinSatirlari.forEach(satir => {
+                doc.text(satir, alintiMetinBaslangicX, contentYInsideBox);
+                contentYInsideBox += currentFont.size * PDF_SETTINGS.quoteLineHeightMultiplier;
+            });
+            contentYInsideBox += 5;
+
+            currentFont = { family: 'Lora', style: 'italic', size: PDF_SETTINGS.footerFontSize, color: PDF_SETTINGS.mediumGray };
+            applyCurrentFont(doc);
+            const kaynakcaMetni = `Kaynakça: ${kaynakKunyesi || "Kaynak Belirtilmemiş"}`;
+            const kaynakcaSatirlari = doc.splitTextToSize(kaynakcaMetni, contentWidthInsideBox);
+            kaynakcaSatirlari.forEach(satir => {
+                doc.text(satir, sagKenar - boxPadding, contentYInsideBox, { align: 'right' });
+                contentYInsideBox += PDF_SETTINGS.footerFontSize * PDF_SETTINGS.lineHeightMultiplier;
+            });
+        }
+        y = currentBoxY + boxHeight + PDF_SETTINGS.sourceSectionBottomPadding;
+    }
+    
+    console.log(`[addSourceSection] ✅ Fonksiyondan dönülen son y değeri: ${y.toFixed(2)}`);
     console.groupEnd();
     return y;
 }
