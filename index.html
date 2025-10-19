@@ -310,7 +310,10 @@ const PDF_SETTINGS = {
     headerBottomSpacing: 5,
 };
 
+// LÜTFEN MEVCUT olusturVeIndirPDF FONKSİYONUNU BU YENİ KODLA DEĞİŞTİR
 async function olusturVeIndirPDF() {
+    console.clear(); // Önceki logları temizle
+    console.log("%c--- YENİ PDF OLUŞTURMA İŞLEMİ BAŞLADI ---", "color: #4CAF50; font-weight: bold; font-size: 16px;");
 
     if (!sonApiCevabi) {
         alert("PDF oluşturmak için önce bir çalışma kağıdı oluşturmalısınız.");
@@ -327,9 +330,7 @@ async function olusturVeIndirPDF() {
     try {
         const fetchAssetAsBase64 = async (url) => {
             const response = await fetch(url);
-            if (!response.ok) {
-                throw new Error(`Varlık yüklenemedi: ${url}. HTTP Statü: ${response.status} ${response.statusText}`);
-            }
+            if (!response.ok) throw new Error(`Varlık yüklenemedi: ${url}. HTTP Statü: ${response.status} ${response.statusText}`);
             const blob = await response.blob();
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
@@ -358,9 +359,26 @@ async function olusturVeIndirPDF() {
         doc.addFileToVFS('PlayfairDisplay-Regular.ttf', playfairRegular.split(',')[1]); doc.addFont('PlayfairDisplay-Regular.ttf', 'Playfair', 'normal');
         doc.addFileToVFS('PlayfairDisplay-Bold.ttf', playfairBold.split(',')[1]); doc.addFont('PlayfairDisplay-Bold.ttf', 'Playfair', 'bold');
 
+        // --- TEŞHİS KISMI BURADA ---
+        console.groupCollapsed("Resim Verisi Kontrolü");
+        console.log("PDF butonu tıklandı. #kaynak-alani elementi kontrol ediliyor...");
+        const kaynakAlaniElementi = document.getElementById('kaynak-alani');
+        console.log("Elementin kendisi:", kaynakAlaniElementi);
+        console.log("Elementin içeriği (innerHTML):", kaynakAlaniElementi ? kaynakAlaniElementi.innerHTML : "Element bulunamadı!");
+        
         let imageDataUrl = null;
         const imageElement = document.querySelector('#kaynak-alani img');
-        if (imageElement && imageElement.src) { imageDataUrl = await fetchAssetAsBase64(imageElement.src); }
+        console.log("Sayfada 'img' etiketi arandı. Bulunan element:", imageElement);
+
+        if (imageElement && imageElement.src) {
+            console.log(`✅ Resim elementi bulundu! Resmin adresi (src): ${imageElement.src}`);
+            imageDataUrl = await fetchAssetAsBase64(imageElement.src);
+            console.log("✅ Resim başarıyla Base64 formatına çevrildi.");
+        } else {
+            console.warn("⚠️ Resim elementi SAYFADA BULUNAMADI veya 'src' adresi boş. Bu yüzden resim PDF'e eklenmeyecek.");
+        }
+        console.groupEnd();
+        // --- TEŞHİS KISMI BİTTİ ---
 
         const kazanımSelect = document.getElementById('kazanim-secimi');
         const seciliKazanimMetni = kazanımSelect && kazanımSelect.options[kazanımSelect.selectedIndex] ? kazanımSelect.options[kazanımSelect.selectedIndex].text.substring(4) : "Belirtilmemiş Kazanım";
