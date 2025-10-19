@@ -310,6 +310,15 @@ const PDF_SETTINGS = {
     headerBottomSpacing: 5,
 };
 
+// BU KOD BLOĞUNU KOPYALA
+let currentFont = { family: 'Lora', style: 'normal', size: 11, color: PDF_SETTINGS.textColor };
+
+function applyCurrentFont(doc) {
+    doc.setFont(currentFont.family, currentFont.style);
+    doc.setFontSize(currentFont.size);
+    doc.setTextColor(currentFont.color[0], currentFont.color[1], currentFont.color[2]);
+}
+
 // LÜTFEN MEVCUT olusturVeIndirPDF FONKSİYONUNU BU YENİ KODLA DEĞİŞTİR
 async function olusturVeIndirPDF() {
     if (!sonApiCevabi) {
@@ -420,7 +429,6 @@ async function generatePdfContent(doc, kaynakMetni, calismaKagidiMetni, imageDat
 function addHeaderSection(doc, startY, logoBase64, kazanımMetni, sayfaGenisligi) {
     let y = startY;
     const solKenar = PDF_SETTINGS.marginLeft;
-
     currentFont = { family: 'Playfair', style: 'bold', size: 24, color: PDF_SETTINGS.titleColor };
     applyCurrentFont(doc);
     doc.addImage(logoBase64, 'PNG', solKenar, y - PDF_SETTINGS.logoOffset, PDF_SETTINGS.logoSize, PDF_SETTINGS.logoSize);
