@@ -208,8 +208,15 @@ async function calismaKagidiOlustur() {
         });
         const veri = await response.json();
         if (!response.ok) { throw new Error(veri.message || `Sunucu hatası`); }
+        sonApiCevabi = veri;
 
-        sonApiCevabi = veri; 
+        console.log("--- Tarih Asistanı Debug Başladı ---");
+        console.log("API'den gelen ham source_url:", veri.source_url);
+        console.log("source_url'in tipi:", typeof veri.source_url);        
+  
+        const resimGosterilmeliMi = veri.source_url && veri.source_url.trim() !== "";
+        console.log("Resim gösterilmeli mi? (Koşul sonucu):", resimGosterilmeliMi);
+        console.log("--- Tarih Asistanı Debug Bitti ---");
 
         kaynakBasligi.style.display = 'block';
         sonucBasligi.style.display = 'block';
@@ -217,12 +224,12 @@ async function calismaKagidiOlustur() {
 
         let kaynakHTML = '';
 
-        if (veri.source_url && veri.source_url.trim() !== "") {
+        if (resimGosterilmeliMi) {
             kaynakHTML += `<img src="${veri.source_url}" alt="${veri.source_title || 'Kaynak Görseli'}" class="kaynak-gorsel">`;
         }
 
         if (veri.kullanilan_kaynak) {
-            const style = (veri.source_url && veri.source_url.trim() !== "") ? 'margin-top: 15px;' : '';
+            const style = resimGosterilmeliMi ? 'margin-top: 15px;' : '';
             kaynakHTML += `<p style="white-space: pre-wrap; ${style}">${veri.kullanilan_kaynak}</p>`;
         }
 
