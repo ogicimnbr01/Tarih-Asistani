@@ -208,7 +208,7 @@ async function calismaKagidiOlustur() {
         });
         const veri = await response.json();
         if (!response.ok) { throw new Error(veri.message || `Sunucu hatası`); }
-        sonApiCevabi = veri; 
+        sonApiCabir_kaynaklar = veri; 
 
         kaynakBasligi.style.display = 'block';
         sonucBasligi.style.display = 'block';
@@ -216,12 +216,12 @@ async function calismaKagidiOlustur() {
 
         let kaynakHTML = '';
 
-        if (veri.source_url) {
+        if (veri.source_url && veri.source_url.trim() !== "") {
             kaynakHTML += `<img src="${veri.source_url}" alt="${veri.source_title || 'Kaynak Görseli'}" class="kaynak-gorsel">`;
         }
 
         if (veri.kullanilan_kaynak) {
-            const style = veri.source_url ? 'margin-top: 15px;' : '';
+            const style = (veri.source_url && veri.source_url.trim() !== "") ? 'margin-top: 15px;' : '';
             kaynakHTML += `<p style="white-space: pre-wrap; ${style}">${veri.kullanilan_kaynak}</p>`;
         }
 
