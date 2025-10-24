@@ -208,7 +208,8 @@ async function calismaKagidiOlustur() {
         });
         const veri = await response.json();
         if (!response.ok) { throw new Error(veri.message || `Sunucu hatası`); }
-        sonApiCabir_kaynaklar = veri; 
+
+        sonApiCevabi = veri; 
 
         kaynakBasligi.style.display = 'block';
         sonucBasligi.style.display = 'block';
