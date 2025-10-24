@@ -210,26 +210,22 @@ async function calismaKagidiOlustur() {
         if (!response.ok) { throw new Error(veri.message || `Sunucu hatası`); }
         sonApiCevabi = veri;
 
-        console.log("--- Tarih Asistanı Debug Başladı ---");
-        console.log("API'den gelen ham source_url:", veri.source_url);
-        console.log("source_url'in tipi:", typeof veri.source_url);        
-  
-        const resimGosterilmeliMi = veri.source_url && veri.source_url.trim() !== "";
-        console.log("Resim gösterilmeli mi? (Koşul sonucu):", resimGosterilmeliMi);
-        console.log("--- Tarih Asistanı Debug Bitti ---");
-
         kaynakBasligi.style.display = 'block';
         sonucBasligi.style.display = 'block';
         indirPdfButonu.style.display = 'block';
 
         let kaynakHTML = '';
 
-        if (resimGosterilmeliMi) {
+        const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg', '.bmp'];
+        
+        const isImageUrl = veri.source_url && imageExtensions.some(ext => veri.source_url.toLowerCase().endsWith(ext));
+
+        if (isImageUrl) {
             kaynakHTML += `<img src="${veri.source_url}" alt="${veri.source_title || 'Kaynak Görseli'}" class="kaynak-gorsel">`;
         }
 
         if (veri.kullanilan_kaynak) {
-            const style = resimGosterilmeliMi ? 'margin-top: 15px;' : '';
+            const style = isImageUrl ? 'margin-top: 15px;' : '';
             kaynakHTML += `<p style="white-space: pre-wrap; ${style}">${veri.kullanilan_kaynak}</p>`;
         }
 
