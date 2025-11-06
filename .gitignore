@@ -1,13 +1,39 @@
-# Terraform state dosyaları - Hassas bilgiler içerebilir! ASLA YÜKLENMEMELİ.
+/node_modules
+
+/.vite
+
+
+/dist
+/dist-ssr
+
+*.zip
+
+
 *.tfstate
 *.tfstate.*
 
-# Terraform'un indirdiği eklenti dosyaları (gereksiz)
 .terraform/
 
-# Terraform'un oluşturduğu zip dosyaları (gereksiz, her seferinde yeniden oluşur)
-*.zip
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
 
-# İşletim sistemi özel dosyaları
+
+.env
+.env.local
+.env.*.local
+*.local
+
+.vscode/*
+!.vscode/extensions.json
+.idea
 .DS_Store
-Thumbs.db
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
