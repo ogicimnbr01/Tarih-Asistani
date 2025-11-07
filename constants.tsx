@@ -23,21 +23,21 @@ export const FEATURES: Feature[] = [
 
 export const TESTIMONIALS: Testimonial[] = [
     {
-        quote: "Tarih Asistanı, araştırmalarım için vazgeçilmez bir araç haline geldi. Veri analizi ve kaynak bulma konusunda inanılmaz zaman kazandırıyor.",
-        name: "Dr. XXXXXX",
-        title: "Tarih Profesörü, XXXXXX Üniversitesi",
-        avatarUrl: "",
+        quote: `2002'de "Tarih Derslerinde "Dokümanlarla Öğretim” Yaklaşımı" adlı yazımda önerdiğim bazı hususları 2025'te sanal ortamda Tarih Asistanı ile yapan öğrencim Oğuzhan Başsarı'yı tebrik ederim. Başarılarının devamını dilerim. İnşallah bu site "Tarihçi şahsiyetine sahip" gençlerin sayısını arttıracaktır.`,
+        name: "Prof. Dr. Bahri Ata",
+        title: "Tarih Eğitimi Profesörü, Gazi Üniversitesi",
+        avatarUrl: "https://i.imgur.com/NczrmG2.png",
     },
     {
         quote: "Öğrencilerim için ders materyali hazırlarken Tarih Asistanı'nın görselleştirme araçları sayesinde konuları çok daha ilgi çekici hale getirebiliyorum.",
-        name: "XXXXXXXXXXX",
+        name: "xxxxxxx",
         title: "Tarih Öğretmeni, Lise",
-        avatarUrl: "",
+        avatarUrl: "https://i.pravatar.cc/150?u=ahmet-kaya", // <-- YENİ
     },
     {
         quote: "Merak ettiğim herhangi bir tarihi olayı saniyeler içinde, güvenilir kaynaklarla öğrenmek harika bir deneyim. Her tarih meraklısına tavsiye ederim.",
-        name: "XXXXXXXXXXXX",
+        name: "xxxxxxxxxx",
         title: "Tarih Meraklısı",
-        avatarUrl: "",
+        avatarUrl: "https://i.pravatar.cc/150?u=zeynep-arslan", // <-- YENİ
     },
 ];

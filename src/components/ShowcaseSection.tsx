@@ -2,9 +2,11 @@ import React from 'react';
 
 const ShowcaseSection: React.FC = () => {
   return (
-    <section id="tanitim" className="min-h-screen flex items-center bg-brand-light-dark py-24"> 
+    <section id="tanitim" className="min-h-screen flex items-center bg-brand-light-dark scroll-mt-24"> 
       <div className="container mx-auto px-6">
         <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-16">
+          
+          {}
           <div className="lg:w-2/3 text-center lg:text-left"> 
             <h2 className="text-3xl md:text-4xl font-serif font-bold text-white mb-4">Kaynak Seç, Soruları Al, PDF'i İndir</h2>
             <p className="text-lg text-brand-text-light mb-6"> 
@@ -25,8 +27,14 @@ const ShowcaseSection: React.FC = () => {
               </li>
             </ul>
           </div>
+
+          {}
           <div className="lg:w-1/3">
-            <div className="rounded-xl shadow-2xl overflow-hidden border-4 border-slate-700/50 transform rotate-3 hover:rotate-0 transition-transform duration-500">
+            <div 
+              className="rounded-xl overflow-hidden border-4 border-slate-700/50 
+                         transform rotate-3 hover:rotate-0 transition-transform duration-500 
+                         drop-shadow-2xl hover:drop-shadow-xl" 
+            >
                 <img 
                   src="/showcase-image.jpeg" 
                   alt="Tarih Asistanı ile oluşturulmuş çalışma kağıdı örneği" 
@@ -34,6 +42,7 @@ const ShowcaseSection: React.FC = () => {
                 />
             </div>
           </div>
+
         </div>
       </div>
     </section>

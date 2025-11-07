@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-
+import { Loader2 } from 'lucide-react';
 import { createPdf } from '../utils/pdfGenerator';
 
 interface Unite { id: string; ad: string; }
@@ -126,7 +126,7 @@ const WorksheetGenerator: React.FC = () => {
     const getKaynakIcon = (type: string) => { const sourceType = (type || 'belge').toLowerCase(); if (sourceType === 'gazete') return '📰'; if (sourceType === 'hatirat') return '📖'; if (sourceType === 'mektup') return '✉️'; return '📜'; };
     
     return (
-        <section id="generator" className="py-20">
+        <section id="generator" className="min-h-screen flex items-center">
             <div className="container mx-auto px-6">
                 <div className="bg-brand-light-dark rounded-2xl p-8 md:p-12 shadow-2xl border border-slate-700/50">
                     <div className="text-center mb-10">
@@ -159,9 +159,17 @@ const WorksheetGenerator: React.FC = () => {
                             </div>
                         </div>
                         {}
-                        <div className="text-center">
-                            <button onClick={handleCreateWorksheet} disabled={!selectedKaynak || isLoadingWorksheet} className="bg-brand-accent text-brand-dark font-bold py-3 px-8 rounded-lg text-lg hover:bg-brand-accent-hover transition-all duration-300 transform hover:scale-105 shadow-lg shadow-brand-accent/20 disabled:bg-slate-600 disabled:cursor-not-allowed disabled:transform-none">
-                                {isLoadingWorksheet ? 'Oluşturuluyor...' : 'Çalışma Kağıdı Oluştur'}
+                        <div className="flex justify-center">
+                            <button onClick={handleCreateWorksheet} disabled={!selectedKaynak || isLoadingWorksheet} className="bg-brand-accent text-brand-dark font-bold py-3 px-8 rounded-lg text-lg hover:bg-brand-accent-hover transition-all duration-300 transform hover:scale-105 shadow-lg shadow-brand-accent/20 disabled:bg-slate-600 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center">
+                            
+                            {isLoadingWorksheet ? (
+                                <>
+                                    <Loader2 className="animate-spin h-5 w-5 mr-3" />
+                                    Oluşturuluyor...
+                                    </>
+                                ) : (
+                                    'Çalışma Kağıdı Oluştur'
+                                )}
                             </button>
                         </div>
                         {error && <div className="mt-8 text-center bg-red-900/50 border border-red-500 text-red-300 p-4 rounded-lg">{error}</div>}

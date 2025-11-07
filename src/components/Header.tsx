@@ -1,18 +1,10 @@
+// src/components/Header.tsx
 import React, { useState, useEffect } from 'react';
-
-const handleScroll = (event: React.MouseEvent<HTMLAnchorElement>, targetId: string) => {
-  event.preventDefault();
-  const elementId = targetId.startsWith('#') ? targetId.substring(1) : targetId;
-  const targetElement = document.getElementById(elementId);
-  if (targetElement) {
-    targetElement.scrollIntoView({
-      behavior: 'smooth',
-      block: 'start'
-    });
-  }
-};
+import { scrollToSection } from '../utils/scrollUtils';
 
 const Header: React.FC = () => {
+  console.log('Header bileşeni render edildi!');
+
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
 
@@ -31,38 +23,49 @@ const Header: React.FC = () => {
   }, []);
 
   const navLinks = [
-    { href: '#ozellikler', label: 'Özellikler' },
-    { href: '#tanitim', label: 'Tanıtım' },
-    { href: '#yorumlar', label: 'Yorumlar' },
-    { href: '#teknoloji', label: 'Teknik Detaylar' },
+    { targetId: 'ozellikler', label: 'Özellikler' },
+    { targetId: 'tanitim', label: 'Tanıtım' },
+    { targetId: 'yorumlar', label: 'Yorumlar' },
+    { targetId: 'teknoloji', label: 'Teknik Detaylar' },
   ];
 
+  const handleNavLinkClick = (e: React.MouseEvent<HTMLAnchorElement>, targetId: string) => {
+    e.preventDefault();
+    console.log('Navigasyon linki tıklandı, hedef ID:', targetId);
+    scrollToSection(targetId); // SADECE targetId gönderiyoruz
+    setIsOpen(false);
+  };
+
   return (
-    <header className={`fixed top-0 left-0 right-0 z-50 transition-transform duration-300 ${isScrolled ? 'translate-y-0' : '-translate-y-full'} bg-brand-dark/80 backdrop-blur-md border-b border-slate-700/50`}>
+    <header
+      className={`fixed top-0 left-0 right-0 z-50 transition-transform duration-300 ease-in-out
+                 ${isScrolled ? 'translate-y-0' : '-translate-y-full'}
+                 bg-brand-dark/80 backdrop-blur-md border-b border-slate-700/50`}
+    >
       <div className="container mx-auto px-6 py-4 flex justify-between items-center">
-        <div className="text-xl font-serif font-bold text-white">
+        <a
+          onClick={(e) => handleNavLinkClick(e, 'hero')}
+          className="text-xl font-serif font-bold text-white cursor-pointer"
+        >
           Tarih Asistanı
-        </div>
-        
+        </a>
+
         <nav className="hidden md:flex items-center space-x-8">
           {navLinks.map((link) => (
-            <a 
-              key={link.label} 
-              href={link.href} 
-              onClick={(e) => handleScroll(e, link.href)}
-              className="text-brand-text-light hover:text-brand-accent transition-colors"
+            <a
+              key={link.label}
+              onClick={(e) => handleNavLinkClick(e, link.targetId)}
+              className="text-brand-text-light hover:text-brand-accent transition-colors cursor-pointer"
             >
               {link.label}
             </a>
           ))}
         </nav>
-        
-        {}
+
         <div className="hidden md:flex">
-            <a 
-              href="#generator" 
-              onClick={(e) => handleScroll(e, 'generator')}
-              className="bg-brand-accent text-brand-dark font-bold py-2 px-6 rounded-lg hover:bg-brand-accent-hover transition-colors"
+            <a
+              onClick={(e) => handleNavLinkClick(e, 'generator')}
+              className="bg-brand-accent text-brand-dark font-bold py-2 px-6 rounded-lg hover:bg-brand-accent-hover transition-colors cursor-pointer"
             >
               Oluşturmaya Başla
             </a>
@@ -76,25 +79,22 @@ const Header: React.FC = () => {
           </button>
         </div>
       </div>
-      
+
       {isOpen && (
         <div className="md:hidden bg-brand-light-dark">
           <nav className="px-6 pt-2 pb-4 space-y-2">
             {navLinks.map((link) => (
-              <a 
-                key={link.label} 
-                href={link.href}
-                onClick={(e) => { handleScroll(e, link.href); setIsOpen(false); }}
-                className="block py-2 text-brand-text-light hover:text-brand-accent"
+              <a
+                key={link.label}
+                onClick={(e) => handleNavLinkClick(e, link.targetId)}
+                className="block py-2 text-brand-text-light hover:text-brand-accent cursor-pointer"
               >
                 {link.label}
               </a>
             ))}
-            {}
-            <a 
-              href="#generator" 
-              onClick={(e) => { handleScroll(e, 'generator'); setIsOpen(false); }}
-              className="block w-full text-center mt-4 bg-brand-accent text-brand-dark font-bold py-2 px-6 rounded-lg hover:bg-brand-accent-hover transition-colors"
+            <a
+              onClick={(e) => handleNavLinkClick(e, 'generator')}
+              className="block w-full text-center mt-4 bg-brand-accent text-brand-dark font-bold py-2 px-6 rounded-lg hover:bg-brand-accent-hover transition-colors cursor-pointer"
             >
               Oluşturmaya Başla
             </a>

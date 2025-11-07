@@ -3,7 +3,7 @@ import { BrainCircuitIcon, CloudIcon, AtomIcon } from 'lucide-react';
 
 const CTASection: React.FC = () => {
   return (
-    <section id="teknoloji" className="min-h-screen flex flex-col justify-center py-20">
+    <section id="teknoloji" className="min-h-screen flex flex-col justify-center bg-brand-light-dark text-center scroll-mt-24">
       <div className="container mx-auto px-6">
         <div className="text-center mb-12">
           <h2 className="text-3xl md:text-4xl font-serif font-bold text-white">
@@ -43,7 +43,6 @@ const CTASection: React.FC = () => {
               Kullandığınız bu akıcı arayüz, en modern web teknolojilerinden <strong>React</strong> ile geliştirilmiş olup, <strong>Vite</strong> sayesinde anlık derleme gücü sunmaktadır.
             </p>
           </div>
-          
         </div>
       </div>
     </section>
