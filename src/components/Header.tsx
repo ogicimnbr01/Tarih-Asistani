@@ -1,4 +1,3 @@
-// src/components/Header.tsx
 import React, { useState, useEffect } from 'react';
 import { scrollToSection } from '../utils/scrollUtils';
 
@@ -27,12 +26,13 @@ const Header: React.FC = () => {
     { targetId: 'tanitim', label: 'Tanıtım' },
     { targetId: 'yorumlar', label: 'Yorumlar' },
     { targetId: 'teknoloji', label: 'Teknik Detaylar' },
+    { targetId: 'kaynak-durumu', label: 'Kaynak Durumu' },
   ];
 
   const handleNavLinkClick = (e: React.MouseEvent<HTMLAnchorElement>, targetId: string) => {
     e.preventDefault();
     console.log('Navigasyon linki tıklandı, hedef ID:', targetId);
-    scrollToSection(targetId); // SADECE targetId gönderiyoruz
+    scrollToSection(targetId);
     setIsOpen(false);
   };
 

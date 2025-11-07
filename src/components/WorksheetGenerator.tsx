@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
 import { createPdf } from '../utils/pdfGenerator';
+import { scrollToSection } from '../utils/scrollUtils'; 
 
 interface Unite { id: string; ad: string; }
 interface Kazanim { id: string; ad: string; }
@@ -159,7 +160,7 @@ const WorksheetGenerator: React.FC = () => {
                             </div>
                         </div>
                         {}
-                        <div className="flex justify-center">
+                        <div className="flex flex-col items-center justify-center"> {}
                             <button onClick={handleCreateWorksheet} disabled={!selectedKaynak || isLoadingWorksheet} className="bg-brand-accent text-brand-dark font-bold py-3 px-8 rounded-lg text-lg hover:bg-brand-accent-hover transition-all duration-300 transform hover:scale-105 shadow-lg shadow-brand-accent/20 disabled:bg-slate-600 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center">
                             
                             {isLoadingWorksheet ? (
@@ -171,6 +172,10 @@ const WorksheetGenerator: React.FC = () => {
                                     'Çalışma Kağıdı Oluştur'
                                 )}
                             </button>
+                            {}
+                            <p className="mt-4 text-sm text-brand-text-light/70 text-center">
+                                Henüz istediğiniz ünite ve kazanımlara kaynak eklenmemiş olabilir. Lütfen çalışma kağıdı oluşturmadan önce <a onClick={(e) => { e.preventDefault(); scrollToSection('kaynak-durumu'); }} className="text-brand-accent hover:underline cursor-pointer">Kaynak Durumu</a>'nu kontrol etmeyi unutmayın. 
+                            </p>
                         </div>
                         {error && <div className="mt-8 text-center bg-red-900/50 border border-red-500 text-red-300 p-4 rounded-lg">{error}</div>}
                         {apiResponse && (
