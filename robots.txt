@@ -1,2 +1,5 @@
 User-agent: *
 Disallow: /admin.html
+
+Allow: /
+Sitemap: https://www.tarihasistani.com.tr/sitemap.xml
