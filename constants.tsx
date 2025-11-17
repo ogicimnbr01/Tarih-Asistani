@@ -37,7 +37,7 @@ export const TESTIMONIALS: Testimonial[] = [
     {
         quote: "Yapay zekanın katkılarıyla oluşturulan ve her bir belgenin arşivden tek tek incelenip, düzeltilip ve yer yer çevirisinin yapıldığı bazı belgelerinde ilk defa rastlandığı özellikle tarih severlerin , tarih öğretmenleri ve öğrencilerinin-lise öğrencileri dahil- rahatlıkla kullanabileceği güvenilir kaynakların objektif bir şekilde sunulduğu gayet kullanışlı ve güzel bir site olmuş. Varolan kaynakların daha da zenginleştirilmesiyle çok daha güzel olacaktır",
         name: "Nilgün Hastürk",
-        title: "Tarih Öğretmeni Adayı",
+        title: "Tarih Öğretmeni",
         avatarUrl: "https://i.imgur.com/yajlhVH.jpeg", 
     },
 ];
