@@ -35,10 +35,10 @@ export const TESTIMONIALS: Testimonial[] = [
         avatarUrl: "https://i.imgur.com/vBy5jcG.jpeg", 
     },
     {
-        quote: "Merak ettiğim herhangi bir tarihi olayı saniyeler içinde, güvenilir kaynaklarla öğrenmek harika bir deneyim. Her tarih meraklısına tavsiye ederim.",
-        name: "xxxxxxxxxx",
-        title: "Tarih Meraklısı",
-        avatarUrl: "https://i.pravatar.cc/150?u=zeynep-arslan", 
+        quote: "Yapay zekanın katkılarıyla oluşturulan ve her bir belgenin arşivden tek tek incelenip, düzeltilip ve yer yer çevirisinin yapıldığı bazı belgelerinde ilk defa rastlandığı özellikle tarih severlerin , tarih öğretmenleri ve öğrencilerinin-lise öğrencileri dahil- rahatlıkla kullanabileceği güvenilir kaynakların objektif bir şekilde sunulduğu gayet kullanışlı ve güzel bir site olmuş. Varolan kaynakların daha da zenginleştirilmesiyle çok daha güzel olacaktır",
+        name: "Nilgün Hastürk",
+        title: "Tarih Öğretmeni Adayı",
+        avatarUrl: "https://i.imgur.com/yajlhVH.jpeg", 
     },
 ];
 

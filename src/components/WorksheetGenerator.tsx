@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
 import { createPdf } from '../utils/pdfGenerator';
-import { scrollToSection } from '../utils/scrollUtils'; 
+import { scrollToSection } from '../utils/scrollUtils';
 
 interface Unite { id: string; ad: string; }
 interface Kazanim { id: string; ad: string; }
@@ -77,6 +77,7 @@ interface ApiResponse {
     };
 
 
+
 const WorksheetGenerator: React.FC = () => {
     const [uniteler] = useState<Unite[]>(mockUniteler);
     const [kazanimlar, setKazanimlar] = useState<Kazanim[]>([]);
@@ -97,7 +98,7 @@ const WorksheetGenerator: React.FC = () => {
     useEffect(() => { const fetchKaynaklar = async () => { if (!selectedUnite || !selectedKazanim) { setKaynaklar([]); setSelectedKaynak(null); return; } setIsLoadingKaynak(true); setError(null); setKaynaklar([]); setSelectedKaynak(null); try { const response = await fetch(API_ENDPOINT_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ unit_id: selectedUnite, outcome_id: selectedKazanim }), }); if (!response.ok) throw new Error('Kaynaklar sunucudan alınamadı.'); const data: Kaynak[] = await response.json(); setKaynaklar(data); } catch (err: any) { setError(err.message || 'Kaynakları yüklerken bir hata oluştu.'); } finally { setIsLoadingKaynak(false); } }; fetchKaynaklar(); }, [selectedKazanim, selectedUnite]);
     useEffect(() => { setApiResponse(null); }, [selectedUnite, selectedKazanim, selectedKaynak]);
     const handleCreateWorksheet = async () => { if (!selectedUnite || !selectedKaynak) { setError("Lütfen bir ünite ve kaynak seçiniz."); return; } setIsLoadingWorksheet(true); setError(null); setApiResponse(null); try { const response = await fetch(API_ENDPOINT_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ unit_id: selectedUnite, source_id: selectedKaynak }), }); const data: ApiResponse = await response.json(); if (!response.ok) throw new Error((data as any).message || `Sunucu hatası`); setApiResponse(data); } catch (err: any) { setError(err.message || 'Çalışma kağıdı oluşturulurken bir hata oluştu.'); } finally { setIsLoadingWorksheet(false); } };
-    
+
     const handleDownloadPdf = async () => {
       if (!apiResponse) {
         alert("PDF oluşturmak için önce bir çalışma kağıdı oluşturmalısınız.");
@@ -125,28 +126,34 @@ const WorksheetGenerator: React.FC = () => {
     };
 
     const getKaynakIcon = (type: string) => { const sourceType = (type || 'belge').toLowerCase(); if (sourceType === 'gazete') return '📰'; if (sourceType === 'hatirat') return '📖'; if (sourceType === 'mektup') return '✉️'; return '📜'; };
-    
+
     return (
         <section id="generator" className="min-h-screen flex items-center">
             <div className="container mx-auto px-6">
                 <div className="bg-brand-light-dark rounded-2xl p-8 md:p-12 shadow-2xl border border-slate-700/50">
                     <div className="text-center mb-10">
-                        <h2 className="text-3xl md:text-4xl font-serif font-bold text-white">İnkılap Tarihi Akıllı Çalışma Kağıdı Asistanı</h2>
-                        <p className="mt-4 text-lg text-brand-text-light max-w-3xl mx-auto">MEB kazanımlarına uygun, yapay zeka ile eleştirel düşünce soruları ve PDF çalışma kağıtları hazırlayın.</p>
+                        {}
+                        <h2 className="text-3xl md:text-4xl font-serif font-bold text-white">
+                            Sizin İçin Kişiselleştirilmiş Çalışma Kağıtları
+                        </h2>
+                        {}
+                        <p className="mt-4 text-lg text-brand-text-light max-w-3xl mx-auto leading-relaxed">
+                            MEB müfredatına uygun, birinci elden tarihi belgelerle desteklenmiş, eleştirel düşünme becerilerinizi geliştirecek çalışma kağıtları oluşturun.
+                        </p>
                     </div>
                     <div className="max-w-4xl mx-auto">
                         {}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                             <div>
                                 <label htmlFor="unite-secimi" className="block text-brand-text font-bold mb-2">Ünite Seçimi:</label>
-                                <select id="unite-secimi" value={selectedUnite} onChange={e => setSelectedUnite(e.target.value)} className="w-full bg-brand-dark border-2 border-slate-700 rounded-lg py-3 px-4 text-white focus:outline-none focus:border-brand-accent transition-colors appearance-none">
+                                <select id="unite-secimi" value={selectedUnite} onChange={e => setSelectedUnite(e.target.value)} className="w-full bg-brand-dark border-2 border-slate-700 rounded-lg py-3 px-4 text-white focus:outline-none focus:border-brand-accent transition-colors appearance-none overflow-hidden">
                                     <option value="">Lütfen bir ünite seçiniz</option>
                                     {uniteler.map(unite => <option key={unite.id} value={unite.id}>{unite.ad}</option>)}
                                 </select>
                             </div>
                             <div>
                                 <label htmlFor="kazanim-secimi" className="block text-brand-text font-bold mb-2">Kazanım Seçimi:</label>
-                                <select id="kazanim-secimi" value={selectedKazanim} onChange={e => setSelectedKazanim(e.target.value)} disabled={!selectedUnite} className="w-full bg-brand-dark border-2 border-slate-700 rounded-lg py-3 px-4 text-white focus:outline-none focus:border-brand-accent transition-colors appearance-none disabled:opacity-50">
+                                <select id="kazanim-secimi" value={selectedKazanim} onChange={e => setSelectedKazanim(e.target.value)} disabled={!selectedUnite} className="w-full bg-brand-dark border-2 border-slate-700 rounded-lg py-3 px-4 text-white focus:outline-none focus:border-brand-accent transition-colors appearance-none disabled:opacity-50 overflow-hidden">
                                     <option value="">Lütfen bir kazanım seçiniz</option>
                                     {kazanimlar.map(kazanim => <option key={kazanim.id} value={kazanim.id}>{kazanim.ad}</option>)}
                                 </select>
@@ -155,14 +162,21 @@ const WorksheetGenerator: React.FC = () => {
                         {}
                         <div className="mb-8">
                             <label className="block text-brand-text font-bold mb-2">Kaynak Seçimi:</label>
-                            <div className="bg-brand-dark border-2 border-slate-700 rounded-lg p-4 min-h-[150px]">
-                                {isLoadingKaynak ? <p className="text-brand-text-light">Kaynaklar yükleniyor...</p> : !selectedKazanim ? <p className="text-brand-text-light">Lütfen önce bir kazanım seçiniz.</p> : kaynaklar.length === 0 ? <p className="text-brand-text-light">Bu kazanıma ait kaynak bulunamadı.</p> : <div className="space-y-2">{kaynaklar.map(kaynak => (<div key={kaynak.source_id} onClick={() => setSelectedKaynak(kaynak.source_id)} className={`flex items-center p-3 rounded-md cursor-pointer transition-colors ${selectedKaynak === kaynak.source_id ? 'bg-brand-accent/20 border-brand-accent' : 'hover:bg-slate-700/50'}`}><span className="text-2xl mr-3" title={kaynak.source_type}>{getKaynakIcon(kaynak.source_type)}</span><span className="text-brand-text">{kaynak.source_title}</span></div>))}</div>}
+                            <div className="bg-brand-dark border-2 border-slate-700 rounded-lg p-4 min-h-[150px] overflow-x-auto">
+                                {isLoadingKaynak ? <p className="text-brand-text-light">Kaynaklar yükleniyor...</p> : !selectedKazanim ? <p className="text-brand-text-light">Lütfen önce bir kazanım seçiniz.</p> : kaynaklar.length === 0 ? <p className="text-brand-text-light">Bu kazanıma ait kaynak bulunamadı.</p> : <div className="space-y-2 min-w-max md:min-w-0">{kaynaklar.map(kaynak => (
+                                    <div key={kaynak.source_id} onClick={() => setSelectedKaynak(kaynak.source_id)} className={`flex items-center p-3 rounded-md cursor-pointer transition-colors ${selectedKaynak === kaynak.source_id ? 'bg-brand-accent/20 border-brand-accent' : 'hover:bg-slate-700/50'}`}>
+                                        <span className="text-2xl mr-3 flex-shrink-0" title={kaynak.source_type}>{getKaynakIcon(kaynak.source_type)}</span>
+                                        <span className="text-brand-text flex-1 min-w-0 overflow-hidden text-ellipsis whitespace-nowrap">
+                                            {kaynak.source_title}
+                                        </span>
+                                    </div>
+                                ))}</div>}
                             </div>
                         </div>
                         {}
-                        <div className="flex flex-col items-center justify-center"> {}
+                        <div className="flex flex-col items-center justify-center">
                             <button onClick={handleCreateWorksheet} disabled={!selectedKaynak || isLoadingWorksheet} className="bg-brand-accent text-brand-dark font-bold py-3 px-8 rounded-lg text-lg hover:bg-brand-accent-hover transition-all duration-300 transform hover:scale-105 shadow-lg shadow-brand-accent/20 disabled:bg-slate-600 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center">
-                            
+
                             {isLoadingWorksheet ? (
                                 <>
                                     <Loader2 className="animate-spin h-5 w-5 mr-3" />
@@ -172,9 +186,8 @@ const WorksheetGenerator: React.FC = () => {
                                     'Çalışma Kağıdı Oluştur'
                                 )}
                             </button>
-                            {}
                             <p className="mt-4 text-sm text-brand-text-light/70 text-center">
-                                Henüz istediğiniz ünite ve kazanımlara kaynak eklenmemiş olabilir. Lütfen çalışma kağıdı oluşturmadan önce <a onClick={(e) => { e.preventDefault(); scrollToSection('kaynak-durumu'); }} className="text-brand-accent hover:underline cursor-pointer">Kaynak Durumu</a>'nu kontrol etmeyi unutmayın. 
+                                Henüz istediğiniz ünite ve kazanımlara kaynak eklenmemiş olabilir. Lütfen çalışma kağıdı oluşturmadan önce <a onClick={(e) => { e.preventDefault(); scrollToSection('kaynak-durumu'); }} className="text-brand-accent hover:underline cursor-pointer">Kaynak Durumu</a>'nu kontrol etmeyi unutmayın.
                             </p>
                         </div>
                         {error && <div className="mt-8 text-center bg-red-900/50 border border-red-500 text-red-300 p-4 rounded-lg">{error}</div>}
@@ -192,7 +205,6 @@ const WorksheetGenerator: React.FC = () => {
                                     <div className="bg-brand-dark p-6 rounded-lg border border-slate-700">
                                         <div className="text-brand-text-light whitespace-pre-wrap leading-relaxed">{apiResponse.calisma_kagidi}</div>
                                         <div className="text-center mt-8">
-                                            {}
                                             <button onClick={handleDownloadPdf} disabled={isGeneratingPdf} className="bg-green-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-green-700 transition-colors disabled:bg-slate-600 disabled:cursor-not-allowed">
                                                 {isGeneratingPdf ? 'Oluşturuluyor...' : 'PDF Olarak İndir'}
                                             </button>
