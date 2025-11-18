@@ -12,35 +12,32 @@ import Footer from './components/Footer';
 const App: React.FC = () => {
   return (
     <div className="bg-brand-dark min-h-screen text-brand-text font-sans antialiased relative">
-      {}
       <div
         className="absolute inset-0 z-0 bg-brand-dark"
         style={{
           backgroundImage: `url('/paper-texture.png')`,
-          opacity: 0.05, 
+          opacity: 0.05,
           backgroundRepeat: 'repeat',
           backgroundAttachment: 'fixed',
           mixBlendMode: 'overlay',
         }}
       ></div>
 
-      {}
       <div className="relative z-10">
-        {}
-        <div className="absolute top-0 left-0 w-full h-full bg-grid-slate-800/[0.05] [mask-image:linear-gradient(to_bottom,white_20%,transparent_100%)]"></div> {}
+        <div className="absolute top-0 left-0 w-full h-full bg-grid-slate-800/[0.05] [mask-image:linear-gradient(to_bottom,white_20%,transparent_100%)]"></div>
 
         <Header />
 
         <main className="relative z-10">
           <HeroSection />
-          <WorksheetGenerator />
-          <FeaturesSection />
           <ShowcaseSection />
+          <FeaturesSection />
+          <WorksheetGenerator />
           <TestimonialsSection />
+          <ResourceStatusSection />
           <CTASection />
         </main>
 
-        <ResourceStatusSection />
         <Footer />
       </div>
     </div>

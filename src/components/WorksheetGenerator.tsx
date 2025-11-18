@@ -77,7 +77,6 @@ interface ApiResponse {
     };
 
 
-
 const WorksheetGenerator: React.FC = () => {
     const [uniteler] = useState<Unite[]>(mockUniteler);
     const [kazanimlar, setKazanimlar] = useState<Kazanim[]>([]);
@@ -89,60 +88,30 @@ const WorksheetGenerator: React.FC = () => {
     const [isLoadingWorksheet, setIsLoadingWorksheet] = useState(false);
     const [apiResponse, setApiResponse] = useState<ApiResponse | null>(null);
     const [error, setError] = useState<string | null>(null);
-
     const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
-
     const API_ENDPOINT_URL = 'https://duwr3ymxi6.execute-api.eu-central-1.amazonaws.com/';
 
     useEffect(() => { setSelectedKazanim(''); setKazanimlar(selectedUnite ? mockKazanimlar[selectedUnite as keyof typeof mockKazanimlar] || [] : []); }, [selectedUnite]);
     useEffect(() => { const fetchKaynaklar = async () => { if (!selectedUnite || !selectedKazanim) { setKaynaklar([]); setSelectedKaynak(null); return; } setIsLoadingKaynak(true); setError(null); setKaynaklar([]); setSelectedKaynak(null); try { const response = await fetch(API_ENDPOINT_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ unit_id: selectedUnite, outcome_id: selectedKazanim }), }); if (!response.ok) throw new Error('Kaynaklar sunucudan alınamadı.'); const data: Kaynak[] = await response.json(); setKaynaklar(data); } catch (err: any) { setError(err.message || 'Kaynakları yüklerken bir hata oluştu.'); } finally { setIsLoadingKaynak(false); } }; fetchKaynaklar(); }, [selectedKazanim, selectedUnite]);
     useEffect(() => { setApiResponse(null); }, [selectedUnite, selectedKazanim, selectedKaynak]);
     const handleCreateWorksheet = async () => { if (!selectedUnite || !selectedKaynak) { setError("Lütfen bir ünite ve kaynak seçiniz."); return; } setIsLoadingWorksheet(true); setError(null); setApiResponse(null); try { const response = await fetch(API_ENDPOINT_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ unit_id: selectedUnite, source_id: selectedKaynak }), }); const data: ApiResponse = await response.json(); if (!response.ok) throw new Error((data as any).message || `Sunucu hatası`); setApiResponse(data); } catch (err: any) { setError(err.message || 'Çalışma kağıdı oluşturulurken bir hata oluştu.'); } finally { setIsLoadingWorksheet(false); } };
-
-    const handleDownloadPdf = async () => {
-      if (!apiResponse) {
-        alert("PDF oluşturmak için önce bir çalışma kağıdı oluşturmalısınız.");
-        return;
-      }
-      setIsGeneratingPdf(true);
-      try {
-        const unitKazanimlari = mockKazanimlar[selectedUnite as keyof typeof mockKazanimlar] || [];
-        const seciliKazanimObjesi = unitKazanimlari.find(k => k.id === selectedKazanim);
-        const kazanimMetni = seciliKazanimObjesi ? seciliKazanimObjesi.ad.substring(seciliKazanimObjesi.id.length + 1).trim() : "Belirtilmemiş Kazanım";
-        const reportData = {
-          seciliKazanimMetni: kazanimMetni,
-          kaynakKunyesi: apiResponse.source_citation || "Kaynak Belirtilmemiş",
-          calismaKagidiMetni: apiResponse.calisma_kagidi,
-          kaynakMetni: apiResponse.kullanilan_kaynak || null,
-          sourceImageUrl: apiResponse.source_url && apiResponse.source_url.match(/\.(jpeg|jpg|gif|png)$/) ? apiResponse.source_url : null
-        };
-        await createPdf(reportData);
-      } catch (error) {
-        console.error(error);
-        alert("PDF oluşturulurken bir hata oluştu. Lütfen konsolu kontrol ediniz.");
-      } finally {
-        setIsGeneratingPdf(false);
-      }
-    };
-
+    const handleDownloadPdf = async () => { if (!apiResponse) { alert("PDF oluşturmak için önce bir çalışma kağıdı oluşturmalısınız."); return; } setIsGeneratingPdf(true); try { const unitKazanimlari = mockKazanimlar[selectedUnite as keyof typeof mockKazanimlar] || []; const seciliKazanimObjesi = unitKazanimlari.find(k => k.id === selectedKazanim); const kazanimMetni = seciliKazanimObjesi ? seciliKazanimObjesi.ad.substring(seciliKazanimObjesi.id.length + 1).trim() : "Belirtilmemiş Kazanım"; const reportData = { seciliKazanimMetni: kazanimMetni, kaynakKunyesi: apiResponse.source_citation || "Kaynak Belirtilmemiş", calismaKagidiMetni: apiResponse.calisma_kagidi, kaynakMetni: apiResponse.kullanilan_kaynak || null, sourceImageUrl: apiResponse.source_url && apiResponse.source_url.match(/\.(jpeg|jpg|gif|png)$/) ? apiResponse.source_url : null }; await createPdf(reportData); } catch (error) { console.error(error); alert("PDF oluşturulurken bir hata oluştu. Lütfen konsolu kontrol ediniz."); } finally { setIsGeneratingPdf(false); } };
     const getKaynakIcon = (type: string) => { const sourceType = (type || 'belge').toLowerCase(); if (sourceType === 'gazete') return '📰'; if (sourceType === 'hatirat') return '📖'; if (sourceType === 'mektup') return '✉️'; return '📜'; };
 
     return (
         <section id="generator" className="min-h-screen flex items-center">
-            <div className="container mx-auto px-6">
+            <div className="container mx-auto px-6 py-20">
                 <div className="bg-brand-light-dark rounded-2xl p-8 md:p-12 shadow-2xl border border-slate-700/50">
                     <div className="text-center mb-10">
-                        {}
                         <h2 className="text-3xl md:text-4xl font-serif font-bold text-white">
                             Sizin İçin Kişiselleştirilmiş Çalışma Kağıtları
                         </h2>
-                        {}
                         <p className="mt-4 text-lg text-brand-text-light max-w-3xl mx-auto leading-relaxed">
                             MEB müfredatına uygun, birinci elden tarihi belgelerle desteklenmiş, eleştirel düşünme becerilerinizi geliştirecek çalışma kağıtları oluşturun.
                         </p>
                     </div>
+
                     <div className="max-w-4xl mx-auto">
-                        {}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                             <div>
                                 <label htmlFor="unite-secimi" className="block text-brand-text font-bold mb-2">Ünite Seçimi:</label>
@@ -159,7 +128,6 @@ const WorksheetGenerator: React.FC = () => {
                                 </select>
                             </div>
                         </div>
-                        {}
                         <div className="mb-8">
                             <label className="block text-brand-text font-bold mb-2">Kaynak Seçimi:</label>
                             <div className="bg-brand-dark border-2 border-slate-700 rounded-lg p-4 min-h-[150px] overflow-x-auto">
@@ -173,24 +141,29 @@ const WorksheetGenerator: React.FC = () => {
                                 ))}</div>}
                             </div>
                         </div>
-                        {}
-                        <div className="flex flex-col items-center justify-center">
-                            <button onClick={handleCreateWorksheet} disabled={!selectedKaynak || isLoadingWorksheet} className="bg-brand-accent text-brand-dark font-bold py-3 px-8 rounded-lg text-lg hover:bg-brand-accent-hover transition-all duration-300 transform hover:scale-105 shadow-lg shadow-brand-accent/20 disabled:bg-slate-600 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center">
 
-                            {isLoadingWorksheet ? (
-                                <>
-                                    <Loader2 className="animate-spin h-5 w-5 mr-3" />
-                                    Oluşturuluyor...
+                        <div className="flex flex-col items-center justify-center">
+                            <button onClick={handleCreateWorksheet} disabled={!selectedKaynak || isLoadingWorksheet} className="w-full md:w-auto bg-brand-accent text-brand-dark font-bold py-3 px-8 rounded-lg text-lg hover:bg-brand-accent-hover transition-all duration-300 transform hover:scale-105 shadow-lg shadow-brand-accent/20 disabled:bg-slate-600 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center">
+                                {isLoadingWorksheet ? (
+                                    <>
+                                        <Loader2 className="animate-spin h-5 w-5 mr-3" />
+                                        Oluşturuluyor...
                                     </>
                                 ) : (
                                     'Çalışma Kağıdı Oluştur'
                                 )}
                             </button>
-                            <p className="mt-4 text-sm text-brand-text-light/70 text-center">
-                                Henüz istediğiniz ünite ve kazanımlara kaynak eklenmemiş olabilir. Lütfen çalışma kağıdı oluşturmadan önce <a onClick={(e) => { e.preventDefault(); scrollToSection('kaynak-durumu'); }} className="text-brand-accent hover:underline cursor-pointer">Kaynak Durumu</a>'nu kontrol etmeyi unutmayın.
+                            <p className="mt-6 text-sm text-brand-text-light/80 text-center">
+                                Henüz istediğiniz ünite ve kazanımlara kaynak eklenmemiş olabilir. Lütfen 
+                                <a onClick={(e) => { e.preventDefault(); scrollToSection('kaynak-durumu'); }} className="font-semibold text-brand-accent hover:text-brand-accent-hover underline mx-1 cursor-pointer">
+                                    Kaynak Durumu
+                                </a>
+                                bölümünü kontrol etmeyi unutmayın.
                             </p>
                         </div>
+                        
                         {error && <div className="mt-8 text-center bg-red-900/50 border border-red-500 text-red-300 p-4 rounded-lg">{error}</div>}
+                        
                         {apiResponse && (
                             <div className="mt-12 space-y-8">
                                 <div>
@@ -213,8 +186,11 @@ const WorksheetGenerator: React.FC = () => {
                                 </div>
                             </div>
                         )}
-                         <div className="text-center mt-12 text-xs text-brand-text-light max-w-3xl mx-auto">
-                           <p>📜 Bu platformda yer alan belgeler kamuya açık arşivlerden (Atatürk Kitaplığı, SALT Araştırma, Devlet Arşivleri vb.) alınmıştır. Tüm materyaller yalnızca eğitim ve araştırma amaçlı kullanılmakta olup, ilgili kurumların Creative Commons lisans koşullarına tabidir. Bu platform ticari amaç gütmemekte olup, arşiv materyalleri ilgili kurumların mülkiyetindedir. Herhangi bir hak ihlali tespit edilmesi durumunda ilgili içerik derhal kaldırılacaktır.</p>
+
+                        <div className="text-center mt-12 border-t border-slate-700/50 pt-8">
+                           <p className="text-xs text-slate-500 leading-relaxed">
+                             <span className="font-semibold">Yasal Bilgilendirme:</span> Bu platformda yer alan belgeler kamuya açık arşivlerden (Atatürk Kitaplığı, SALT Araştırma, Devlet Arşivleri vb.) alınmıştır. Tüm materyaller yalnızca eğitim ve araştırma amaçlı kullanılmakta olup, ilgili kurumların Creative Commons lisans koşullarına tabidir. Bu platform ticari amaç gütmemekte olup, arşiv materyalleri ilgili kurumların mülkiyetindedir. Herhangi bir hak ihlali tespit edilmesi durumunda ilgili içerik derhal kaldırılacaktır.
+                           </p>
                         </div>
                     </div>
                 </div>
