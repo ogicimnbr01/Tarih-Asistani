@@ -8,7 +8,7 @@ import TestimonialsSection from './components/TestimonialsSection';
 import CTASection from './components/CTASection';
 import ResourceStatusSection from './components/ResourceStatusSection';
 import Footer from './components/Footer';
-
+import FAQSection from './components/FAQSection';
 const App: React.FC = () => {
   return (
     <div className="bg-brand-dark min-h-screen text-brand-text font-sans antialiased relative">
@@ -35,6 +35,7 @@ const App: React.FC = () => {
           <WorksheetGenerator />
           <TestimonialsSection />
           <ResourceStatusSection />
+          <FAQSection /> {}
           <CTASection />
         </main>
 

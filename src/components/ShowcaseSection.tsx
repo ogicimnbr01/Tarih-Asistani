@@ -2,14 +2,14 @@ import React from 'react';
 
 const ShowcaseSection: React.FC = () => {
   return (
-    <section id="tanitim" className="min-h-screen flex items-center bg-brand-light-dark scroll-mt-24"> 
+    <section id="tanitim" className="min-h-screen flex items-center bg-brand-light-dark scroll-mt-18"> 
       <div className="container mx-auto px-6 py-20 lg:py-0">
         
-        {/* --- DEĞİŞİKLİK 1: MOBİL İÇİN DÜZEN DEĞİŞTİRİLDİ --- */}
-        {/* 'flex-col-reverse' ile mobilde önce görsel, sonra metin gelecek. */}
+        {}
+        {}
         <div className="flex flex-col-reverse lg:flex-row items-center gap-12 lg:gap-16">
           
-          {/* --- DEĞİŞİKLİK 2: METİN BLOĞU MOBİL İÇİN ORTALANDI --- */}
+          {}
           <div className="lg:w-2/3 text-center lg:text-left"> 
             <h2 className="text-3xl md:text-4xl font-serif font-bold text-white mb-4">
               3 Adımda Akıllı Çalışma Kağıtları
@@ -18,7 +18,7 @@ const ShowcaseSection: React.FC = () => {
               MEB müfredatından ünitenizi ve kazanımınızı seçin, ardından ilgili tarihi belgeyi belirleyin. Yapay zeka, seçtiğiniz belgeyi analiz ederek saniyeler içinde size özel sorular hazırlasın.
             </p>
             
-            {/* --- DEĞİŞİKLİK 3: LİSTE MOBİL İÇİN DAHA ŞIK HALE GELDİ --- */}
+            {}
             <ul className="space-y-4 inline-block text-left">
               <li className="flex items-start">
                 <CheckmarkIcon />

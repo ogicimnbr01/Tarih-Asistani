@@ -16,7 +16,7 @@ const FeatureCard: React.FC<{ feature: Feature }> = ({ feature }) => (
 
 const FeaturesSection: React.FC = () => {
     return (
-        <section id="ozellikler" className="min-h-screen flex flex-col justify-center scroll-mt-24">
+        <section id="ozellikler" className="min-h-screen flex flex-col justify-center scroll-mt-18">
             <div className="container mx-auto px-6">
                 <div className="text-center mb-12">
                     <h2 className="text-3xl md:text-4xl font-serif font-bold text-white">Neden Tarih Asistanı?</h2>
