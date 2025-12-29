@@ -22,24 +22,24 @@ export const FEATURES: Feature[] = [
 ];
 
 export const TESTIMONIALS: Testimonial[] = [
-    {
-        quote: `2002'de "Tarih Derslerinde "Dokümanlarla Öğretim” Yaklaşımı" adlı yazımda önerdiğim bazı hususları 2025'te sanal ortamda Tarih Asistanı ile yapan öğrencim Oğuzhan Başsarı'yı tebrik ederim. Başarılarının devamını dilerim. İnşallah bu site "Tarihçi şahsiyetine sahip" gençlerin sayısını arttıracaktır.`,
-        name: "Bahri Ata",
-        title: "Profesör Dr. | Tarih Eğitimi, Gazi Üniversitesi",
-        avatarUrl: "https://i.imgur.com/NczrmG2.png",
-    },
-    {
-        quote: "Tarih derslerinde belgeleri kullanmak ve etkinlikler yapmak çok önemli, çoğu zaman tarih öğretmenlerimiz ve okul deneyimi derslerine giren öğretmen adayları bunun için çok emek vererek derslerinde etkinlikler planlamaya çalışıyorlar. Bu uygulama bu açıdan çok işe yarayacak öğretmenlerimize destek olabilecek bir uygulama olmuş. Biz de üniversitede okul deneyimi dersinde öğretmen adayları ile kullanmaya başladık, tavsiye ediyorum.",
-        name: "Ayşegül Nihan Erol Şahin",
-        title: "Doçent Dr. | Tarih Eğitimi, Gazi Üniversitesi",
-        avatarUrl: "https://i.imgur.com/vBy5jcG.jpeg", 
-    },
-    {
-        quote: "Yapay zekanın katkılarıyla oluşturulan ve her bir belgenin arşivden tek tek incelenip, düzeltilip ve yer yer çevirisinin yapıldığı bazı belgelerinde ilk defa rastlandığı özellikle tarih severlerin , tarih öğretmenleri ve öğrencilerinin-lise öğrencileri dahil- rahatlıkla kullanabileceği güvenilir kaynakların objektif bir şekilde sunulduğu gayet kullanışlı ve güzel bir site olmuş. Varolan kaynakların daha da zenginleştirilmesiyle çok daha güzel olacaktır",
-        name: "Nilgün Hastürk",
-        title: "Tarih Öğretmeni",
-        avatarUrl: "https://i.imgur.com/yajlhVH.jpeg", 
-    },
+  {
+    quote: `2002'de "Tarih Derslerinde "Dokümanlarla Öğretim” Yaklaşımı" adlı yazımda önerdiğim bazı hususları 2025'te sanal ortamda Tarih Asistanı ile yapan öğrencim Oğuzhan Başsarı'yı tebrik ederim. Başarılarının devamını dilerim. İnşallah bu site "Tarihçi şahsiyetine sahip" gençlerin sayısını arttıracaktır.`,
+    name: "Bahri Ata",
+    title: "Profesör Dr. | Tarih Eğitimi, Gazi Üniversitesi",
+    avatarUrl: "https://i.imgur.com/NczrmG2.png",
+  },
+  {
+    quote: "Tarih derslerinde belgeleri kullanmak ve etkinlikler yapmak çok önemli, çoğu zaman tarih öğretmenlerimiz ve okul deneyimi derslerine giren öğretmen adayları bunun için çok emek vererek derslerinde etkinlikler planlamaya çalışıyorlar. Bu uygulama bu açıdan çok işe yarayacak öğretmenlerimize destek olabilecek bir uygulama olmuş. Biz de üniversitede okul deneyimi dersinde öğretmen adayları ile kullanmaya başladık, tavsiye ediyorum.",
+    name: "Ayşegül Nihan Erol Şahin",
+    title: "Doçent Dr. | Tarih Eğitimi, Gazi Üniversitesi",
+    avatarUrl: "https://i.imgur.com/vBy5jcG.jpeg",
+  },
+  {
+    quote: "Yapay zekanın katkılarıyla oluşturulan ve her bir belgenin arşivden tek tek incelenip, düzeltilip ve yer yer çevirisinin yapıldığı bazı belgelerinde ilk defa rastlandığı özellikle tarih severlerin , tarih öğretmenleri ve öğrencilerinin-lise öğrencileri dahil- rahatlıkla kullanabileceği güvenilir kaynakların objektif bir şekilde sunulduğu gayet kullanışlı ve güzel bir site olmuş. Varolan kaynakların daha da zenginleştirilmesiyle çok daha güzel olacaktır",
+    name: "Nilgün Hastürk",
+    title: "Tarih Öğretmeni",
+    avatarUrl: "https://i.imgur.com/yajlhVH.jpeg",
+  },
 ];
 
 export interface UnitResource {
@@ -50,9 +50,9 @@ export interface UnitResource {
 
 export const unitResourceStatus: UnitResource[] = [
   { id: 1, name: "1. 20. Yüzyıl Başlarında Osmanlı Devleti ve Dünya", docCount: 30 },
-  { id: 2, name: "2. Milli Mücadele", docCount: 5 },
-  { id: 3, name: "3. Atatürkçülük ve Türk İnkılabı", docCount: 0 },
-  { id: 4, name: "4. İki Savaş Arasındaki Dönemde Türkiye ve Dünya", docCount: 0 },
+  { id: 2, name: "2. Milli Mücadele", docCount: 7 },
+  { id: 3, name: "3. Atatürkçülük ve Türk İnkılabı", docCount: 2 },
+  { id: 4, name: "4. İki Savaş Arasındaki Dönemde Türkiye ve Dünya", docCount: 1 },
   { id: 5, name: "5. II.Dünya Savaşı Sürecinde Türkiye ve Dünya", docCount: 0 },
   { id: 6, name: "6. II.Dünya Savaşı Sonrasında Türkiye ve Dünya", docCount: 0 },
   { id: 7, name: "7. Toplumsal Devrim Çağında Dünya ve Türkiye", docCount: 0 },
