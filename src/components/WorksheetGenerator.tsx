@@ -13,68 +13,68 @@ interface ApiResponse {
     source_citation?: string;
 }
 
-    const mockUniteler = [
-        { id: "1", ad: "1. 20. Yüzyıl Başlarında Osmanlı Devleti ve Dünya" },
-        { id: "2", ad: "2. Milli Mücadele" },
-        { id: "3", ad: "3. Atatürkçülük ve Türk İnkılabı" },
-        { id: "4", ad: "4. İki Savaş Arasındaki Dönemde Türkiye ve Dünya" },
-        { id: "5", ad: "5. II.Dünya Savaşı Sürecinde Türkiye ve Dünya" },
-        { id: "6", ad: "6. II.Dünya Savaşı Sonrasında Türkiye ve Dünya" },
-        { id: "7", ad: "7. Toplumsal Devrim Çağında Dünya ve Türkiye" },
-        { id: "8", ad: "8. 21. Yüzyılın Eşiğinde Türkiye ve Dünya" }
-    ];
+const mockUniteler = [
+    { id: "1", ad: "1. 20. Yüzyıl Başlarında Osmanlı Devleti ve Dünya" },
+    { id: "2", ad: "2. Milli Mücadele" },
+    { id: "3", ad: "3. Atatürkçülük ve Türk İnkılabı" },
+    { id: "4", ad: "4. İki Savaş Arasındaki Dönemde Türkiye ve Dünya" },
+    { id: "5", ad: "5. II.Dünya Savaşı Sürecinde Türkiye ve Dünya" },
+    { id: "6", ad: "6. II.Dünya Savaşı Sonrasında Türkiye ve Dünya" },
+    { id: "7", ad: "7. Toplumsal Devrim Çağında Dünya ve Türkiye" },
+    { id: "8", ad: "8. 21. Yüzyılın Eşiğinde Türkiye ve Dünya" }
+];
 
-    const mockKazanimlar = {
-        "1": [
-            { id: "1.1", ad: "1.1. Mustafa Kemal’in Birinci Dünya Savaşı’na kadarki eğitim ve askerlik hayatını içinde bulunduğu toplumun siyasi, sosyal ve kültürel yapısı ile ilişkilendirir" },
-            { id: "1.2", ad: "1.2. 20. yüzyıl başlarında Osmanlı Devleti’nin siyasi, sosyal ve ekonomik durumunu analiz eder." },
-            { id: "1.3", ad: "1.3. I. Dünya Savaşı sürecinde Osmanlı Devleti’nin durumunu siyasi, askerî ve sosyal açılardan analiz eder." },
-            { id: "1.4", ad: "1.4. I. Dünya Savaşı’nın sonuçlarını Osmanlı Devleti ve Batılı devletler açısından değerlendirir." }
-        ],
-        "2": [
-            { id: "2.1", ad: "2.1. Kuvay-ı Millîye hareketinin oluşumundan Büyük Millet Meclisinin açılışına kadar olan süreçte meydana gelen gelişmeleri açıklar." },
-            { id: "2.2", ad: "2.2. Büyük Millet Meclisinin açılış sürecini ve sonrasında meydana gelen gelişmeleri kavrar." },
-            { id: "2.3", ad: "2.3. Sevr Antlaşması’nın Millî Mücadele sürecine etkilerini analiz eder." },
-            { id: "2.4", ad: "2.4. Doğu ve Güney Cephelerinde verilen mücadelelerin ülkemizin bağımsızlık sürecine katkılarını kavrar." },
-            { id: "2.5", ad: "2.5. Düzenli ordunun kurulmasından Mudanya Ateşkes Antlaşması’na kadar meydana gelen gelişmeleri Türkiye’nin bağımsızlık sürecine katkıları açısından analiz eder." },
-            { id: "2.6", ad: "2.6. Millî Mücadele sonucunda kazanılan diplomatik başarıları ülkemizin bağımsızlığı açısından değerlendirir.2.6. Millî Mücadele sonucunda kazanılan diplomatik başarıları ülkemizin bağımsızlığı açısından değerlendirir." },
-            { id: "2.7", ad: "2.7. Millî Mücadele sürecine katkıda bulunmuş önemli şahsiyetlerin kişilik özellikleri ile faaliyetlerini ilişkilendirir." }
-        ],
-        "3": [
-            { id: "3.1", ad: "3.1. Çağdaşlaşan Türkiye’nin temeli olan Atatürk ilkelerini kavrar." },
-            { id: "3.2", ad: "3.2. Siyasi alanda meydana gelen gelişmeleri kavrar." },
-            { id: "3.3", ad: "3.3. Hukuk alanında meydana gelen gelişmelerin Türk toplumunda meydana getirdiği değişimleri kavrar." },
-            { id: "3.4", ad: "3.4. Eğitim ve kültür alanında yapılan inkılapları ve gelişmeleri kavrar." },
-            { id: "3.5", ad: "3.5. Toplumsal alanda yapılan inkılapları ve meydana gelen gelişmeleri kavrar." },
-            { id: "3.6", ad: "3.6. Ekonomi alanında meydana gelen gelişmeleri kavrar." },
-            { id: "3.7", ad: "3.7. Atatürk Dönemi’nde sağlık alanında yapılan çalışmaları kavrar." },
-            { id: "3.8", ad: "3.7. Atatürk ilke ve inkılaplarını oluşturan temel esasları Atatürkçü düşünce sistemi açısından analiz eder." },
-        ],
-        "4": [
-            { id: "4.1", ad: "4.1. Atatürk Dönemi’nde Türkiye Cumhuriyeti’nin iç politikasındaki önemli gelişmeleri açıklar." },
-            { id: "4.2", ad: "4.2. Atatürk Dönemi’nde (1923-1938) Türkiye Cumhuriyeti’nin dış politikasındaki başlıca gelişmeleri açıklar. " },
-            { id: "4.3", ad: "4.3. İki dünya savaşı arasındaki dönemde dünyada meydana gelen siyasi ve ekonomik gelişmeleri kavrar." },
-        ],
-        "5": [
-            { id: "5.1", ad: "5.1. II. Dünya Savaşı’nın sebepleri, başlaması ve yayılmasıyla ilgili başlıca gelişmeleri kavrar" },
-            { id: "5.2", ad: "5.2. II. Dünya Savaşı sürecinde Türkiye’nin izlediği siyaset ile savaşın Türkiye üzerindeki ekonomik ve toplumsal etkilerini analiz eder." },
-            { id: "5.3", ad: "5.3. II. Dünya Savaşı’nın sonuçlarını değerlendirir." },
-        ],
-        "6": [
-            { id: "6.1", ad: "6.1. 1945-1950 yılları arasında Türkiye’de meydana gelen siyasi, sosyal ve ekonomik gelişmeleri kavrar." },
-            { id: "6.2", ad: "6.2. II. Dünya Savaşı sonrası dönemde uluslararası ilişkilerde ve Türk dış politikasında meydana gelen gelişmeleri kavrar." },
-            { id: "6.3", ad: "6.3. 1950’ler Türkiye’sinde meydana gelen siyasi, sosyal ve ekonomik gelişmeleri analiz eder." },
-        ],
-        "7": [
-            { id: "7.1", ad: "7.1. 1960 sonrasında dünya siyasetinde ortaya çıkan gelişmeleri açıklar." },
-            { id: "7.2", ad: "7.2. 1960’lardan itibaren Türk dış politikasını etkileyen önemli gelişmeleri kavrar." },
-            { id: "7.3", ad: "7.3. 1960’lardan itibaren Türkiye’de meydana gelen siyasi, ekonomik ve sosyo-kültürel gelişmeleri analiz eder." },
-        ],
-        "8": [
-            { id: "8.1", ad: "8.1. 1990 sonrasında Türkiye’de meydana gelen ekonomik, siyasi, sosyal ve kültürel gelişmeleri kavrar." },
-            { id: "8.2", ad: "8.2. 1990 sonrasında meydana gelen siyasi gelişmeleri Türkiye’ye etkileri ve dünya siyasi konjonktürü bağlamında analiz eder." },
-        ]
-    };
+const mockKazanimlar = {
+    "1": [
+        { id: "1.1", ad: "1.1. Mustafa Kemal’in Birinci Dünya Savaşı’na kadarki eğitim ve askerlik hayatını içinde bulunduğu toplumun siyasi, sosyal ve kültürel yapısı ile ilişkilendirir" },
+        { id: "1.2", ad: "1.2. 20. yüzyıl başlarında Osmanlı Devleti’nin siyasi, sosyal ve ekonomik durumunu analiz eder." },
+        { id: "1.3", ad: "1.3. I. Dünya Savaşı sürecinde Osmanlı Devleti’nin durumunu siyasi, askerî ve sosyal açılardan analiz eder." },
+        { id: "1.4", ad: "1.4. I. Dünya Savaşı’nın sonuçlarını Osmanlı Devleti ve Batılı devletler açısından değerlendirir." }
+    ],
+    "2": [
+        { id: "2.1", ad: "2.1. Kuvay-ı Millîye hareketinin oluşumundan Büyük Millet Meclisinin açılışına kadar olan süreçte meydana gelen gelişmeleri açıklar." },
+        { id: "2.2", ad: "2.2. Büyük Millet Meclisinin açılış sürecini ve sonrasında meydana gelen gelişmeleri kavrar." },
+        { id: "2.3", ad: "2.3. Sevr Antlaşması’nın Millî Mücadele sürecine etkilerini analiz eder." },
+        { id: "2.4", ad: "2.4. Doğu ve Güney Cephelerinde verilen mücadelelerin ülkemizin bağımsızlık sürecine katkılarını kavrar." },
+        { id: "2.5", ad: "2.5. Düzenli ordunun kurulmasından Mudanya Ateşkes Antlaşması’na kadar meydana gelen gelişmeleri Türkiye’nin bağımsızlık sürecine katkıları açısından analiz eder." },
+        { id: "2.6", ad: "2.6. Millî Mücadele sonucunda kazanılan diplomatik başarıları ülkemizin bağımsızlığı açısından değerlendirir." },
+        { id: "2.7", ad: "2.7. Millî Mücadele sürecine katkıda bulunmuş önemli şahsiyetlerin kişilik özellikleri ile faaliyetlerini ilişkilendirir." }
+    ],
+    "3": [
+        { id: "3.1", ad: "3.1. Çağdaşlaşan Türkiye’nin temeli olan Atatürk ilkelerini kavrar." },
+        { id: "3.2", ad: "3.2. Siyasi alanda meydana gelen gelişmeleri kavrar." },
+        { id: "3.3", ad: "3.3. Hukuk alanında meydana gelen gelişmelerin Türk toplumunda meydana getirdiği değişimleri kavrar." },
+        { id: "3.4", ad: "3.4. Eğitim ve kültür alanında yapılan inkılapları ve gelişmeleri kavrar." },
+        { id: "3.5", ad: "3.5. Toplumsal alanda yapılan inkılapları ve meydana gelen gelişmeleri kavrar." },
+        { id: "3.6", ad: "3.6. Ekonomi alanında meydana gelen gelişmeleri kavrar." },
+        { id: "3.7", ad: "3.7. Atatürk Dönemi’nde sağlık alanında yapılan çalışmaları kavrar." },
+        { id: "3.8", ad: "3.7. Atatürk ilke ve inkılaplarını oluşturan temel esasları Atatürkçü düşünce sistemi açısından analiz eder." },
+    ],
+    "4": [
+        { id: "4.1", ad: "4.1. Atatürk Dönemi’nde Türkiye Cumhuriyeti’nin iç politikasındaki önemli gelişmeleri açıklar." },
+        { id: "4.2", ad: "4.2. Atatürk Dönemi’nde (1923-1938) Türkiye Cumhuriyeti’nin dış politikasındaki başlıca gelişmeleri açıklar. " },
+        { id: "4.3", ad: "4.3. İki dünya savaşı arasındaki dönemde dünyada meydana gelen siyasi ve ekonomik gelişmeleri kavrar." },
+    ],
+    "5": [
+        { id: "5.1", ad: "5.1. II. Dünya Savaşı’nın sebepleri, başlaması ve yayılmasıyla ilgili başlıca gelişmeleri kavrar" },
+        { id: "5.2", ad: "5.2. II. Dünya Savaşı sürecinde Türkiye’nin izlediği siyaset ile savaşın Türkiye üzerindeki ekonomik ve toplumsal etkilerini analiz eder." },
+        { id: "5.3", ad: "5.3. II. Dünya Savaşı’nın sonuçlarını değerlendirir." },
+    ],
+    "6": [
+        { id: "6.1", ad: "6.1. 1945-1950 yılları arasında Türkiye’de meydana gelen siyasi, sosyal ve ekonomik gelişmeleri kavrar." },
+        { id: "6.2", ad: "6.2. II. Dünya Savaşı sonrası dönemde uluslararası ilişkilerde ve Türk dış politikasında meydana gelen gelişmeleri kavrar." },
+        { id: "6.3", ad: "6.3. 1950’ler Türkiye’sinde meydana gelen siyasi, sosyal ve ekonomik gelişmeleri analiz eder." },
+    ],
+    "7": [
+        { id: "7.1", ad: "7.1. 1960 sonrasında dünya siyasetinde ortaya çıkan gelişmeleri açıklar." },
+        { id: "7.2", ad: "7.2. 1960’lardan itibaren Türk dış politikasını etkileyen önemli gelişmeleri kavrar." },
+        { id: "7.3", ad: "7.3. 1960’lardan itibaren Türkiye’de meydana gelen siyasi, ekonomik ve sosyo-kültürel gelişmeleri analiz eder." },
+    ],
+    "8": [
+        { id: "8.1", ad: "8.1. 1990 sonrasında Türkiye’de meydana gelen ekonomik, siyasi, sosyal ve kültürel gelişmeleri kavrar." },
+        { id: "8.2", ad: "8.2. 1990 sonrasında meydana gelen siyasi gelişmeleri Türkiye’ye etkileri ve dünya siyasi konjonktürü bağlamında analiz eder." },
+    ]
+};
 
 
 const WorksheetGenerator: React.FC = () => {
@@ -154,16 +154,16 @@ const WorksheetGenerator: React.FC = () => {
                                 )}
                             </button>
                             <p className="mt-6 text-sm text-brand-text-light/80 text-center">
-                                Henüz istediğiniz ünite ve kazanımlara kaynak eklenmemiş olabilir. Lütfen 
+                                Henüz istediğiniz ünite ve kazanımlara kaynak eklenmemiş olabilir. Lütfen
                                 <a onClick={(e) => { e.preventDefault(); scrollToSection('kaynak-durumu'); }} className="font-semibold text-brand-accent hover:text-brand-accent-hover underline mx-1 cursor-pointer">
                                     Kaynak Durumu
                                 </a>
                                 bölümünü kontrol etmeyi unutmayın.
                             </p>
                         </div>
-                        
+
                         {error && <div className="mt-8 text-center bg-red-900/50 border border-red-500 text-red-300 p-4 rounded-lg">{error}</div>}
-                        
+
                         {apiResponse && (
                             <div className="mt-12 space-y-8">
                                 <div>
@@ -188,9 +188,9 @@ const WorksheetGenerator: React.FC = () => {
                         )}
 
                         <div className="text-center mt-12 border-t border-slate-700/50 pt-8">
-                           <p className="text-xs text-slate-500 leading-relaxed">
-                             <span className="font-semibold">Yasal Bilgilendirme:</span> Bu platformda yer alan belgeler kamuya açık arşivlerden (Atatürk Kitaplığı, SALT Araştırma, Devlet Arşivleri vb.) alınmıştır. Tüm materyaller yalnızca eğitim ve araştırma amaçlı kullanılmakta olup, ilgili kurumların Creative Commons lisans koşullarına tabidir. Bu platform ticari amaç gütmemekte olup, arşiv materyalleri ilgili kurumların mülkiyetindedir. Herhangi bir hak ihlali tespit edilmesi durumunda ilgili içerik derhal kaldırılacaktır.
-                           </p>
+                            <p className="text-xs text-slate-500 leading-relaxed">
+                                <span className="font-semibold">Yasal Bilgilendirme:</span> Bu platformda yer alan belgeler kamuya açık arşivlerden (Atatürk Kitaplığı, SALT Araştırma, Devlet Arşivleri vb.) alınmıştır. Tüm materyaller yalnızca eğitim ve araştırma amaçlı kullanılmakta olup, ilgili kurumların Creative Commons lisans koşullarına tabidir. Bu platform ticari amaç gütmemekte olup, arşiv materyalleri ilgili kurumların mülkiyetindedir. Herhangi bir hak ihlali tespit edilmesi durumunda ilgili içerik derhal kaldırılacaktır.
+                            </p>
                         </div>
                     </div>
                 </div>
