@@ -81,7 +81,7 @@ resource "aws_apigatewayv2_api" "http_api" {
     allow_methods = ["GET", "POST", "PUT", "DELETE", "OPTIONS"] 
     allow_origins = [
       "https://www.tarihasistani.com.tr", 
-      "https://main.d30pkxbqbjkexa.amplifyapp.com", 
+      "https://main.d1kvf0euvwd4k5.amplifyapp.com", 
       "http://localhost:8000",
       "http://127.0.0.1:5500"
     ]
@@ -190,7 +190,7 @@ cors_rule {
     allowed_headers = ["*"]
     allowed_methods = ["GET", "PUT"] 
     allowed_origins = [
-        "https://main.d30pkxbqbjkexa.amplifyapp.com",
+        "https://main.d1kvf0euvwd4k5.amplifyapp.com",
         "https://www.tarihasistani.com.tr",
         "http://localhost:8000",
         "http://127.0.0.1:5500"
@@ -280,7 +280,7 @@ cors_config {
     }
 access_control_allow_origins {
       items = [
-        "https://main.d30pkxbqbjkexa.amplifyapp.com", 
+        "https://main.d1kvf0euvwd4k5.amplifyapp.com", 
         "https://www.tarihasistani.com.tr", 
         "http://localhost:8000", 
         "http://127.0.0.1:5500"
