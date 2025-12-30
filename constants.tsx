@@ -49,8 +49,8 @@ export interface UnitResource {
 }
 
 export const unitResourceStatus: UnitResource[] = [
-  { id: 1, name: "1. 20. Yüzyıl Başlarında Osmanlı Devleti ve Dünya", docCount: 30 },
-  { id: 2, name: "2. Milli Mücadele", docCount: 7 },
+  { id: 1, name: "1. 20. Yüzyıl Başlarında Osmanlı Devleti ve Dünya", docCount: 31 },
+  { id: 2, name: "2. Milli Mücadele", docCount: 10 },
   { id: 3, name: "3. Atatürkçülük ve Türk İnkılabı", docCount: 2 },
   { id: 4, name: "4. İki Savaş Arasındaki Dönemde Türkiye ve Dünya", docCount: 1 },
   { id: 5, name: "5. II.Dünya Savaşı Sürecinde Türkiye ve Dünya", docCount: 0 },
