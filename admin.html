@@ -4,146 +4,435 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tarih Projesi - Admin Paneli</title>
+    <title>Tarih Asistanı - Admin Paneli</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@400;500;600&display=swap"
+        rel="stylesheet">
     <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        * {
             margin: 0;
-            background-color: #f0f2f5;
-            display: flex;
-            justify-content: center;
-            padding: 20px;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #0a0a0a 100%);
+            min-height: 100vh;
+            color: #e0e0e0;
+            padding: 40px 20px;
         }
 
         .container {
-            background-color: #fff;
-            padding: 25px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            width: 100%;
-            max-width: 700px;
+            max-width: 800px;
+            margin: 0 auto;
         }
 
-        h1 {
-            color: #1c1e21;
+        .header {
             text-align: center;
-            margin-bottom: 20px;
-            font-size: 24px;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.5rem;
+            color: #fff;
+            margin-bottom: 8px;
+        }
+
+        .header h1 span {
+            color: #d4a84b;
+        }
+
+        .header p {
+            color: #888;
+            font-size: 0.95rem;
+        }
+
+        .admin-card {
+            background: rgba(26, 26, 46, 0.8);
+            border: 1px solid rgba(212, 168, 75, 0.2);
+            border-radius: 16px;
+            padding: 32px;
+            backdrop-filter: blur(10px);
+        }
+
+        .form-section {
+            margin-bottom: 24px;
+        }
+
+        .form-section-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #d4a84b;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 16px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid rgba(212, 168, 75, 0.2);
+        }
+
+        .form-section-title svg {
+            width: 18px;
+            height: 18px;
         }
 
         .form-group {
-            margin-bottom: 15px;
+            margin-bottom: 20px;
         }
 
         label {
             display: block;
-            font-weight: 600;
-            margin-bottom: 5px;
-            color: #606770;
+            font-weight: 500;
+            margin-bottom: 8px;
+            color: #ccc;
+            font-size: 0.9rem;
         }
 
         input[type="text"],
+        input[type="password"],
         select,
         textarea {
             width: 100%;
-            padding: 10px;
-            border-radius: 6px;
-            border: 1px solid #dddfe2;
-            box-sizing: border-box;
-            font-size: 16px;
+            padding: 14px 16px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(0, 0, 0, 0.3);
+            color: #fff;
+            font-size: 1rem;
+            font-family: inherit;
+            transition: all 0.3s ease;
+        }
+
+        input:focus,
+        select:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #d4a84b;
+            box-shadow: 0 0 0 3px rgba(212, 168, 75, 0.1);
+        }
+
+        input::placeholder,
+        textarea::placeholder {
+            color: #666;
+        }
+
+        select {
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 16px center;
+        }
+
+        select option {
+            background: #1a1a2e;
+            color: #fff;
         }
 
         textarea {
-            min-height: 150px;
+            min-height: 120px;
             resize: vertical;
         }
 
-        button {
-            width: 100%;
-            padding: 12px;
-            border-radius: 6px;
-            border: none;
-            background-color: #1877f2;
-            color: white;
-            font-size: 18px;
-            font-weight: bold;
-            cursor: pointer;
-            margin-top: 10px;
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
         }
 
-        button:disabled {
-            background-color: #a0bdf1;
-            cursor: not-allowed;
+        @media (max-width: 600px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
         }
 
-        .status {
-            margin-top: 15px;
+        .file-input-wrapper {
+            position: relative;
+            border: 2px dashed rgba(212, 168, 75, 0.3);
+            border-radius: 12px;
+            padding: 30px;
             text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .file-input-wrapper:hover {
+            border-color: #d4a84b;
+            background: rgba(212, 168, 75, 0.05);
+        }
+
+        .file-input-wrapper input[type="file"] {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .file-input-wrapper svg {
+            width: 40px;
+            height: 40px;
+            color: #d4a84b;
+            margin-bottom: 12px;
+        }
+
+        .file-input-wrapper p {
+            color: #888;
+            font-size: 0.9rem;
+        }
+
+        .file-input-wrapper .file-name {
+            color: #d4a84b;
+            font-weight: 500;
+            margin-top: 8px;
+        }
+
+        .auth-section {
+            background: linear-gradient(135deg, rgba(212, 168, 75, 0.1) 0%, rgba(212, 168, 75, 0.05) 100%);
+            border: 1px solid rgba(212, 168, 75, 0.3);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 24px;
+        }
+
+        .auth-section label {
+            color: #d4a84b;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 16px 32px;
+            border: none;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #d4a84b 0%, #b8943f 100%);
+            color: #000;
+            font-size: 1rem;
             font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
         }
 
-        .success {
-            color: #31a24c;
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(212, 168, 75, 0.3);
         }
 
-        .error {
-            color: #fa383e;
+        .submit-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .submit-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        .status-message {
+            margin-top: 20px;
+            padding: 16px;
+            border-radius: 10px;
+            text-align: center;
+            font-weight: 500;
+            display: none;
+        }
+
+        .status-message.show {
+            display: block;
+        }
+
+        .status-message.success {
+            background: rgba(76, 175, 80, 0.1);
+            border: 1px solid rgba(76, 175, 80, 0.3);
+            color: #4caf50;
+        }
+
+        .status-message.error {
+            background: rgba(244, 67, 54, 0.1);
+            border: 1px solid rgba(244, 67, 54, 0.3);
+            color: #f44336;
+        }
+
+        .status-message.loading {
+            background: rgba(212, 168, 75, 0.1);
+            border: 1px solid rgba(212, 168, 75, 0.3);
+            color: #d4a84b;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: #888;
+            text-decoration: none;
+            font-size: 0.9rem;
+            margin-bottom: 20px;
+            transition: color 0.3s;
+        }
+
+        .back-link:hover {
+            color: #d4a84b;
+        }
+
+        .back-link svg {
+            width: 16px;
+            height: 16px;
         }
     </style>
 </head>
 
 <body>
     <div class="container">
-        <h1>Yeni Tarihsel Kaynak Yükle</h1>
-        <form id="upload-form">
-            <div class="form-group" style="background: #fff3cd; padding: 10px; border-radius: 6px; margin-bottom: 15px;">
-                <label for="admin-key" style="color: #856404;">🔐 Admin Şifresi:</label>
-                <input type="password" id="admin-key" placeholder="Admin API anahtarını giriniz" required>
-            </div>
-            <div class="form-group">
-                <label for="unite-secimi">Ünite Seçimi:</label>
-                <select id="unite-secimi" required></select>
-            </div>
-            <div class="form-group">
-                <label for="kazanim-secimi">Kazanım Seçimi:</label>
-                <select id="kazanim-secimi" required></select>
-            </div>
-            <div class="form-group">
-                <label for="source-type">Kaynak Türü:</label>
-                <select id="source-type" required>
-                    <option value="gazete">Gazete</option>
-                    <option value="mektup">Mektup</option>
-                    <option value="hatirat">Hatırat</option>
-                    <option value="genelge">Genelge</option>
-                    <option value="belge">Diğer Belge</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label for="source-title">Kaynak Başlığı:</label>
-                <input type="text" id="source-title" placeholder="Örn: Hakimiyeti Milliye 10 Ocak 1920" required>
-            </div>
-            <div class="form-group">
-                <label for="file-input">Belge Dosyası (PDF, JPG, PNG):</label>
-                <input type="file" id="file-input" accept=".pdf,.jpg,.jpeg,.png" required>
-            </div>
-            <div class="form-group">
-                <label for="extracted-text">Belge Metni (OCR ile okunamazsa burayı doldurun):</label>
-                <textarea id="extracted-text"
-                    placeholder="Bu alan boş bırakılırsa, PDF dosyaları için OCR otomatik çalışır. Resim dosyaları için bu alanı doldurmak zorunludur."></textarea>
-            </div>
-            <div class="form-group">
-                <label for="source-citation">Kaynakça:</label>
-                <textarea id="source-citation"
-                    placeholder="Belgenin tam kaynakçasını buraya yazınız (Yazar, Eser Adı, Yayınevi, Basım Yılı, Sayfa vb.)"></textarea>
-            </div>
-            <button type="submit" id="submit-button">Kütüphaneye Ekle</button>
-            <div id="status-message" class="status"></div>
-        </form>
+        <a href="index.html" class="back-link">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2">
+                <path d="M19 12H5M12 19l-7-7 7-7" />
+            </svg>
+            Ana Sayfaya Dön
+        </a>
+
+        <div class="header">
+            <h1>Admin <span>Paneli</span></h1>
+            <p>Yeni tarihsel kaynak ekleyin</p>
+        </div>
+
+        <div class="admin-card">
+            <form id="upload-form">
+                <!-- Auth Section -->
+                <div class="auth-section">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label for="admin-key">🔐 Admin Şifresi</label>
+                        <input type="password" id="admin-key" placeholder="Admin API anahtarını giriniz" required>
+                    </div>
+                </div>
+
+                <!-- Ünite & Kazanım Section -->
+                <div class="form-section">
+                    <div class="form-section-title">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+                            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+                        </svg>
+                        Müfredat Bilgileri
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="unite-secimi">Ünite Seçimi</label>
+                            <select id="unite-secimi" required></select>
+                        </div>
+                        <div class="form-group">
+                            <label for="kazanim-secimi">Kazanım Seçimi</label>
+                            <select id="kazanim-secimi" required></select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Kaynak Bilgileri Section -->
+                <div class="form-section">
+                    <div class="form-section-title">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                            <polyline points="14 2 14 8 20 8" />
+                        </svg>
+                        Kaynak Bilgileri
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="source-type">Kaynak Türü</label>
+                            <select id="source-type" required>
+                                <option value="gazete">Gazete</option>
+                                <option value="mektup">Mektup</option>
+                                <option value="hatirat">Hatırat</option>
+                                <option value="genelge">Genelge</option>
+                                <option value="belge">Diğer Belge</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="source-title">Kaynak Başlığı</label>
+                            <input type="text" id="source-title" placeholder="Örn: Hakimiyeti Milliye 10 Ocak 1920"
+                                required>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dosya Yükleme Section -->
+                <div class="form-section">
+                    <div class="form-section-title">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                            <polyline points="17 8 12 3 7 8" />
+                            <line x1="12" y1="3" x2="12" y2="15" />
+                        </svg>
+                        Belge Dosyası
+                    </div>
+                    <div class="file-input-wrapper">
+                        <input type="file" id="file-input" accept=".pdf,.jpg,.jpeg,.png" required>
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                            <polyline points="17 8 12 3 7 8" />
+                            <line x1="12" y1="3" x2="12" y2="15" />
+                        </svg>
+                        <p>PDF, JPG veya PNG dosyası seçin</p>
+                        <p class="file-name" id="selected-file-name"></p>
+                    </div>
+                </div>
+
+                <!-- Metin & Kaynakça Section -->
+                <div class="form-section">
+                    <div class="form-section-title">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <line x1="17" y1="10" x2="3" y2="10" />
+                            <line x1="21" y1="6" x2="3" y2="6" />
+                            <line x1="21" y1="14" x2="3" y2="14" />
+                            <line x1="17" y1="18" x2="3" y2="18" />
+                        </svg>
+                        İçerik Detayları
+                    </div>
+                    <div class="form-group">
+                        <label for="extracted-text">Belge Metni (Opsiyonel)</label>
+                        <textarea id="extracted-text"
+                            placeholder="Bu alan boş bırakılırsa, PDF dosyaları için OCR otomatik çalışır."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="source-citation">Kaynakça</label>
+                        <textarea id="source-citation"
+                            placeholder="Belgenin tam kaynakçasını buraya yazınız (Yazar, Eser Adı, Yayınevi, Basım Yılı, Sayfa vb.)"></textarea>
+                    </div>
+                </div>
+
+                <button type="submit" class="submit-btn" id="submit-button">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                        <polyline points="17 8 12 3 7 8" />
+                        <line x1="12" y1="3" x2="12" y2="15" />
+                    </svg>
+                    Kütüphaneye Ekle
+                </button>
+
+                <div id="status-message" class="status-message"></div>
+            </form>
+        </div>
     </div>
 
     <script>
         const ADMIN_API_ENDPOINT = 'https://duwr3ymxi6.execute-api.eu-central-1.amazonaws.com/admin';
-        const CLOUDFRONT_DOMAIN = 'd2an9xa3x2j0tn.cloudfront.net'; // CloudFront Dağıtım Alan Adın
+        const CLOUDFRONT_DOMAIN = 'd2an9xa3x2j0tn.cloudfront.net';
 
         const mockUniteler = [
             { id: "1", ad: "1. 20. Yüzyıl Başlarında Osmanlı Devleti ve Dünya" },
@@ -158,58 +447,60 @@
 
         const mockKazanimlar = {
             "1": [
-                { id: "1.1", ad: "1.1. Mustafa Kemal’in Birinci Dünya Savaşı’na kadarki eğitim ve askerlik hayatını içinde bulunduğu toplumun siyasi, sosyal ve kültürel yapısı ile ilişkilendirir" },
-                { id: "1.2", ad: "1.2. 20. yüzyıl başlarında Osmanlı Devleti’nin siyasi, sosyal ve ekonomik durumunu analiz eder." },
-                { id: "1.3", ad: "1.3. I. Dünya Savaşı sürecinde Osmanlı Devleti’nin durumunu siyasi, askerî ve sosyal açılardan analiz eder." },
-                { id: "1.4", ad: "1.4. I. Dünya Savaşı’nın sonuçlarını Osmanlı Devleti ve Batılı devletler açısından değerlendirir." }
+                { id: "1.1", ad: "1.1. Mustafa Kemal'in Birinci Dünya Savaşı'na kadarki eğitim ve askerlik hayatını içinde bulunduğu toplumun siyasi, sosyal ve kültürel yapısı ile ilişkilendirir" },
+                { id: "1.2", ad: "1.2. 20. yüzyıl başlarında Osmanlı Devleti'nin siyasi, sosyal ve ekonomik durumunu analiz eder." },
+                { id: "1.3", ad: "1.3. I. Dünya Savaşı sürecinde Osmanlı Devleti'nin durumunu siyasi, askerî ve sosyal açılardan analiz eder." },
+                { id: "1.4", ad: "1.4. I. Dünya Savaşı'nın sonuçlarını Osmanlı Devleti ve Batılı devletler açısından değerlendirir." }
             ],
             "2": [
                 { id: "2.1", ad: "2.1. Kuvay-ı Millîye hareketinin oluşumundan Büyük Millet Meclisinin açılışına kadar olan süreçte meydana gelen gelişmeleri açıklar." },
                 { id: "2.2", ad: "2.2. Büyük Millet Meclisinin açılış sürecini ve sonrasında meydana gelen gelişmeleri kavrar." },
-                { id: "2.3", ad: "2.3. Sevr Antlaşması’nın Millî Mücadele sürecine etkilerini analiz eder." },
+                { id: "2.3", ad: "2.3. Sevr Antlaşması'nın Millî Mücadele sürecine etkilerini analiz eder." },
                 { id: "2.4", ad: "2.4. Doğu ve Güney Cephelerinde verilen mücadelelerin ülkemizin bağımsızlık sürecine katkılarını kavrar." },
-                { id: "2.5", ad: "2.5. Düzenli ordunun kurulmasından Mudanya Ateşkes Antlaşması’na kadar meydana gelen gelişmeleri Türkiye’nin bağımsızlık sürecine katkıları açısından analiz eder." },
+                { id: "2.5", ad: "2.5. Düzenli ordunun kurulmasından Mudanya Ateşkes Antlaşması'na kadar meydana gelen gelişmeleri Türkiye'nin bağımsızlık sürecine katkıları açısından analiz eder." },
                 { id: "2.6", ad: "2.6. Millî Mücadele sonucunda kazanılan diplomatik başarıları ülkemizin bağımsızlığı açısından değerlendirir." },
                 { id: "2.7", ad: "2.7. Millî Mücadele sürecine katkıda bulunmuş önemli şahsiyetlerin kişilik özellikleri ile faaliyetlerini ilişkilendirir." }
             ],
             "3": [
-                { id: "3.1", ad: "3.1. Çağdaşlaşan Türkiye’nin temeli olan Atatürk ilkelerini kavrar." },
+                { id: "3.1", ad: "3.1. Çağdaşlaşan Türkiye'nin temeli olan Atatürk ilkelerini kavrar." },
                 { id: "3.2", ad: "3.2. Siyasi alanda meydana gelen gelişmeleri kavrar." },
                 { id: "3.3", ad: "3.3. Hukuk alanında meydana gelen gelişmelerin Türk toplumunda meydana getirdiği değişimleri kavrar." },
                 { id: "3.4", ad: "3.4. Eğitim ve kültür alanında yapılan inkılapları ve gelişmeleri kavrar." },
                 { id: "3.5", ad: "3.5. Toplumsal alanda yapılan inkılapları ve meydana gelen gelişmeleri kavrar." },
                 { id: "3.6", ad: "3.6. Ekonomi alanında meydana gelen gelişmeleri kavrar." },
-                { id: "3.7", ad: "3.7. Atatürk Dönemi’nde sağlık alanında yapılan çalışmaları kavrar." },
-                { id: "3.8", ad: "3.8. Atatürk ilke ve inkılaplarını oluşturan temel esasları Atatürkçü düşünce sistemi açısından analiz eder." },
+                { id: "3.7", ad: "3.7. Atatürk Dönemi'nde sağlık alanında yapılan çalışmaları kavrar." },
+                { id: "3.8", ad: "3.8. Atatürk ilke ve inkılaplarını oluşturan temel esasları Atatürkçü düşünce sistemi açısından analiz eder." }
             ],
             "4": [
-                { id: "4.1", ad: "4.1. Atatürk Dönemi’nde Türkiye Cumhuriyeti’nin iç politikasındaki önemli gelişmeleri açıklar." },
-                { id: "4.2", ad: "4.2. Atatürk Dönemi’nde (1923-1938) Türkiye Cumhuriyeti’nin dış politikasındaki başlıca gelişmeleri açıklar. " },
-                { id: "4.3", ad: "4.3. İki dünya savaşı arasındaki dönemde dünyada meydana gelen siyasi ve ekonomik gelişmeleri kavrar." },
+                { id: "4.1", ad: "4.1. Atatürk Dönemi'nde Türkiye Cumhuriyeti'nin iç politikasındaki önemli gelişmeleri açıklar." },
+                { id: "4.2", ad: "4.2. Atatürk Dönemi'nde (1923-1938) Türkiye Cumhuriyeti'nin dış politikasındaki başlıca gelişmeleri açıklar. " },
+                { id: "4.3", ad: "4.3. İki dünya savaşı arasındaki dönemde dünyada meydana gelen siyasi ve ekonomik gelişmeleri kavrar." }
             ],
             "5": [
-                { id: "5.1", ad: "5.1. II. Dünya Savaşı’nın sebepleri, başlaması ve yayılmasıyla ilgili başlıca gelişmeleri kavrar" },
-                { id: "5.2", ad: "5.2. II. Dünya Savaşı sürecinde Türkiye’nin izlediği siyaset ile savaşın Türkiye üzerindeki ekonomik ve toplumsal etkilerini analiz eder." },
-                { id: "5.3", ad: "5.3. II. Dünya Savaşı’nın sonuçlarını değerlendirir." },
+                { id: "5.1", ad: "5.1. II. Dünya Savaşı'nın sebepleri, başlaması ve yayılmasıyla ilgili başlıca gelişmeleri kavrar" },
+                { id: "5.2", ad: "5.2. II. Dünya Savaşı sürecinde Türkiye'nin izlediği siyaset ile savaşın Türkiye üzerindeki ekonomik ve toplumsal etkilerini analiz eder." },
+                { id: "5.3", ad: "5.3. II. Dünya Savaşı'nın sonuçlarını değerlendirir." }
             ],
             "6": [
-                { id: "6.1", ad: "6.1. 1945-1950 yılları arasında Türkiye’de meydana gelen siyasi, sosyal ve ekonomik gelişmeleri kavrar." },
+                { id: "6.1", ad: "6.1. 1945-1950 yılları arasında Türkiye'de meydana gelen siyasi, sosyal ve ekonomik gelişmeleri kavrar." },
                 { id: "6.2", ad: "6.2. II. Dünya Savaşı sonrası dönemde uluslararası ilişkilerde ve Türk dış politikasında meydana gelen gelişmeleri kavrar." },
-                { id: "6.3", ad: "6.3. 1950’ler Türkiye’sinde meydana gelen siyasi, sosyal ve ekonomik gelişmeleri analiz eder." },
+                { id: "6.3", ad: "6.3. 1950'ler Türkiye'sinde meydana gelen siyasi, sosyal ve ekonomik gelişmeleri analiz eder." }
             ],
             "7": [
                 { id: "7.1", ad: "7.1. 1960 sonrasında dünya siyasetinde ortaya çıkan gelişmeleri açıklar." },
-                { id: "7.2", ad: "7.2. 1960’lardan itibaren Türk dış politikasını etkileyen önemli gelişmeleri kavrar." },
-                { id: "7.3", ad: "7.3. 1960’lardan itibaren Türkiye’de meydana gelen siyasi, ekonomik ve sosyo-kültürel gelişmeleri analiz eder." },
+                { id: "7.2", ad: "7.2. 1960'lardan itibaren Türk dış politikasını etkileyen önemli gelişmeleri kavrar." },
+                { id: "7.3", ad: "7.3. 1960'lardan itibaren Türkiye'de meydana gelen siyasi, ekonomik ve sosyo-kültürel gelişmeleri analiz eder." }
             ],
             "8": [
-                { id: "8.1", ad: "8.1. 1990 sonrasında Türkiye’de meydana gelen ekonomik, siyasi, sosyal ve kültürel gelişmeleri kavrar." },
-                { id: "8.2", ad: "8.2. 1990 sonrasında meydana gelen siyasi gelişmeleri Türkiye’ye etkileri ve dünya siyasi konjonktürü bağlamında analiz eder." },
+                { id: "8.1", ad: "8.1. 1990 sonrasında Türkiye'de meydana gelen ekonomik, siyasi, sosyal ve kültürel gelişmeleri kavrar." },
+                { id: "8.2", ad: "8.2. 1990 sonrasında meydana gelen siyasi gelişmeleri Türkiye'ye etkileri ve dünya siyasi konjonktürü bağlamında analiz eder." }
             ]
         };
 
         const uniteSecimi = document.getElementById('unite-secimi');
         const kazanimSecimi = document.getElementById('kazanim-secimi');
+        const fileInput = document.getElementById('file-input');
+        const selectedFileName = document.getElementById('selected-file-name');
 
         uniteSecimi.innerHTML = '<option value="">Lütfen bir ünite seçiniz</option>' + mockUniteler.map(u => `<option value="${u.id}">${u.ad}</option>`).join('');
 
@@ -221,24 +512,34 @@
             }
         });
 
+        fileInput.addEventListener('change', () => {
+            if (fileInput.files.length > 0) {
+                selectedFileName.textContent = fileInput.files[0].name;
+            } else {
+                selectedFileName.textContent = '';
+            }
+        });
+
         const form = document.getElementById('upload-form');
         const submitButton = document.getElementById('submit-button');
         const statusMessage = document.getElementById('status-message');
 
+        function showStatus(message, type) {
+            statusMessage.textContent = message;
+            statusMessage.className = 'status-message show ' + type;
+        }
+
         form.addEventListener('submit', async (event) => {
             event.preventDefault();
             submitButton.disabled = true;
-            submitButton.textContent = "Yükleniyor...";
-            statusMessage.textContent = '';
-            statusMessage.className = 'status';
+            submitButton.innerHTML = '<svg class="spin" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> Yükleniyor...';
 
-            const fileInput = document.getElementById('file-input');
             const file = fileInput.files[0];
+            const adminKey = document.getElementById('admin-key').value;
 
             try {
-                statusMessage.textContent = 'Yükleme adresi alınıyor...';
+                showStatus('Yükleme adresi alınıyor...', 'loading');
                 const extension = file.name.split('.').pop();
-                const adminKey = document.getElementById('admin-key').value;
                 const getUrlResponse = await fetch(ADMIN_API_ENDPOINT, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'X-Admin-Key': adminKey },
@@ -251,14 +552,14 @@
                 const { upload_url, object_key } = await getUrlResponse.json();
                 if (!upload_url) throw new Error('Yükleme URL\'i alınamadı.');
 
-                statusMessage.textContent = 'Dosya S3\'e yükleniyor...';
+                showStatus('Dosya S3\'e yükleniyor...', 'loading');
                 await fetch(upload_url, {
                     method: 'PUT',
                     body: file,
                     headers: { 'Content-Type': file.type }
                 });
 
-                statusMessage.textContent = 'Veriler veritabanına kaydediliyor...';
+                showStatus('Veriler veritabanına kaydediliyor...', 'loading');
                 const source_url = `https://${CLOUDFRONT_DOMAIN}/${object_key}`;
 
                 const metadata = {
@@ -283,17 +584,17 @@
                 const result = await saveMetadataResponse.json();
                 if (saveMetadataResponse.status !== 200) throw new Error(result.error || 'Metadata kaydedilemedi.');
 
-                statusMessage.textContent = 'Başarılı! Belge kütüphaneye eklendi.';
-                statusMessage.classList.add('success');
+                showStatus('✓ Başarılı! Belge kütüphaneye eklendi.', 'success');
                 form.reset();
+                selectedFileName.textContent = '';
+                kazanimSecimi.innerHTML = '<option value="">Lütfen bir kazanım seçiniz</option>';
 
             } catch (error) {
                 console.error('Yükleme hatası:', error);
-                statusMessage.textContent = `Hata: ${error.message}`;
-                statusMessage.classList.add('error');
+                showStatus(`Hata: ${error.message}`, 'error');
             } finally {
                 submitButton.disabled = false;
-                submitButton.textContent = "Kütüphaneye Ekle";
+                submitButton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Kütüphaneye Ekle';
             }
         });
     </script>
