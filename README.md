@@ -1,36 +1,191 @@
-# Akıllı İnkılap Tarihi Asistanı
+# Tarih Asistanı 📜
 
-Bu proje, 12. Sınıf T.C. İnkılap Tarihi ve Atatürkçülük dersi öğretmenleri için geliştirilmiş, yapay zeka destekli bir çalışma kağıdı üreticisidir.
+[![Website](https://img.shields.io/badge/Website-tarihasistani.com.tr-d4a84b?style=flat-square)](https://www.tarihasistani.com.tr)
+[![AWS](https://img.shields.io/badge/AWS-Serverless-orange?style=flat-square&logo=amazon-aws)](https://aws.amazon.com/)
+[![Terraform](https://img.shields.io/badge/IaC-Terraform-7B42BC?style=flat-square&logo=terraform)](https://www.terraform.io/)
 
-
-**Canlı Prototipi Denemek İçin:** https://www.tarihasistani.com.tr
+12. Sınıf T.C. İnkılap Tarihi ve Atatürkçülük dersi öğretmenleri için **yapay zeka destekli çalışma kağıdı üreticisi**.
 
 ---
 
-### Projenin Amacı
+## 🎯 Projenin Amacı
 
-Bu projenin temel amacı, öğretmenlerin ders materyali hazırlama sürecini otomatikleştirmektir. Sistem, MEB müfredatındaki ünite ve kazanımlara göre, önceden kürate edilmiş birinci elden tarihi kaynakları kullanarak, öğrencilerin eleştirel düşünme ve analiz becerilerini geliştirecek, tartışma odaklı açık uçlu soruları saniyeler içinde üretir.
+Öğretmenlerin ders materyali hazırlama sürecini otomatikleştirmek. Sistem:
 
-### Kullanılan Teknolojiler
+- **MEB müfredatına uygun** ünite ve kazanımları kullanır
+- **Birinci elden tarihi belgeleri** (gazete, mektup, hatırat) analiz eder
+- **Bloom Taksonomisine göre** sorular üretir
+- **Saniyeler içinde** çalışma kağıdı oluşturur
 
-Bu proje, modern bulut ve sunucusuz teknolojiler kullanılarak uçtan uca geliştirilmiştir.
+---
 
-* **Bulut Platformu:** Amazon Web Services (AWS)
-* **Altyapı olarak Kod (IaC):** Terraform
-* **Backend:**
-    * **Mimari:** Sunucusuz (Serverless)
-    * **Compute:** AWS Lambda (Python)
-    * **API:** Amazon API Gateway
-    * **Veritabanı:** Amazon DynamoDB (NoSQL)
-* **Yapay Zeka (AI):**
-    * **Soru Üretimi:** Amazon Bedrock (Claude Modeli)
-    * **Belge Okuma (OCR):** AWS Textract
-* **Depolama (Storage):** Amazon S3
-* **Frontend:** HTML, CSS, Vanilla JavaScript
-* **CI/CD & Hosting:** AWS Amplify & GitHub
+## 🏗️ Mimari
 
-### Nasıl Çalışır?
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                         FRONTEND                                     │
+│  React + TypeScript + Vite + TailwindCSS                            │
+│  AWS Amplify (CI/CD & Hosting)                                      │
+└──────────────────────────┬──────────────────────────────────────────┘
+                           │
+                           ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│                      API GATEWAY (HTTP)                              │
+│  /api → Lambda (Soru Üretme)                                        │
+│  /admin → Lambda (Belge Yönetimi)                                   │
+└──────────────────────────┬──────────────────────────────────────────┘
+                           │
+           ┌───────────────┼───────────────┐
+           ▼               ▼               ▼
+┌──────────────┐  ┌──────────────┐  ┌──────────────┐
+│   Lambda     │  │   Lambda     │  │   Lambda     │
+│  Soru Üret   │  │   Admin      │  │  Polling     │
+│  (Bedrock)   │  │  (S3/Textract)│  │  (2 dakika)  │
+└──────┬───────┘  └──────┬───────┘  └──────┬───────┘
+       │                 │                 │
+       ▼                 ▼                 ▼
+┌──────────────────────────────────────────────────────────────────────┐
+│                        AWS SERVİSLERİ                                │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌────────────┐  │
+│  │  DynamoDB   │  │     S3      │  │  CloudFront │  │  Textract  │  │
+│  │ (Kaynaklar) │  │  (Belgeler) │  │   (CDN)     │  │   (OCR)    │  │
+│  └─────────────┘  └─────────────┘  └─────────────┘  └────────────┘  │
+│                                                                      │
+│  ┌─────────────┐                                                     │
+│  │  Bedrock    │  Claude 3.5 Sonnet (AI Soru Üretimi)               │
+│  └─────────────┘                                                     │
+└──────────────────────────────────────────────────────────────────────┘
+```
 
-1.  **Belge Yükleme (Otomasyon):** `ÜniteID_KazanımID_BelgeAdı.pdf` formatında isimlendirilen PDF belgeleri bir S3 deposuna yüklenir.
-2.  **İşleme:** S3'teki bu olay, bir Lambda fonksiyonunu tetikler. Bu fonksiyon, AWS Textract ile PDF'in metnini çıkarır ve tüm bilgileri (ID'ler, başlık, metin vb.) DynamoDB'ye kaydeder.
-3.  **Kullanıcı Etkileşimi (Arayüz):** Öğretmen, web arayüzünden bir ünite ve kazan
+---
+
+## 🛠️ Teknolojiler
+
+| Katman | Teknoloji |
+|--------|-----------|
+| **Frontend** | React, TypeScript, Vite, TailwindCSS |
+| **Backend** | AWS Lambda (Python 3.12), Serverless |
+| **API** | Amazon API Gateway (HTTP) |
+| **Veritabanı** | Amazon DynamoDB (NoSQL) |
+| **Depolama** | Amazon S3 + CloudFront (CDN) |
+| **AI/ML** | Amazon Bedrock (Claude 3.5 Sonnet) |
+| **OCR** | AWS Textract |
+| **IaC** | Terraform |
+| **CI/CD** | AWS Amplify + GitHub |
+
+---
+
+## 📁 Proje Yapısı
+
+```
+Tarih-Asistani/
+├── src/                    # React frontend kaynak kodu
+│   ├── components/         # React bileşenleri
+│   └── utils/              # Yardımcı fonksiyonlar
+├── lambda_function/        # Ana Lambda (soru üretimi)
+│   └── lambda_function.py
+├── admin_lambda/           # Admin Lambda (belge yönetimi)
+│   └── admin_handler.py
+├── polling_lambda/         # Polling Lambda (Textract takibi)
+│   └── polling_handler.py
+├── public/                 # Statik dosyalar
+├── main.tf                 # Terraform altyapı tanımları
+├── variables.tf            # Terraform değişken tanımları
+├── admin.html              # Belge yükleme paneli
+└── index.html              # Frontend entry point
+```
+
+---
+
+## 🚀 Kurulum
+
+### Gereksinimler
+
+- Node.js 18+
+- Python 3.12
+- Terraform 1.0+
+- AWS CLI (yapılandırılmış)
+
+### 1. Depoyu Klonlayın
+
+```bash
+git clone git@github.com:ogicimnbr01/Tarih-Asistani.git
+cd Tarih-Asistani
+```
+
+### 2. Frontend Bağımlılıklarını Yükleyin
+
+```bash
+npm install
+```
+
+### 3. Terraform Değişkenlerini Ayarlayın
+
+```bash
+# terraform.tfvars dosyası oluşturun (Git'e eklenmez)
+echo 'admin_api_key = "GucluBirSifre123!"' > terraform.tfvars
+```
+
+### 4. AWS Altyapısını Oluşturun
+
+```bash
+terraform init
+terraform apply
+```
+
+### 5. Frontend'i Çalıştırın
+
+```bash
+npm run dev
+```
+
+---
+
+## 📖 Nasıl Çalışır?
+
+### Belge Yükleme Akışı
+
+1. **Admin Paneli** (`/admin.html`) üzerinden şifre ile giriş yapılır
+2. Ünite ve kazanım seçilir
+3. Tarihsel belge (PDF/JPG) yüklenir
+4. Sistem otomatik olarak:
+   - Dosyayı S3'e yükler
+   - Textract ile OCR işlemi başlatır
+   - Polling Lambda 2 dakikada bir kontrol eder
+   - İşlem tamamlandığında DynamoDB'ye kaydeder
+
+### Soru Üretme Akışı
+
+1. Öğretmen web sitesinden ünite/kazanım seçer
+2. Mevcut kaynaklar listelenir
+3. Kaynak seçilip "Çalışma Kağıdı Oluştur" tıklanır
+4. Lambda, Bedrock'a istek gönderir
+5. Claude modeli Bloom Taksonomisine göre 3 soru üretir
+
+---
+
+## 🔐 Güvenlik
+
+- ✅ Repository **private**
+- ✅ Tüm hassas veriler Git history'den temizlendi
+- ✅ API anahtarları `terraform.tfvars` dosyasında (Git dışı)
+- ✅ Admin paneli şifre korumalı
+- ✅ CORS yapılandırması aktif
+
+---
+
+## 🌐 Canlı Demo
+
+**https://www.tarihasistani.com.tr**
+
+---
+
+## 📝 Lisans
+
+Bu proje eğitim amaçlı geliştirilmiştir.
+
+---
+
+<p align="center">
+  <sub>MEB 12. Sınıf T.C. İnkılap Tarihi ve Atatürkçülük dersi için geliştirilmiştir.</sub>
+</p>
