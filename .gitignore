@@ -13,6 +13,9 @@
 *.tfstate.*
 
 .terraform/
+*.tfvars
+*.tfvars.json
+terraform.tfstate.d/
 
 logs
 *.log
