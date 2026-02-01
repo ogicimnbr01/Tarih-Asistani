@@ -7,7 +7,7 @@ bedrock = boto3.client(service_name='bedrock-runtime')
 dynamodb = boto3.resource('dynamodb')
 table = dynamodb.Table(TABLE_NAME)
 
-model_id = 'arn:aws:bedrock:eu-central-1:***REMOVED***:inference-profile/eu.anthropic.claude-haiku-4-5-20251001-v1:0'
+model_id = os.environ.get('BEDROCK_MODEL_ID', 'eu.anthropic.claude-haiku-4-5-20251001-v1:0')
 
 CORS_HEADERS = {
     'access-control-allow-origin': '*',

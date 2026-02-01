@@ -71,6 +71,12 @@ resource "aws_lambda_function" "tarih_projesi_lambda" {
   handler          = "lambda_function.lambda_handler"
   runtime          = "python3.12"
   timeout          = 30
+
+  environment {
+    variables = {
+      BEDROCK_MODEL_ID = "eu.anthropic.claude-haiku-4-5-20251001-v1:0"
+    }
+  }
 }                       
 resource "aws_apigatewayv2_api" "http_api" {
   name          = "TarihProjesiAPI"
