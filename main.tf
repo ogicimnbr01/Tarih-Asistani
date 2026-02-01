@@ -83,7 +83,7 @@ resource "aws_apigatewayv2_api" "http_api" {
   protocol_type = "HTTP"
 
   cors_configuration {
-    allow_headers = ["Authorization", "Content-Type"]
+    allow_headers = ["Authorization", "Content-Type", "X-Admin-Key"]
     allow_methods = ["GET", "POST", "PUT", "DELETE", "OPTIONS"] 
     allow_origins = [
       "https://www.tarihasistani.com.tr", 
