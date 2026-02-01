@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tarih Asistanı - Admin Paneli</title>
+    <title>Tarih Asistanı - Belge Paneli</title>
     <link
         href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@400;500;600&display=swap"
         rel="stylesheet">
@@ -288,6 +288,60 @@
             width: 16px;
             height: 16px;
         }
+
+        .verify-btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            background: rgba(212, 168, 75, 0.2);
+            color: #d4a84b;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .verify-btn:hover {
+            background: rgba(212, 168, 75, 0.3);
+        }
+
+        .verify-btn.verified {
+            background: rgba(76, 175, 80, 0.2);
+            color: #4caf50;
+            cursor: default;
+        }
+
+        .verify-btn.error {
+            background: rgba(244, 67, 54, 0.2);
+            color: #f44336;
+        }
+
+        .verify-btn svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        .auth-status {
+            font-size: 0.85rem;
+            margin-top: 8px;
+            display: none;
+        }
+
+        .auth-status.show {
+            display: block;
+        }
+
+        .auth-status.success {
+            color: #4caf50;
+        }
+
+        .auth-status.error {
+            color: #f44336;
+        }
     </style>
 </head>
 
@@ -302,7 +356,7 @@
         </a>
 
         <div class="header">
-            <h1>Admin <span>Paneli</span></h1>
+            <h1>Belge <span>Paneli</span></h1>
             <p>Yeni tarihsel kaynak ekleyin</p>
         </div>
 
@@ -311,8 +365,17 @@
                 <!-- Auth Section -->
                 <div class="auth-section">
                     <div class="form-group" style="margin-bottom: 0;">
-                        <label for="admin-key">🔐 Admin Şifresi</label>
-                        <input type="password" id="admin-key" placeholder="Admin API anahtarını giriniz" required>
+                        <label for="admin-key">🔐 Şifre</label>
+                        <input type="password" id="admin-key" placeholder="Erişim şifresini giriniz" required>
+                        <button type="button" class="verify-btn" id="verify-btn" onclick="verifyPassword()">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2">
+                                <path d="M9 12l2 2 4-4" />
+                                <circle cx="12" cy="12" r="10" />
+                            </svg>
+                            Şifreyi Doğrula
+                        </button>
+                        <div class="auth-status" id="auth-status"></div>
                     </div>
                 </div>
 
@@ -433,6 +496,58 @@
     <script>
         const ADMIN_API_ENDPOINT = 'https://duwr3ymxi6.execute-api.eu-central-1.amazonaws.com/admin';
         const CLOUDFRONT_DOMAIN = 'd2an9xa3x2j0tn.cloudfront.net';
+        let isPasswordVerified = false;
+
+        async function verifyPassword() {
+            const adminKey = document.getElementById('admin-key').value;
+            const verifyBtn = document.getElementById('verify-btn');
+            const authStatus = document.getElementById('auth-status');
+
+            if (!adminKey) {
+                authStatus.textContent = '⚠️ Lütfen şifre giriniz';
+                authStatus.className = 'auth-status show error';
+                return;
+            }
+
+            verifyBtn.innerHTML = '<svg class="spin" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> Doğrulanıyor...';
+
+            try {
+                const response = await fetch(ADMIN_API_ENDPOINT, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-Admin-Key': adminKey },
+                    body: JSON.stringify({ mode: 'verify' })
+                });
+
+                if (response.status === 401) {
+                    isPasswordVerified = false;
+                    verifyBtn.className = 'verify-btn error';
+                    verifyBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg> Şifre Hatalı';
+                    authStatus.textContent = '❌ Şifre yanlış. Lütfen kontrol edin.';
+                    authStatus.className = 'auth-status show error';
+                } else {
+                    isPasswordVerified = true;
+                    verifyBtn.className = 'verify-btn verified';
+                    verifyBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg> Şifre Doğrulandı';
+                    authStatus.textContent = '✅ Şifre doğru! Belge yükleyebilirsiniz.';
+                    authStatus.className = 'auth-status show success';
+                }
+            } catch (error) {
+                isPasswordVerified = false;
+                verifyBtn.className = 'verify-btn error';
+                verifyBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg> Bağlantı Hatası';
+                authStatus.textContent = '⚠️ Sunucuya bağlanılamadı. Lütfen tekrar deneyin.';
+                authStatus.className = 'auth-status show error';
+            }
+        }
+
+        // Reset verification when password changes
+        document.getElementById('admin-key').addEventListener('input', () => {
+            isPasswordVerified = false;
+            const verifyBtn = document.getElementById('verify-btn');
+            verifyBtn.className = 'verify-btn';
+            verifyBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg> Şifreyi Doğrula';
+            document.getElementById('auth-status').className = 'auth-status';
+        });
 
         const mockUniteler = [
             { id: "1", ad: "1. 20. Yüzyıl Başlarında Osmanlı Devleti ve Dünya" },

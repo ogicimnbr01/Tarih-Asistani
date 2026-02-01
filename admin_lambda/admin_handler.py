@@ -34,6 +34,8 @@ def lambda_handler(event, context):
             return handle_get_upload_url(body)
         elif mode == 'save_metadata':
             return handle_save_metadata_and_start_textract(body)
+        elif mode == 'verify':
+            return create_response(200, {'verified': True, 'message': 'Şifre doğrulandı'})
         else:
             return create_response(400, {'error': 'Geçersiz mod belirtildi.'})
     except Exception as e:
