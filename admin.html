@@ -96,6 +96,10 @@
     <div class="container">
         <h1>Yeni Tarihsel Kaynak Yükle</h1>
         <form id="upload-form">
+            <div class="form-group" style="background: #fff3cd; padding: 10px; border-radius: 6px; margin-bottom: 15px;">
+                <label for="admin-key" style="color: #856404;">🔐 Admin Şifresi:</label>
+                <input type="password" id="admin-key" placeholder="Admin API anahtarını giriniz" required>
+            </div>
             <div class="form-group">
                 <label for="unite-secimi">Ünite Seçimi:</label>
                 <select id="unite-secimi" required></select>
@@ -234,9 +238,10 @@
             try {
                 statusMessage.textContent = 'Yükleme adresi alınıyor...';
                 const extension = file.name.split('.').pop();
+                const adminKey = document.getElementById('admin-key').value;
                 const getUrlResponse = await fetch(ADMIN_API_ENDPOINT, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 'Content-Type': 'application/json', 'X-Admin-Key': adminKey },
                     body: JSON.stringify({
                         mode: 'get_upload_url',
                         extension: extension,
@@ -268,7 +273,7 @@
 
                 const saveMetadataResponse = await fetch(ADMIN_API_ENDPOINT, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 'Content-Type': 'application/json', 'X-Admin-Key': adminKey },
                     body: JSON.stringify({
                         mode: 'save_metadata',
                         metadata: metadata

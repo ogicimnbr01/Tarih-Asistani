@@ -361,6 +361,7 @@ resource "aws_lambda_function" "admin_lambda" {
     variables = {
       S3_BUCKET_NAME      = aws_s3_bucket.belge_deposu.id
       DYNAMODB_TABLE_NAME = aws_dynamodb_table.kaynak_kutuphanesi.name
+      ADMIN_API_KEY       = "***REMOVED***"
     }
   }
 }

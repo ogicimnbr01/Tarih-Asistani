@@ -13,6 +13,14 @@ textract_client = boto3.client('textract')
 table = dynamodb.Table(DYNAMODB_TABLE_NAME)
 
 def lambda_handler(event, context):
+    # API Key kontrolü
+    headers = event.get('headers', {})
+    api_key = headers.get('x-admin-key') or headers.get('X-Admin-Key')
+    expected_key = os.environ.get('ADMIN_API_KEY')
+    
+    if not expected_key or api_key != expected_key:
+        return create_response(401, {'error': 'Yetkisiz erişim. Geçerli API anahtarı gerekli.'})
+    
     try:
         body = json.loads(event.get('body', '{}'))
         mode = body.get('mode')
