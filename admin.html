@@ -700,7 +700,13 @@
                 if (saveMetadataResponse.status !== 200) throw new Error(result.error || 'Metadata kaydedilemedi.');
 
                 showStatus('✓ Başarılı! Belge kütüphaneye eklendi.', 'success');
-                form.reset();
+                // Reset form fields except password
+                uniteSecimi.value = '';
+                document.getElementById('source-type').value = 'gazete';
+                document.getElementById('source-title').value = '';
+                document.getElementById('extracted-text').value = '';
+                document.getElementById('source-citation').value = '';
+                fileInput.value = '';
                 selectedFileName.textContent = '';
                 kazanimSecimi.innerHTML = '<option value="">Lütfen bir kazanım seçiniz</option>';
 
