@@ -16,6 +16,7 @@
 *.tfvars
 *.tfvars.json
 terraform.tfstate.d/
+.terraform.lock.hcl
 
 logs
 *.log
