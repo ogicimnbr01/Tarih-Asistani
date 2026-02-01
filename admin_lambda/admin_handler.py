@@ -13,6 +13,11 @@ textract_client = boto3.client('textract')
 table = dynamodb.Table(DYNAMODB_TABLE_NAME)
 
 def lambda_handler(event, context):
+    # OPTIONS preflight isteğini hemen yanıtla (CORS için gerekli)
+    http_method = event.get('requestContext', {}).get('http', {}).get('method', '')
+    if http_method == 'OPTIONS' or event.get('httpMethod') == 'OPTIONS':
+        return create_response(200, {'message': 'OK'})
+    
     # API Key kontrolü
     headers = event.get('headers', {})
     api_key = headers.get('x-admin-key') or headers.get('X-Admin-Key')
