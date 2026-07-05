@@ -1,4 +1,11 @@
 terraform {
+  backend "s3" {
+    bucket       = "tarih-projesi-tfstate-606705193623"
+    key          = "tarih-asistani/terraform.tfstate"
+    region       = "eu-central-1"
+    encrypt      = true
+    use_lockfile = true # S3 native locking (Terraform 1.10+)
+  }
   required_providers {
     aws = {
       source  = "hashicorp/aws"
