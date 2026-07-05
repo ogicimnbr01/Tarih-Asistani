@@ -2,49 +2,59 @@ import boto3
 import json
 import os
 
-TABLE_NAME = "TarihProjesiKaynakKutuphanesi"
+TABLE_NAME = os.environ.get('DYNAMODB_TABLE_NAME', 'TarihProjesiKaynakKutuphanesi')
 bedrock = boto3.client(service_name='bedrock-runtime')
 dynamodb = boto3.resource('dynamodb')
 table = dynamodb.Table(TABLE_NAME)
 
 model_id = os.environ.get('BEDROCK_MODEL_ID', 'eu.anthropic.claude-haiku-4-5-20251001-v1:0')
+ALLOWED_ORIGINS = [o.strip() for o in os.environ.get('ALLOWED_ORIGINS', '').split(',') if o.strip()]
 
-CORS_HEADERS = {
-    'access-control-allow-origin': '*',
-    'access-control-allow-headers': 'Content-Type',
-    'access-control-allow-methods': 'OPTIONS, POST, GET'
-}
+def cors_headers(origin=''):
+    # Sadece izinli origin'lere CORS başlığı dön; '*' kullanma.
+    allow_origin = origin if origin in ALLOWED_ORIGINS else (ALLOWED_ORIGINS[0] if ALLOWED_ORIGINS else 'null')
+    return {
+        'access-control-allow-origin': allow_origin,
+        'access-control-allow-headers': 'Content-Type',
+        'access-control-allow-methods': 'OPTIONS, POST, GET',
+        'vary': 'Origin'
+    }
 
 def lambda_handler(event, context):
-    if event.get('httpMethod') == 'OPTIONS':
-        return {'statusCode': 200, 'headers': CORS_HEADERS}
+    headers = event.get('headers', {})
+    origin = headers.get('origin') or headers.get('Origin') or ''
+
+    # HTTP API v2 payload: metod requestContext.http.method altında gelir.
+    http_method = event.get('requestContext', {}).get('http', {}).get('method', '') or event.get('httpMethod', '')
+    if http_method == 'OPTIONS':
+        return {'statusCode': 200, 'headers': cors_headers(origin)}
     try:
         body = json.loads(event.get("body", "{}") or "{}")
         if 'source_id' in body and 'unit_id' in body:
-            return generate_worksheet(body['unit_id'], body['source_id'])
+            return generate_worksheet(body['unit_id'], body['source_id'], origin)
         elif 'unit_id' in body and 'outcome_id' in body:
-            return list_sources(body['unit_id'], body['outcome_id'])
+            return list_sources(body['unit_id'], body['outcome_id'], origin)
         else:
             raise ValueError("İstek için gerekli parametreler eksik.")
     except Exception as e:
         print(f"HATA: {str(e)}")
-        error_headers = CORS_HEADERS.copy(); error_headers['content-type'] = 'application/json; charset=utf-8'
+        error_headers = cors_headers(origin); error_headers['content-type'] = 'application/json; charset=utf-8'
         return {'statusCode': 500, 'headers': error_headers, 'body': json.dumps({'error': str(e)}, ensure_ascii=False)}
 
-def list_sources(unit_id, outcome_id):
+def list_sources(unit_id, outcome_id, origin=''):
     print(f"Kaynaklar listeleniyor: unit_id={unit_id}, outcome_id={outcome_id}")
     response = table.query(IndexName='UnitOutcomeIndex', KeyConditionExpression='unit_id = :uid AND outcome_id = :oid', ExpressionAttributeValues={':uid': unit_id, ':oid': outcome_id})
     items = response.get('Items', []); print(f"{len(items)} adet kaynak bulundu.")
     sources = [{'source_id': item['source_id'], 'source_title': item['source_title'], 'source_type': item.get('source_type', 'Belge'), 'source_url': item.get('source_url')} for item in items]
-    return {'statusCode': 200, 'headers': CORS_HEADERS, 'body': json.dumps(sources, ensure_ascii=False)}
+    return {'statusCode': 200, 'headers': cors_headers(origin), 'body': json.dumps(sources, ensure_ascii=False)}
 
-def generate_worksheet(unit_id, source_id):
+def generate_worksheet(unit_id, source_id, origin=''):
     print(f"Çalışma kağıdı üretiliyor (Converse API ile): unit_id={unit_id}, source_id={source_id}")
     
     response = table.get_item(Key={'unit_id': unit_id, 'source_id': source_id})
     item = response.get('Item')
     if not item:
-        return {'statusCode': 404, 'headers': CORS_HEADERS, 'body': json.dumps({'message': 'Belirtilen kaynak bulunamadı.'})}
+        return {'statusCode': 404, 'headers': cors_headers(origin), 'body': json.dumps({'message': 'Belirtilen kaynak bulunamadı.'}, ensure_ascii=False)}
     
     tarihi_metin = item.get('extracted_text')
     if not tarihi_metin:
@@ -79,7 +89,7 @@ Sevr Antlaşması'nın tamamen uygulanması durumunda günümüz Türkiye harita
     output_message = bedrock_response['output']['message']
     generated_text = output_message['content'][0]['text']
     
-    success_headers = CORS_HEADERS.copy(); success_headers['content-type'] = 'application/json; charset=utf-8'
+    success_headers = cors_headers(origin); success_headers['content-type'] = 'application/json; charset=utf-8'
     return {
         'statusCode': 200,
         'headers': success_headers,

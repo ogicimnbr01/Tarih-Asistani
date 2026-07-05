@@ -39,8 +39,8 @@
            ▼               ▼               ▼
 ┌──────────────┐  ┌──────────────┐  ┌──────────────┐
 │   Lambda     │  │   Lambda     │  │   Lambda     │
-│  Soru Üret   │  │   Admin      │  │  Polling     │
-│  (Bedrock)   │  │  (S3/Textract)│  │  (2 dakika)  │
+│  Soru Üret   │  │   Admin      │  │Result Handler│
+│  (Bedrock)   │  │  (S3/Textract)│  │ (SNS tetikli)│
 └──────┬───────┘  └──────┬───────┘  └──────┬───────┘
        │                 │                 │
        ▼                 ▼                 ▼
@@ -52,7 +52,7 @@
 │  └─────────────┘  └─────────────┘  └─────────────┘  └────────────┘  │
 │                                                                      │
 │  ┌─────────────┐                                                     │
-│  │  Bedrock    │  Claude 4.5 Sonnet (AI Soru Üretimi)               │
+│  │  Bedrock    │  Claude Haiku 4.5 (AI Soru Üretimi)                │
 │  └─────────────┘                                                     │
 └──────────────────────────────────────────────────────────────────────┘
 ```
@@ -68,7 +68,7 @@
 | **API** | Amazon API Gateway (HTTP) |
 | **Veritabanı** | Amazon DynamoDB (NoSQL) |
 | **Depolama** | Amazon S3 + CloudFront (CDN) |
-| **AI/ML** | Amazon Bedrock (Claude 3.5 Sonnet) |
+| **AI/ML** | Amazon Bedrock (Claude Haiku 4.5) |
 | **OCR** | AWS Textract |
 | **IaC** | Terraform |
 | **CI/CD** | AWS Amplify + GitHub |
@@ -86,8 +86,8 @@ Tarih-Asistani/
 │   └── lambda_function.py
 ├── admin_lambda/           # Admin Lambda (belge yönetimi)
 │   └── admin_handler.py
-├── polling_lambda/         # Polling Lambda (Textract takibi)
-│   └── polling_handler.py
+├── result_handler_lambda/  # Result Handler Lambda (Textract SNS bildirimi)
+│   └── result_handler.py
 ├── public/                 # Statik dosyalar
 ├── main.tf                 # Terraform altyapı tanımları
 ├── variables.tf            # Terraform değişken tanımları
@@ -151,8 +151,8 @@ npm run dev
 4. Sistem otomatik olarak:
    - Dosyayı S3'e yükler
    - Textract ile OCR işlemi başlatır
-   - Polling Lambda 2 dakikada bir kontrol eder
-   - İşlem tamamlandığında DynamoDB'ye kaydeder
+   - Textract işi bitince SNS üzerinden Result Handler Lambda'yı tetikler
+   - Çıkarılan metin DynamoDB'ye kaydedilir
 
 ### Soru Üretme Akışı
 
