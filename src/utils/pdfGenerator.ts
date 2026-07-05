@@ -1,7 +1,9 @@
 import jsPDF from 'jspdf';
 
 // --- Arayüzler ve Tipler ---
-interface ReportData { seciliKazanimMetni: string; kaynakKunyesi: string; calismaKagidiMetni: string; kaynakMetni: string | null; sourceImageUrl: string | null; }
+interface RubrikSeviye { seviye: string; olcut: string; }
+interface Soru { soru: string; tur: string; bloom_basamagi: string; bloom_gerekcesi: string; cevap_anahtari: string; rubrik: RubrikSeviye[]; }
+interface ReportData { seciliKazanimMetni: string; kaynakKunyesi: string; calismaKagidiMetni: string; sorular: Soru[] | null; kaynakMetni: string | null; sourceImageUrl: string | null; }
 type LineInfo = { text: string; type: 'main' | 'citation' | 'spacer'; };
 
 // YAZICI DOSTU RENK PALETİ
@@ -60,8 +62,58 @@ async function addSourceSection(doc: jsPDF, startY: number, imageDataUrl: string
 function addQuestionSection(doc: jsPDF, startY: number, calismaKagidiMetni: string, sayfaGenisligi: number) { let y = startY; const solKenar = PDF_SETTINGS.marginLeft; const sagKenar = doc.internal.pageSize.getWidth() - PDF_SETTINGS.marginRight; currentFont = { family: 'Playfair', style: 'bold', size: PDF_SETTINGS.sectionTitleSize, color: PDF_SETTINGS.titleColor }; applyCurrentFont(doc); doc.text('Analiz ve Yorumlama Soruları', solKenar, y); doc.setDrawColor(PDF_SETTINGS.underlineColor[0], PDF_SETTINGS.underlineColor[1], PDF_SETTINGS.underlineColor[2]); doc.setLineWidth(PDF_SETTINGS.lineThickness); doc.line(solKenar, y + 5, solKenar + PDF_SETTINGS.questionSectionTitleLineLength, y + 5); y += 25; const sorular = (calismaKagidiMetni || "").split('\n').filter(s => s.trim() !== ''); sorular.forEach((soruMetni, index) => { const soruNumarasi = `${index + 1}.`; currentFont = { family: 'Lora', style: 'normal', size: PDF_SETTINGS.mainBodyFontSize, color: PDF_SETTINGS.darkGray }; applyCurrentFont(doc); const soruNumarasiGenisligi = doc.getStringUnitWidth(soruNumarasi) * currentFont.size / (doc.internal as any).scaleFactor; const metinBaslangicX = solKenar + soruNumarasiGenisligi + 5; const metinIcinKullanilabilirGenislik = sayfaGenisligi - soruNumarasiGenisligi - 5; const tempSoruSatirlari = doc.splitTextToSize(soruMetni, metinIcinKullanilabilirGenislik); let estimatedQuestionTextHeight = tempSoruSatirlari.length * currentFont.size * PDF_SETTINGS.lineHeightMultiplier; let estimatedQuestionLineHeight = PDF_SETTINGS.soruAltCizgiSayısı * (currentFont.size * PDF_SETTINGS.lineHeightMultiplier); let estimatedQuestionHeight = estimatedQuestionTextHeight + 10 + estimatedQuestionLineHeight + 15; y = sayfaKontrolu(doc, y, estimatedQuestionHeight); currentFont = { family: 'Playfair', style: 'bold', size: PDF_SETTINGS.mainBodyFontSize, color: PDF_SETTINGS.mediumGray }; applyCurrentFont(doc); doc.text(soruNumarasi, solKenar, y); currentFont = { family: 'Lora', style: 'normal', size: PDF_SETTINGS.mainBodyFontSize, color: PDF_SETTINGS.darkGray }; applyCurrentFont(doc); const soruSatirlari = doc.splitTextToSize(soruMetni, metinIcinKullanilabilirGenislik); let currentLineY = y; soruSatirlari.forEach((soruSatiri: string) => { const satirYuksekligi = currentFont.size * PDF_SETTINGS.lineHeightMultiplier; doc.text(soruSatiri, metinBaslangicX, currentLineY); currentLineY += satirYuksekligi; }); currentLineY += 10; doc.setDrawColor(PDF_SETTINGS.soruCevapCizgiRengi[0], PDF_SETTINGS.soruCevapCizgiRengi[1], PDF_SETTINGS.soruCevapCizgiRengi[2]); doc.setLineWidth(0.5); for (let i = 0; i < PDF_SETTINGS.soruAltCizgiSayısı; i++) { doc.line(metinBaslangicX, currentLineY, sagKenar, currentLineY); currentLineY += currentFont.size * PDF_SETTINGS.lineHeightMultiplier; } y = currentLineY + 15; }); return y; }
 function altBilgiEkle(doc: jsPDF) { const totalPages = (doc.internal as any).getNumberOfPages(); const currentYear = new Date().getFullYear(); const footerBottomMargin = PDF_SETTINGS.altBilgiYOffset; for (let i = 1; i <= totalPages; i++) { doc.setPage(i); const signatureText = `Bu belge, Amazon Bulut Servisleri aracılığıyla Tarih Asistanı tarafından otomatik üretilmiştir.`; doc.setFont('Lora', 'normal'); doc.setFontSize(PDF_SETTINGS.footerFontSize - 1); doc.setTextColor(PDF_SETTINGS.mediumGray[0], PDF_SETTINGS.mediumGray[1], PDF_SETTINGS.mediumGray[2]); const signatureTextY = doc.internal.pageSize.getHeight() - footerBottomMargin - (PDF_SETTINGS.footerFontSize * PDF_SETTINGS.lineHeightMultiplier) - 5; doc.text(signatureText, doc.internal.pageSize.getWidth() / 2, signatureTextY, { align: 'center' }); doc.setFont('Lora', 'italic'); doc.setFontSize(PDF_SETTINGS.footerFontSize); doc.setTextColor(150, 150, 150); const mainFooterText = `Akıllı Çalışma Kağıdı Asistanı © Oğuzhan Başsarı ${currentYear} | Sayfa ${i} / ${totalPages}`; const mainFooterTextY = doc.internal.pageSize.getHeight() - footerBottomMargin; doc.text(mainFooterText, doc.internal.pageSize.getWidth() / 2, mainFooterTextY, { align: 'center' }); } }
 
+// Öğretmen rehberi: cevap anahtarı + rubrik, öğrenci sayfalarından sonra yeni sayfada.
+function addTeacherGuideSection(doc: jsPDF, sorular: Soru[], sayfaGenisligi: number) {
+    const solKenar = PDF_SETTINGS.marginLeft;
+    doc.addPage();
+    let y = PDF_SETTINGS.marginTop;
+    currentFont = { family: 'Playfair', style: 'bold', size: PDF_SETTINGS.sectionTitleSize, color: PDF_SETTINGS.titleColor };
+    applyCurrentFont(doc);
+    doc.text('Öğretmen Rehberi: Cevap Anahtarı ve Dereceli Puanlama', solKenar, y);
+    doc.setDrawColor(PDF_SETTINGS.underlineColor[0], PDF_SETTINGS.underlineColor[1], PDF_SETTINGS.underlineColor[2]);
+    doc.setLineWidth(PDF_SETTINGS.lineThickness);
+    doc.line(solKenar, y + 5, solKenar + 300, y + 5);
+    y += 30;
+
+    const yazBlok = (metin: string, font: typeof currentFont, girinti = 0) => {
+        currentFont = font; applyCurrentFont(doc);
+        const satirlar = doc.splitTextToSize(metin, sayfaGenisligi - girinti);
+        const satirYuksekligi = font.size * PDF_SETTINGS.lineHeightMultiplier;
+        satirlar.forEach((satir: string) => {
+            y = sayfaKontrolu(doc, y, satirYuksekligi);
+            doc.text(satir, solKenar + girinti, y);
+            y += satirYuksekligi;
+        });
+    };
+
+    sorular.forEach((s, i) => {
+        y = sayfaKontrolu(doc, y, 60);
+        const turEtiketi = s.tur === 'kaynak_elestirisi' ? ' | Kaynak Eleştirisi' : '';
+        yazBlok(`Soru ${i + 1} — Bloom: ${s.bloom_basamagi}${turEtiketi}`, { family: 'Playfair', style: 'bold', size: 12, color: PDF_SETTINGS.titleColor });
+        y += 4;
+        yazBlok(s.soru, { family: 'Lora', style: 'italic', size: PDF_SETTINGS.mainBodyFontSize, color: PDF_SETTINGS.altTextColor });
+        y += 6;
+        yazBlok('Pedagojik Gerekçe:', { family: 'Lora', style: 'bold', size: PDF_SETTINGS.mainBodyFontSize, color: PDF_SETTINGS.darkGray });
+        yazBlok(s.bloom_gerekcesi, { family: 'Lora', style: 'normal', size: PDF_SETTINGS.mainBodyFontSize, color: PDF_SETTINGS.darkGray }, 10);
+        y += 6;
+        yazBlok('Cevap Anahtarı:', { family: 'Lora', style: 'bold', size: PDF_SETTINGS.mainBodyFontSize, color: PDF_SETTINGS.darkGray });
+        yazBlok(s.cevap_anahtari, { family: 'Lora', style: 'normal', size: PDF_SETTINGS.mainBodyFontSize, color: PDF_SETTINGS.darkGray }, 10);
+        y += 6;
+        yazBlok('Dereceli Puanlama Anahtarı (Rubrik):', { family: 'Lora', style: 'bold', size: PDF_SETTINGS.mainBodyFontSize, color: PDF_SETTINGS.darkGray });
+        s.rubrik.forEach(r => {
+            yazBlok(`• ${r.seviye}: ${r.olcut}`, { family: 'Lora', style: 'normal', size: PDF_SETTINGS.mainBodyFontSize, color: PDF_SETTINGS.darkGray }, 10);
+        });
+        y += 12;
+        doc.setDrawColor(PDF_SETTINGS.sectionLineColor[0], PDF_SETTINGS.sectionLineColor[1], PDF_SETTINGS.sectionLineColor[2]);
+        doc.setLineWidth(0.5);
+        y = sayfaKontrolu(doc, y, 10);
+        doc.line(solKenar, y, solKenar + sayfaGenisligi, y);
+        y += 15;
+    });
+}
+
 const fetchAssetAsBase64 = async (url: string) => { const response = await fetch(url); if (!response.ok) throw new Error(`Varlık yüklenemedi: ${url}. Statü: ${response.status}`); const blob = await response.blob(); return new Promise<string>((resolve, reject) => { const reader = new FileReader(); reader.onloadend = () => resolve(reader.result as string); reader.onerror = reject; reader.readAsDataURL(blob); }); };
-async function generatePdfContent(doc: jsPDF, reportData: ReportData, logoBase64: string, imageDataUrl: string | null) { const { kaynakMetni, calismaKagidiMetni, seciliKazanimMetni, kaynakKunyesi } = reportData; let yPozisyonu = PDF_SETTINGS.headerTopMargin; const solKenar = PDF_SETTINGS.marginLeft; const sagKenar = doc.internal.pageSize.getWidth() - PDF_SETTINGS.marginRight; const sayfaGenisligi = sagKenar - solKenar; yPozisyonu = addHeaderSection(doc, yPozisyonu, logoBase64, seciliKazanimMetni, sayfaGenisligi); yPozisyonu = await addSourceSection(doc, yPozisyonu, imageDataUrl, kaynakMetni, kaynakKunyesi, sayfaGenisligi); yPozisyonu += 25; yPozisyonu = sayfaKontrolu(doc, yPozisyonu, 50); yPozisyonu = addQuestionSection(doc, yPozisyonu, calismaKagidiMetni, sayfaGenisligi); }
+async function generatePdfContent(doc: jsPDF, reportData: ReportData, logoBase64: string, imageDataUrl: string | null) { const { kaynakMetni, calismaKagidiMetni, seciliKazanimMetni, kaynakKunyesi } = reportData; let yPozisyonu = PDF_SETTINGS.headerTopMargin; const solKenar = PDF_SETTINGS.marginLeft; const sagKenar = doc.internal.pageSize.getWidth() - PDF_SETTINGS.marginRight; const sayfaGenisligi = sagKenar - solKenar; yPozisyonu = addHeaderSection(doc, yPozisyonu, logoBase64, seciliKazanimMetni, sayfaGenisligi); yPozisyonu = await addSourceSection(doc, yPozisyonu, imageDataUrl, kaynakMetni, kaynakKunyesi, sayfaGenisligi); yPozisyonu += 25; yPozisyonu = sayfaKontrolu(doc, yPozisyonu, 50); yPozisyonu = addQuestionSection(doc, yPozisyonu, calismaKagidiMetni, sayfaGenisligi); if (reportData.sorular && reportData.sorular.length > 0) { addTeacherGuideSection(doc, reportData.sorular, sayfaGenisligi); } }
 
 export const createPdf = async (reportData: ReportData) => {
     const doc = new jsPDF('p', 'pt', 'a4');

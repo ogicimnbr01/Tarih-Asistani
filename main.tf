@@ -92,7 +92,8 @@ resource "aws_lambda_function" "tarih_projesi_lambda" {
   source_code_hash = data.archive_file.lambda_zip.output_base64sha256
   handler          = "lambda_function.lambda_handler"
   runtime          = "python3.12"
-  timeout          = 30
+  timeout          = 60 # Not: API Gateway 30 sn'de keser; pay, doğrudan invoke/teşhis içindir
+  memory_size      = 256
 
   environment {
     variables = {

@@ -4,6 +4,7 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   server: {
+    port: 8000, // API CORS izin listesindeki localhost:8000 ile uyumlu
     allowedHosts: [
       'localhost',
       '127.0.0.1',

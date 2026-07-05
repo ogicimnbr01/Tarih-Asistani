@@ -6,12 +6,31 @@ import { scrollToSection } from '../utils/scrollUtils';
 interface Unite { id: string; ad: string; }
 interface Kazanim { id: string; ad: string; }
 interface Kaynak { source_id: string; source_title: string; source_type: string; }
+export interface RubrikSeviye { seviye: string; olcut: string; }
+export interface Soru {
+    soru: string;
+    tur: 'icerik' | 'kaynak_elestirisi';
+    bloom_basamagi: string;
+    bloom_gerekcesi: string;
+    cevap_anahtari: string;
+    rubrik: RubrikSeviye[];
+}
 interface ApiResponse {
     source_url?: string;
     kullanilan_kaynak?: string;
     calisma_kagidi: string;
+    sorular?: Soru[];
     source_citation?: string;
 }
+
+const BLOOM_RENKLERI: Record<string, string> = {
+    'Hatırlama': 'bg-slate-500/20 text-slate-300 border-slate-500/40',
+    'Anlama': 'bg-sky-500/20 text-sky-300 border-sky-500/40',
+    'Uygulama': 'bg-teal-500/20 text-teal-300 border-teal-500/40',
+    'Analiz': 'bg-amber-500/20 text-amber-300 border-amber-500/40',
+    'Değerlendirme': 'bg-orange-500/20 text-orange-300 border-orange-500/40',
+    'Yaratma': 'bg-rose-500/20 text-rose-300 border-rose-500/40',
+};
 
 const mockUniteler = [
     { id: "1", ad: "1. 20. Yüzyıl Başlarında Osmanlı Devleti ve Dünya" },
@@ -89,13 +108,14 @@ const WorksheetGenerator: React.FC = () => {
     const [apiResponse, setApiResponse] = useState<ApiResponse | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+    const [showTeacherGuide, setShowTeacherGuide] = useState(false);
     const API_ENDPOINT_URL = 'https://duwr3ymxi6.execute-api.eu-central-1.amazonaws.com/';
 
     useEffect(() => { setSelectedKazanim(''); setKazanimlar(selectedUnite ? mockKazanimlar[selectedUnite as keyof typeof mockKazanimlar] || [] : []); }, [selectedUnite]);
     useEffect(() => { const fetchKaynaklar = async () => { if (!selectedUnite || !selectedKazanim) { setKaynaklar([]); setSelectedKaynak(null); return; } setIsLoadingKaynak(true); setError(null); setKaynaklar([]); setSelectedKaynak(null); try { const response = await fetch(API_ENDPOINT_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ unit_id: selectedUnite, outcome_id: selectedKazanim }), }); if (!response.ok) throw new Error('Kaynaklar sunucudan alınamadı.'); const data: Kaynak[] = await response.json(); setKaynaklar(data); } catch (err: any) { setError(err.message || 'Kaynakları yüklerken bir hata oluştu.'); } finally { setIsLoadingKaynak(false); } }; fetchKaynaklar(); }, [selectedKazanim, selectedUnite]);
     useEffect(() => { setApiResponse(null); }, [selectedUnite, selectedKazanim, selectedKaynak]);
-    const handleCreateWorksheet = async () => { if (!selectedUnite || !selectedKaynak) { setError("Lütfen bir ünite ve kaynak seçiniz."); return; } setIsLoadingWorksheet(true); setError(null); setApiResponse(null); try { const response = await fetch(API_ENDPOINT_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ unit_id: selectedUnite, source_id: selectedKaynak }), }); const data: ApiResponse = await response.json(); if (!response.ok) throw new Error((data as any).message || `Sunucu hatası`); setApiResponse(data); } catch (err: any) { setError(err.message || 'Çalışma kağıdı oluşturulurken bir hata oluştu.'); } finally { setIsLoadingWorksheet(false); } };
-    const handleDownloadPdf = async () => { if (!apiResponse) { alert("PDF oluşturmak için önce bir çalışma kağıdı oluşturmalısınız."); return; } setIsGeneratingPdf(true); try { const unitKazanimlari = mockKazanimlar[selectedUnite as keyof typeof mockKazanimlar] || []; const seciliKazanimObjesi = unitKazanimlari.find(k => k.id === selectedKazanim); const kazanimMetni = seciliKazanimObjesi ? seciliKazanimObjesi.ad.substring(seciliKazanimObjesi.id.length + 1).trim() : "Belirtilmemiş Kazanım"; const reportData = { seciliKazanimMetni: kazanimMetni, kaynakKunyesi: apiResponse.source_citation || "Kaynak Belirtilmemiş", calismaKagidiMetni: apiResponse.calisma_kagidi, kaynakMetni: apiResponse.kullanilan_kaynak || null, sourceImageUrl: apiResponse.source_url && apiResponse.source_url.match(/\.(jpeg|jpg|gif|png)$/) ? apiResponse.source_url : null }; await createPdf(reportData); } catch (error) { console.error(error); alert("PDF oluşturulurken bir hata oluştu. Lütfen konsolu kontrol ediniz."); } finally { setIsGeneratingPdf(false); } };
+    const handleCreateWorksheet = async () => { if (!selectedUnite || !selectedKaynak) { setError("Lütfen bir ünite ve kaynak seçiniz."); return; } setIsLoadingWorksheet(true); setError(null); setApiResponse(null); setShowTeacherGuide(false); try { const seciliKazanim = kazanimlar.find(k => k.id === selectedKazanim); const response = await fetch(API_ENDPOINT_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ unit_id: selectedUnite, source_id: selectedKaynak, outcome_text: seciliKazanim?.ad || undefined }), }); const data: ApiResponse = await response.json(); if (!response.ok) throw new Error((data as any).message || `Sunucu hatası`); setApiResponse(data); } catch (err: any) { setError(err.message || 'Çalışma kağıdı oluşturulurken bir hata oluştu.'); } finally { setIsLoadingWorksheet(false); } };
+    const handleDownloadPdf = async () => { if (!apiResponse) { alert("PDF oluşturmak için önce bir çalışma kağıdı oluşturmalısınız."); return; } setIsGeneratingPdf(true); try { const unitKazanimlari = mockKazanimlar[selectedUnite as keyof typeof mockKazanimlar] || []; const seciliKazanimObjesi = unitKazanimlari.find(k => k.id === selectedKazanim); const kazanimMetni = seciliKazanimObjesi ? seciliKazanimObjesi.ad.substring(seciliKazanimObjesi.id.length + 1).trim() : "Belirtilmemiş Kazanım"; const reportData = { seciliKazanimMetni: kazanimMetni, kaynakKunyesi: apiResponse.source_citation || "Kaynak Belirtilmemiş", calismaKagidiMetni: apiResponse.calisma_kagidi, sorular: apiResponse.sorular || null, kaynakMetni: apiResponse.kullanilan_kaynak || null, sourceImageUrl: apiResponse.source_url && apiResponse.source_url.match(/\.(jpeg|jpg|gif|png)$/) ? apiResponse.source_url : null }; await createPdf(reportData); } catch (error) { console.error(error); alert("PDF oluşturulurken bir hata oluştu. Lütfen konsolu kontrol ediniz."); } finally { setIsGeneratingPdf(false); } };
     const getKaynakIcon = (type: string) => { const sourceType = (type || 'belge').toLowerCase(); if (sourceType === 'gazete') return '📰'; if (sourceType === 'hatirat') return '📖'; if (sourceType === 'mektup') return '✉️'; return '📜'; };
 
     return (
@@ -176,8 +196,46 @@ const WorksheetGenerator: React.FC = () => {
                                 <div>
                                     <h3 className="text-2xl font-serif font-bold text-white mb-4 border-b-2 border-brand-accent/50 pb-2">Oluşturulan Çalışma Kağıdı:</h3>
                                     <div className="bg-brand-dark p-6 rounded-lg border border-slate-700">
-                                        <div className="text-brand-text-light whitespace-pre-wrap leading-relaxed">{apiResponse.calisma_kagidi}</div>
-                                        <div className="text-center mt-8">
+                                        {apiResponse.sorular && apiResponse.sorular.length > 0 ? (
+                                            <div className="space-y-4">
+                                                {apiResponse.sorular.map((s, i) => (
+                                                    <div key={i} className="border border-slate-700 rounded-lg p-4 bg-brand-light-dark/50">
+                                                        <div className="flex flex-wrap items-center gap-2 mb-2">
+                                                            <span className={`text-xs font-semibold px-2 py-1 rounded-full border ${BLOOM_RENKLERI[s.bloom_basamagi] || BLOOM_RENKLERI['Anlama']}`}>Bloom: {s.bloom_basamagi}</span>
+                                                            {s.tur === 'kaynak_elestirisi' && (
+                                                                <span className="text-xs font-semibold px-2 py-1 rounded-full border bg-purple-500/20 text-purple-300 border-purple-500/40">🔍 Kaynak Eleştirisi</span>
+                                                            )}
+                                                        </div>
+                                                        <p className="text-brand-text leading-relaxed"><span className="font-bold text-brand-accent mr-2">{i + 1}.</span>{s.soru}</p>
+                                                        {showTeacherGuide && (
+                                                            <div className="mt-4 pt-4 border-t border-slate-700/70 space-y-3 text-sm">
+                                                                <p className="text-brand-text-light italic">{s.bloom_gerekcesi}</p>
+                                                                <div>
+                                                                    <p className="font-bold text-green-400 mb-1">Cevap Anahtarı</p>
+                                                                    <p className="text-brand-text-light whitespace-pre-wrap">{s.cevap_anahtari}</p>
+                                                                </div>
+                                                                <div>
+                                                                    <p className="font-bold text-amber-400 mb-1">Dereceli Puanlama (Rubrik)</p>
+                                                                    <ul className="space-y-1">
+                                                                        {s.rubrik.map((r, ri) => (
+                                                                            <li key={ri} className="text-brand-text-light"><span className="font-semibold text-brand-text">{r.seviye}:</span> {r.olcut}</li>
+                                                                        ))}
+                                                                    </ul>
+                                                                </div>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        ) : (
+                                            <div className="text-brand-text-light whitespace-pre-wrap leading-relaxed">{apiResponse.calisma_kagidi}</div>
+                                        )}
+                                        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-8">
+                                            {apiResponse.sorular && apiResponse.sorular.length > 0 && (
+                                                <button onClick={() => setShowTeacherGuide(v => !v)} className="bg-brand-accent/20 border border-brand-accent text-brand-accent font-bold py-2 px-6 rounded-lg hover:bg-brand-accent/30 transition-colors">
+                                                    {showTeacherGuide ? 'Öğretmen Rehberini Gizle' : 'Öğretmen Rehberini Göster'}
+                                                </button>
+                                            )}
                                             <button onClick={handleDownloadPdf} disabled={isGeneratingPdf} className="bg-green-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-green-700 transition-colors disabled:bg-slate-600 disabled:cursor-not-allowed">
                                                 {isGeneratingPdf ? 'Oluşturuluyor...' : 'PDF Olarak İndir'}
                                             </button>

@@ -31,7 +31,7 @@ def lambda_handler(event, context):
     try:
         body = json.loads(event.get("body", "{}") or "{}")
         if 'source_id' in body and 'unit_id' in body:
-            return generate_worksheet(body['unit_id'], body['source_id'], origin)
+            return generate_worksheet(body['unit_id'], body['source_id'], origin, body.get('outcome_text'))
         elif 'unit_id' in body and 'outcome_id' in body:
             return list_sources(body['unit_id'], body['outcome_id'], origin)
         else:
@@ -48,53 +48,113 @@ def list_sources(unit_id, outcome_id, origin=''):
     sources = [{'source_id': item['source_id'], 'source_title': item['source_title'], 'source_type': item.get('source_type', 'Belge'), 'source_url': item.get('source_url')} for item in items]
     return {'statusCode': 200, 'headers': cors_headers(origin), 'body': json.dumps(sources, ensure_ascii=False)}
 
-def generate_worksheet(unit_id, source_id, origin=''):
-    print(f"Çalışma kağıdı üretiliyor (Converse API ile): unit_id={unit_id}, source_id={source_id}")
-    
+# Pedagojik motor: modelden serbest metin değil, şemaya uyan yapılandırılmış
+# çıktı istenir (Bloom etiketi + gerekçe + cevap anahtarı + rubrik).
+WORKSHEET_TOOL = {
+    "toolSpec": {
+        "name": "calisma_kagidi_olustur",
+        "description": "Tarihsel belgeden pedagojik olarak yapılandırılmış çalışma kağıdı üretir.",
+        "inputSchema": {"json": {
+            "type": "object",
+            "properties": {
+                "sorular": {
+                    "type": "array",
+                    "minItems": 4, "maxItems": 4,
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "soru": {"type": "string", "description": "Öğrenciye sorulacak Türkçe soru cümlesi."},
+                            "tur": {"type": "string", "enum": ["icerik", "kaynak_elestirisi"],
+                                    "description": "icerik: belgenin içeriğini işleyen soru; kaynak_elestirisi: belgenin kendisini (yazar, amaç, güvenilirlik, bakış açısı) sorgulatan soru."},
+                            "bloom_basamagi": {"type": "string",
+                                               "enum": ["Hatırlama", "Anlama", "Uygulama", "Analiz", "Değerlendirme", "Yaratma"]},
+                            "bloom_gerekcesi": {"type": "string", "description": "Sorunun bu Bloom basamağını neden ölçtüğünün 1-2 cümlelik pedagojik gerekçesi."},
+                            "cevap_anahtari": {"type": "string", "description": "Tam puan alan bir cevapta bulunması beklenen unsurlar, madde madde."},
+                            "rubrik": {
+                                "type": "array", "minItems": 3, "maxItems": 3,
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "seviye": {"type": "string", "description": "Örn: 'Tam (2 puan)', 'Kısmi (1 puan)', 'Yetersiz (0 puan)'"},
+                                        "olcut": {"type": "string", "description": "Bu seviyeye karşılık gelen gözlenebilir performans ölçütü."}
+                                    },
+                                    "required": ["seviye", "olcut"]
+                                }
+                            }
+                        },
+                        "required": ["soru", "tur", "bloom_basamagi", "bloom_gerekcesi", "cevap_anahtari", "rubrik"]
+                    }
+                }
+            },
+            "required": ["sorular"]
+        }}
+    }
+}
+
+def generate_worksheet(unit_id, source_id, origin='', outcome_text=None):
+    print(f"Çalışma kağıdı üretiliyor (pedagojik motor): unit_id={unit_id}, source_id={source_id}")
+
     response = table.get_item(Key={'unit_id': unit_id, 'source_id': source_id})
     item = response.get('Item')
     if not item:
         return {'statusCode': 404, 'headers': cors_headers(origin), 'body': json.dumps({'message': 'Belirtilen kaynak bulunamadı.'}, ensure_ascii=False)}
-    
+
     tarihi_metin = item.get('extracted_text')
     if not tarihi_metin:
         raise ValueError("Kaynak bulundu fakat metin içeriği boş.")
 
-    system_prompt = """### KİMLİK ###
-Sen, sadece istenen formatta ve Türkçe cevap üreten, uzman bir 12. Sınıf T.C. İnkılap Tarihi ve Atatürkçülük dersi öğretmenisin.
+    kazanim_bolumu = f"\n### HEDEF KAZANIM ###\nSorular şu MEB kazanımını ölçmelidir: \"{outcome_text}\"\n" if outcome_text else ""
+
+    system_prompt = f"""### KİMLİK ###
+Sen, 12. Sınıf T.C. İnkılap Tarihi ve Atatürkçülük dersi için ölçme-değerlendirme uzmanı bir tarih eğitimcisisin. Birinci elden tarihi belgelerle tarihsel düşünme becerisi (kaynak eleştirisi, bağlamlandırma, kanıta dayalı akıl yürütme) kazandırmayı hedeflersin.
+{kazanim_bolumu}
+### GÖREV ###
+Verilen tarihsel belgeden 'calisma_kagidi_olustur' aracını kullanarak TAM 4 soru üret:
+1. Bir İÇERİK sorusu alt basamaktan (Anlama): belgedeki bilgiyi kendi cümleleriyle açıklamayı gerektirir.
+2. Bir İÇERİK sorusu orta basamaktan (Analiz): belgedeki bilgiler arasında ilişki kurmayı, neden-sonuç çözümlemeyi gerektirir.
+3. Bir İÇERİK sorusu üst basamaktan (Değerlendirme veya Yaratma): yargıda bulunmayı, savunmayı veya özgün çıkarım üretmeyi gerektirir.
+4. Bir KAYNAK ELEŞTİRİSİ sorusu: belgenin KENDİSİNİ sorgulatır — kim, ne zaman, hangi amaçla, hangi bakış açısıyla yazmış; neyi söylemiyor; ne kadar güvenilir? Bu soru öğrenciye tarihçi gibi düşünmeyi öğretir.
 
 ### KURALLAR ###
-1. **En Önemli Kural:** Çıktın, başka HİÇBİR kelime, başlık, açıklama, numara, madde işareti veya İngilizce "düşünme süreci" metni içermemelidir. Sadece ve sadece 3 adet Türkçe soru cümlesi olmalıdır.
-2. **Soru Yapısı:** Sorular, Bloom Taksonomisi'nin farklı basamaklarını yansıtacak şekilde dengeli olmalıdır.
-3. **Çıktı Formatı:** Her soru ayrı bir satırda olmalıdır.
+- Tüm metinler Türkçe ve dil bilgisi açısından kusursuz olmalıdır.
+- Sorular yalnızca verilen belgeden hareketle cevaplanabilir olmalı; belgede olmayan bilgiyi ezber yoklamak için sorma.
+- KISA YAZ: bloom_gerekcesi tek cümle; cevap_anahtari en fazla 3 kısa madde; her rubrik ölçütü tek cümle. Uzun paragraf yazma.
+- Cevap anahtarı, öğretmenin puanlarken arayacağı somut unsurları maddeler.
+- Rubrik seviyeleri gözlenebilir performans ölçütleriyle yazılır; 'iyi cevap' gibi belirsiz ifadeler kullanılmaz.
+- Rubrik seviye adları her zaman: 'Tam (2 puan)', 'Kısmi (1 puan)', 'Yetersiz (0 puan)'."""
 
-### ÖRNEK ÇIKTI ###
-Sevr Antlaşması'nın imzalanması, Osmanlı Devleti'nin egemenlik haklarını nasıl etkilemiştir?
-İstanbul Hükûmeti'nin Sevr Antlaşması'nı imzalamasının ardındaki siyasi ve sosyal baskılar neler olabilir?
-Sevr Antlaşması'nın tamamen uygulanması durumunda günümüz Türkiye haritası ve siyasi yapısı nasıl şekillenirdi?
-"""
-    
     user_message = {
         "role": "user",
-        "content": [{ "text": f"### GÖREV ###\nYukarıdaki kimliğe bürün, tüm kurallara ve örneğe harfiyen uyarak, şimdi sana verilecek olan aşağıdaki Kaynak Metin için istenen formatta 3 soru oluştur.\n---\n{tarihi_metin}\n---"}]
+        "content": [{"text": f"### KAYNAK BELGE ###\n---\n{tarihi_metin}\n---\nBu belge için çalışma kağıdını üret."}]
     }
-    
+
     bedrock_response = bedrock.converse(
         modelId=model_id,
         messages=[user_message],
         system=[{"text": system_prompt}],
-        inferenceConfig={"maxTokens": 2048}
+        toolConfig={"tools": [WORKSHEET_TOOL], "toolChoice": {"tool": {"name": "calisma_kagidi_olustur"}}},
+        inferenceConfig={"maxTokens": 4096}
     )
-    
-    output_message = bedrock_response['output']['message']
-    generated_text = output_message['content'][0]['text']
-    
+
+    tool_input = None
+    for block in bedrock_response['output']['message']['content']:
+        if 'toolUse' in block:
+            tool_input = block['toolUse']['input']
+            break
+    if not tool_input or not tool_input.get('sorular'):
+        raise ValueError("Model beklenen yapılandırılmış çıktıyı üretmedi.")
+
+    sorular = tool_input['sorular']
+    # Eski istemcilerle geriye dönük uyumluluk: düz metin alanı korunur.
+    calisma_kagidi = "\n".join(s['soru'] for s in sorular)
+
     success_headers = cors_headers(origin); success_headers['content-type'] = 'application/json; charset=utf-8'
     return {
         'statusCode': 200,
         'headers': success_headers,
         'body': json.dumps({
-            'calisma_kagidi': generated_text.strip(),
+            'calisma_kagidi': calisma_kagidi,
+            'sorular': sorular,
             'kullanilan_kaynak': tarihi_metin,
             'source_type': item.get('source_type'),
             'source_url': item.get('source_url'),
